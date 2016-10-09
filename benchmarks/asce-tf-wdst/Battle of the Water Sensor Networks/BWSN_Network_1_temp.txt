@@ -1,0 +1,13 @@
+  Page 1                                    Sun Oct 09 23:35:40 2016
+
+  ******************************************************************
+  *                           E P A N E T                          *
+  *                   Hydraulic and Water Quality                  *
+  *                   Analysis for Pipe Networks                   *
+  *                         Version 2.1                            *
+  ******************************************************************
+  
+  Analysis begun Sun Oct 09 23:35:40 2016
+
+  Processing MSX input file C:\Users\eldemet\Documents\GitHub\CCWI2016\CCWI2016\Arsenite_temp.msx
+  

@@ -6,6 +6,5 @@ Source-code to reproduce the examples presented in:
 
 [Presentation of the EPANET-MATLAB Toolkit (with Videos)](https://github.com/KIOS-Research/CCWI2016/blob/master/CCWI2016/Presentation/Eliades_CCWI2016.ppt)
 
-
-
+To execute the code, first run the `start_toolkit.m` module to load the paths, and then execute `contamination_simulation.m` or `introduction_toolkit.m`.
 

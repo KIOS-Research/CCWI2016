@@ -1,3 +1,5 @@
+<a href="http://www.kios.ucy.ac.cy"><img src="http://www.kios.ucy.ac.cy/templates/favourite/images/kios_logo_hover.png"/><a>
+
 # CCWI2016
 
 Source-code to reproduce the examples presented in:

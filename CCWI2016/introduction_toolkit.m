@@ -1,6 +1,9 @@
 %% Introduction to Toolkit
 G = epanet('Net2.inp')
 
+%% Examples
+% ./epanet-matlab-toolkit/examples/
+
 %% Properties
 properties(G) % List of all available parameters
 diameters = G.LinkDiameter % Link diameters from parameters

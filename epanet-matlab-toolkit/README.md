@@ -1,3 +1,8 @@
+<a href="http://www.kios.ucy.ac.cy"><img src="http://www.kios.ucy.ac.cy/templates/favourite/images/kios_logo_hover.png"/><a>
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.831493.svg)](https://doi.org/10.5281/zenodo.831493)
+
+
 EPANET-MATLAB-Toolkit
 ==================================
 
@@ -7,38 +12,105 @@ The `EPANET-Matlab Toolkit` features easy to use commands/wrappers for viewing, 
 
 For support, please use the OWA community forum : http://community.wateranalytics.org/
 
-# Requirements #
+## Table of Contents
+
+- [How to cite](#how-to-cite)
+- [Requirements](#requirements)
+- [How to install necessary compilers](#How-to-install-necessary-compilers)
+- [How to use the Toolkit](#How-to-use-the-Toolkit)
+- [How to fix/report bugs](#How-to-fixreport-bugs)
+- [Licenses](#Licenses)
+- [Contributors](#Contributors)
+- [List of Matlab Class Functions](#List-of-Matlab-Class-Functions)
+- [List of EPANET 2.1 Functions Supported](#List-of-EPANET-21-Functions-Supported)
+
+## How to cite 
+
+D.G. Eliades, M. Kyriakou, S. Vrachimis and M.M. Polycarpou, "EPANET-MATLAB Toolkit: An Open-Source Software for Interfacing EPANET with MATLAB", in *Proc. 14th International Conference on Computing and Control for the Water Industry (CCWI)*, The Netherlands, Nov 2016, p.8. (doi:10.5281/zenodo.831493)
+
+```
+@INPROCEEDINGS{Eliades2016, 
+author={Eliades, Demetrios G. and Kyriakou, Marios and Vrachimis, Stelios and Polycarpou, Marios M.}, 
+title={EPANET-MATLAB Toolkit: An Open-Source Software for Interfacing EPANET with MATLAB}, 
+booktitle={Proc. 14th International Conference on Computing and Control for the Water Industry (CCWI)}, 
+year={2016},
+pages={8},
+address = {The Netherlands},
+month={Nov},
+DOI={10.5281/zenodo.831493}}
+```
+&uparrow; [Back to top](#table-of-contents)
+	
+## Requirements 
+
 * [Matlab](http://www.mathworks.com/)
 * [EPANET 2.1](https://github.com/OpenWaterAnalytics/epanet) 
 
-# How to use the Toolkit #
-Download the folder `Download ZIP`, set the run path in Matlab within the saved folder, and run `RunTests.m`. This will execute all the commands which have been implemented in the Class.
+&uparrow; [Back to top](#table-of-contents)
 
-Example:
+## How to install necessary compilers 
 
-d=epanet('networks/Net1_Rossman2000.inp')
+In order to use the EPANET-MATLAB-Toolkit the <b> MinGW-w64 compiler </b> must be installed: <p>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=R_RABL3_6EY
+" target="_blank"><img src="http://img.youtube.com/vi/R_RABL3_6EY/0.jpg" 
+alt="How to install MinGW-w64 compiler #Matlab" width="280" height="220" border="5" /></a>
+
+In case you have a version of matlab older than 2015b install the <b> Windows SDK compiler</b>: <p>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=hc3OkDypd24
+" target="_blank"><img src="http://img.youtube.com/vi/hc3OkDypd24/0.jpg" 
+alt="How to install Windows SDK compiler compiler #Matlab" width="280" height="220" border="5" /></a>
+
+&uparrow; [Back to top](#table-of-contents)
+
+## How to use the Toolkit
+
+Detailed examples on how to use the toolkit can be found in the [publication](https://zenodo.org/record/831493#.W9B69PZRXIV) of the Toolkit , together with the [code](https://zenodo.org/record/437778). A presentation of its use is also provided [here](https://github.com/KIOS-Research/CCWI2016/blob/master/CCWI2016/Presentation/Eliades_CCWI2016.ppt).
+
+To start, you need to download the folder from GitHub (e.g., `Download ZIP`), and set the run path in Matlab within the saved folder by running the function `start_toolkit`.
+You can then execute all the toolkit functions from the folder `tests` or  try a use case example from the folder `examples`.
+
+Minimum Example:
+
+start_toolkit;
+
+d=epanet('Net1.inp')
 
 d.getNodeCount
 
 d.getNodeElevations
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=7fQTeZ0mH8Q
+" target="_blank"><img src="http://img.youtube.com/vi/7fQTeZ0mH8Q/0.jpg" 
+alt="How to use EPANET-MATLAB-Toolkit" width="280" height="220" border="5" /></a>
 
-# How to fix/report bugs #
+&uparrow; [Back to top](#table-of-contents)
+
+## How to fix/report bugs
+
 To fix a bug `Fork` the `EPANET-Matlab Toolkit`, `Edit` the code and make the appropriate change, and then `Pull` it so that we evaluate it. 
 
 Keep in mind that some bugs may exist in the `EPANET` libraries, in case you are not receiving the expected results.
 
-# Licenses #
+&uparrow; [Back to top](#table-of-contents)
+
+## Licenses
+
 * `EPANET`: Public Domain
 * `EPANET-MSX`: GNU Lesser General Public License
 * `EPANET-Matlab Toolkit`: EUPL 
 
-# Contributors #
+&uparrow; [Back to top](#table-of-contents)
+
+## Contributors
 * Marios Kyriakou, [KIOS Research Center for Intelligent Systems and Networks, University of Cyprus](http://www.kios.ucy.ac.cy/)
 * Demetrios Eliades, [KIOS Research Center for Intelligent Systems and Networks, University of Cyprus](http://www.kios.ucy.ac.cy/c)
 
 The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](http://www.mathworks.com/matlabcentral/fileexchange/25100-epanet-matlab-toolkit) as well as the OpenWaterAnalytics [EPANET-Matlab Wrappers](https://github.com/OpenWaterAnalytics/epanet-matlab)
-# List of Matlab Class Functions #
+
+&uparrow; [Back to top](#table-of-contents)
+
+## List of Matlab Class Functions
+
 |Function|Description|
 |---------|---------|
 |epanet| Load Input file and open the EPANET Toolkit system|
@@ -47,6 +119,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getError| Returns the description of an error code| 
 |getComputedHydraulicTimeSeries|Computed Hydraulic Time Series|
 |getComputedQualityTimeSeries|Computed Quality Time Series|
+|getComputedTimeSeries|Computed Hydraulic & Quality Time Series via ENepanet binary file|
 |getConnectivityMatrix|Return connectivity matrix of the network|
 |getControlRulesCount|Retrieves the number of control rules|
 |getControls|Retrieves the controls|
@@ -58,11 +131,12 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getCurveXY|Retrieves (x,y) values of all curves|
 |getENfunctionsImpemented|Retrieves the epanet functions that have been developed|
 |getFlowUnits|Retrieves the units used to express all flow rates|
-|getHeadCurveIndex|Retrieves index of a head curve for specific link index|
 |getLibFunctions|Retrieves the functions of DLL|
 |getLinkBulkReactionCoeff|Retrieves the value of all link bulk reaction coefficients|
 |getLinkCount|Retrieves the number of links|
 |getLinkDiameter|Retrieves the value of all link diameters|
+|getLinkEnergy|Retrieves the value of all computed energy in kwatts|
+|getLinkEfficiency|Retrieves the value of all computed efficiency|
 |getLinkFlows|Retrieves the value of all computed link flow rates|
 |getLinkHeadloss|Retrieves the value of all computed link headloss|
 |getLinkIndex|Retrieves the indices of all links, or the indices of an ID set of links|
@@ -76,13 +150,14 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getLinkPipeIndex|Retrieves the indices of pipes|
 |getLinkPipeNameID|Retrieves the pipe IDs|
 |getLinkPumpCount|Retrieves the number of pumps|
-|getLinkPumpEnergy|Retrieves the value of all computed energy in kwatts|
+|getLinkPumpHeadCurveIndex|Retrieves index of a head curve for specific link index|
 |getLinkPumpIndex|Retrieves the indices of pumps|
 |getLinkPumpNameID|Retrieves the pump IDs|
 |getLinkPumpPatternIndex|Retrieves the pump pattern indices|
 |getLinkPumpPatternNameID|Retrieves the pump pattern IDs|
 |getLinkPumpType|Retrieves the type of a pump for specific link index|
 |getLinkPumpTypeCode|Retrieves the type code of a pump for specific link index|
+|getLinkPumpSwitches|Calculates the number of pump switches|
 |getLinkQuality|Retrieves the quality of links|
 |getLinkRoughnessCoeff|Retrieves the value of all link roughness|
 |getLinkSettings|Retrieves the value of all computed link roughness for pipes or actual speed for pumps or actual setting for valves|
@@ -114,7 +189,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getNodeJunctionNameID|Retrieves the junctions IDs|
 |getNodeMassFlowRate|Retrieves the computed mass flow rates per minute of chemical sources|
 |getNodeNameID|Retrieves the ID label of all nodes or some nodes with a specified index|
-|getNodeNumDemandCategories|Retrieves the number of demand categories for a node|
+|getNodeDemandCategoriesNumber|Retrieves the number of demand categories for a node|
 |getNodePressure|Retrieves the computed values of all node pressures|
 |getNodeReservoirCount|Retrieves the number of reservoirs|
 |getNodeReservoirIndex|Retrieves the indices of reservoirs|
@@ -128,7 +203,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getNodeTankIndex|Retrieves the indices of tanks|
 |getNodeTankInitialLevel|Retrieves the value of all tank initial water levels|
 |getNodeTankInitialWaterVolume|Retrieves the tank initial volume|
-|getNodeTankMaxVolume|Retrieves maximum water volume|
+|getNodeTankMaximumWaterVolume|Retrieves maximum water volume|
 |getNodeTankMaximumWaterLevel|Retrieves the tank maximum water level|
 |getNodeTankMinimumFraction|Retrieves the tank Fraction of total volume occupied by the inlet/outlet zone in a 2-compartment tank|
 |getNodeTankMinimumWaterLevel|Retrieves the tank minimum water level|
@@ -162,6 +237,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getQualityType|Retrieves the type of water quality analysis type|
 |getStatistic|Retrieves hydraulic simulation statistic|
 |getTimeHTime|Retrieves the number of htime|
+|getTimeQTime|Retrieves the number of qtime|
 |getTimeHaltFlag|Retrieves the number of  halt flag|
 |getTimeHydraulicStep|Retrieves the value of the hydraulic time step|
 |getTimeNextEvent|Retrieves the number of next event|
@@ -176,11 +252,26 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getTimeStartTime|Retrieves the number of start time|
 |getTimeStatisticsType|Retrieves the type of time series post-processing ('NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE')|
 |getTimeStatisticsIndex|Retrieves the type of time series post-processing|
+|getUnits|Retrieves the Units of Measurement|
 |getVersion|Retrieve the current EPANET version of DLL|
 |getNodesInfo|Retrieves nodes info e.g. elevations, demand pattern indices, emitter coeff. , initial quality, source quality, source pattern indices, source type code, type indices|
 |getLinksInfo|Retrieves links info e.g. diameters, lengths, roughness coeff. , minor loss coeff. , initial status, initial settings, bulk reaction coeff. , wall reaction coeff. , nodes connecting link indices, type indices|
 |addCurve|Adds a new curve appended to the end of the existing curves|
 |addPattern|Adds a new time pattern to the network|
+|addNodeJunction|Adds a new junction|
+|addNodeReservoir|Adds a new reservoir|
+|addNodeTank|Adds a new tank|
+|addLinkPipeCV|Adds a new CV pipe|
+|addLinkPipe|Adds a new pipe|
+|addLinkPump|Adds a new pump|
+|addLinkValvePRV|Adds a new PRV valve|
+|addLinkValvePSV|Adds a new PSV valve|
+|addLinkValvePBV|Adds a new PBV valve|
+|addLinkValveFCV|Adds a new FCV valve|
+|addLinkValveTCV|Adds a new TCV valve|
+|addLinkValveGPV|Adds a new GPV valve|
+|deleteNode|Deletes a node|
+|deleteLink|Deletes a link|
 |closeHydraulicAnalysis|Closes the hydraulic analysis system, freeing all allocated memory|
 |closeNetwork|Closes down the Toolkit system|
 |closeQualityAnalysis|Closes the water quality analysis system, freeing all allocated memory|
@@ -196,11 +287,12 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |saveHydraulicsOutputReportingFile|Transfers results of a hydraulic simulation from the binary Hydraulics file to the binary Output file, where results are only reported at uniform reporting intervals|
 |saveInputFile|Writes all current network input data to a file using the format of an EPANET input file|
 |plot|Plot the network input file|
-|setControl|Sets the parameters of a simple control statement|
+|setControls|Sets the parameters of a simple control statement|
 |setCurve|Sets x,y values for a specific curve|
 |setCurveValue|Retrieves x,y point for a specific point number and curve|
 |setLinkBulkReactionCoeff|Sets the values of bulk reactions|
 |setLinkDiameter|Sets the values of diameters|
+|setLinkPumpHeadCurveIndex|Sets the curves index for pumps index|
 |setLinkInitialSetting|Sets the values of initial settings|
 |setLinkInitialStatus|Sets the values of initial status|
 |setLinkLength|Sets the values of lengths|
@@ -208,6 +300,15 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |setLinkRoughnessCoeff|Sets the values of roughness coeff.|
 |setLinkSettings|Sets the values of settings|
 |setLinkStatus|Sets the values of status|
+|setLinkTypePipe|Set the link type pipe for a specified link|
+|setLinkTypePipeCV|Set the link type cvpipe for a specified link|
+|setLinkTypePump|Set the link type pump for a specified link|
+|setLinkTypeValveFCV|Set the link type valve FCV for a specified link|
+|setLinkTypeValveGPV|Set the link type valve PCV for a specified link|
+|setLinkTypeValvePBV|Set the link type valve PBV for a specified link|
+|setLinkTypeValvePRV|Set the link type valve PRV for a specified link|
+|setLinkTypeValvePSV|Set the link type valve PSV for a specified link|
+|setLinkTypeValveTCV|Set the link type valve TCV for a specified link|
 |setLinkWallReactionCoeff|Sets the values of wall reactions|
 |setNodeBaseDemands|Sets the values of demands|
 |setNodeCoordinates|Sets node coordinates|
@@ -274,6 +375,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |unloadMSX|Closes the EPANET-MSX toolkit system|
 |getMSXAtol|Retrieves the absolute concentration tolerance|
 |getMSXRtol|Retrieves the relative concentration tolerance|
+|getMSXComputedQualitySpecie|Retrieves the quality values for specific specie (e.g getMSXComputedQualitySpecie('CL2'))|
 |getMSXComputedQualityLink|Retrieves the concentration of a chemical species at a specific link of the network at the current simulation time step|
 |getMSXComputedQualityNode|Retrieves the concentration of a chemical species at a specific node of the network at the current simulation time step.|
 |getMSXConstantsCount|Retrieves the number of constants|
@@ -417,6 +519,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |getBinTimesInfo|Retrieves the times info|
 |getBinPatternIndex|Retrieves the indices of all patterns|
 |getBinSimulationDuration|Retrieves the value of simulation duration|
+|getBinSections|Retrieves some basic sections from inp file|
 |getBinUnits|Retrieves the units used to express all flow rates|
 |setBinFlowUnitsAFD|Sets flow units to AFD|
 |setBinFlowUnitsCFS|Sets flow units to CFS|
@@ -443,7 +546,7 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |setBinLinkPumpStatus|Sets the values of pump status|
 |setBinLinkReactionCoeff|Sets the values of bulk and wall reaction coeff.|
 |setBinLinkValvesParameters|Sets the values of valve parameters (diameters, types, settings, minor losses)|
-|setBinNodeDemandPatternNameID|Sets the names of demand pattern IDs|
+|setBinNodeJunDemandPatternNameID|Sets the names of demand pattern IDs for junctions|
 |setBinNodeInitialQuality|Sets the values of initial qualities|
 |setBinNodeJunctionElevation|Sets the values of elevations for junctions|
 |setBinNodeJunctionsBaseDemands|Sets the values of base demands|
@@ -454,10 +557,10 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |setBinNodeSourceQuality|Sets the values of source qualities|
 |setBinNodeTankDiameter|Sets the values of tanks diameter|
 |setBinNodeTankElevation|Sets the values of tanks elevation|
-|setBinNodeTankInitLevel|Sets the values of tanks initial level|
-|setBinNodeTankMaxLevel|Sets the values of tanks maximum water level|
-|setBinNodeTankMinLevel|Sets the values of tanks minimum water level|
-|setBinNodeTankMinVol|Sets the values of tanks minimum water volume|
+|setBinNodeTankInitialLevel|Sets the values of tanks initial level|
+|setBinNodeTankMaximumWaterLevel|Sets the values of tanks maximum water level|
+|setBinNodeTankMinimumWaterLevel|Sets the values of tanks minimum water level|
+|setBinNodeTankMinimumWaterVolume|Sets the values of tanks minimum water volume|
 |setBinNodeTankParameters|Sets the values of reservoir parameters (elevations, initialLevels, minLevels, maxLevels, diameters, minVolume, mixfraction)|
 |setBinPattern|Sets all of the multiplier factors for a specific time pattern|
 |setBinQualityAge|Sets the type of water quality analysis to Age|
@@ -478,25 +581,91 @@ The `EPANET-Matlab Toolkit` is based/inspired on the [EPANET-Matlab Toolkit](htt
 |setBinTimeStatisticsNone|Sets the statistic type to None|
 |setBinTimeStatisticsRange|Sets the statistic type to Range|
 
+&uparrow; [Back to top](#table-of-contents)
 
-# List of EPANET 2.1 Functions Supported #
+## List of EPANET 2.1 Functions Supported
 
 |Function|Description|
 |--------|-----------|
-|ENgetpumptype|Retrieves the type of a pump for specific link index|
-|ENgetheadcurveindex|Retrieves index of a head curve for specific link index|
-|ENsetcurvevalue|Sets x,y point for a specific point and curve|
-|ENsetcurve|Sets x,y values for a specific curve|
 |ENaddcurve|Adds a new curve appended to the end of the existing curves|
-|ENgetcurvevalue|Retrieves x,y point for a specific point number and curve|
-|ENgetcurvelen|Retrieves number of points in a curve|
+|ENaddlink|Adds a new link| 
+|ENaddnode|Adds a new node| 
+|ENaddpattern|Adds a new time pattern to the network|
+|ENclose|Closes down the Toolkit system (including all files being processed)|
+|ENcloseH|Closes the hydraulic analysis system, freeing all allocated memory|
+|ENcloseQ|Closes the water quality analysis system, freeing all allocated memory|
+|ENdeletelink|Deletes a link| 
+|ENdeletenode|Deletes a node| 
+|ENepanet|Runs a complete EPANET simulation|
+|ENgetaveragepatternvalue|Retrieves the average value of a pattern|
+|ENgetbasedemand|Retrieves the nodes base demand for a category|
+|ENgetcontrol|Retrieves the parameters of a simple control statement|
+|ENgetcoord|Retrieves coordinate x, y for a node|
+|ENgetcount|Retrieves the number of network components of a specified type|
+|ENgetcurve|Retrieves a curve's properties|
 |ENgetcurveid|Retrieves ID of a curve with specific index|
 |ENgetcurveindex|Retrieves index of curve with specific ID|
-|ENsetcoord|Sets coordinate x, y for a node|
-|ENgetcoord|Retrieves coordinate x, y for a node|
-|ENgetstatistic|Retrieves hydraulic simulation statistic|
-|ENgetnumdemands|Retrieves the number of demand categories for a node|
-|ENgetbasedemand|Retrieves the nodes base demand for a category|
+|ENgetcurvelen|Retrieves number of points in a curve|
+|ENgetcurvevalue|Retrieves x,y point for a specific point number and curve|
 |ENgetdemandpattern|Retrieves the index of a demand pattern for a specific demand category of a node|
+|ENgeterror|Retrieves the text of the message associated with a particular error or warning code|
+|ENgetflowunits|Retrieves a code number indicating the units used to express all flow rates|
+|ENgetheadcurveindex|Retrieves index of a head curve for specific link index|
+|ENgetlinkid|Retrieves the ID label of a link with a specified index|
+|ENgetlinkindex|Retrieves the index of a link with a specified ID|
+|ENgetlinknodes|Retrieves the indexes of the end nodes of a specified link|
+|ENgetlinktype|Retrieves the link-type code for a specific link|
+|ENgetlinkvalue|Retrieves the value of a specific link parameter|
+|ENgetnodeid|Retrieves the ID label of a node with a specified index|
+|ENgetnodeindex|Retrieves the index of a node with a specified ID|
+|ENgetnodetype|Retrieves the node-type code for a specific node|
+|ENgetnodevalue|Retrieves the value of a specific link parameter|
+|ENgetnumdemands|Retrieves the number of demand categories for a node|
+|ENgetoption|Retrieves the value of a particular analysis option|
+|ENgetpatternid|Retrieves the ID label of a particular time pattern|
+|ENgetpatternindex|Retrieves the index of a particular time pattern|
+|ENgetpatternlen|Retrieves the number of time periods in a specific time pattern|
+|ENgetpatternvalue|Retrieves the multiplier factor for a specific time period in a time pattern|
+|ENgetpumptype|Retrieves the type of a pump for specific link index|
+|ENgetqualinfo|Retrieves quality analysis information (type, chemical name, units, trace node ID)|
+|ENgetqualtype|Retrieves the type of water quality analysis called for|
+|ENgetstatistic|Retrieves hydraulic simulation statistic|
+|ENgettimeparam|Retrieves the value of a specific analysis time parameter|
+|ENgetversion|Retrieves the version number|
+|ENinitH|Initializes hydraulic analysis|
+|ENinitQ|Initializes water quality analysis|
+|ENnextH|Determine time (in seconds) until next hydraulic event|
+|ENnextQ|Advances WQ simulation to next hydraulic event|
+|ENopen|Opens EPANET input file & reads in network data|
+|ENopenH|Sets up data structures for hydraulic analysis|
+|ENopenQ|Sets up data structures for WQ analysis|
+|ENreport|Writes simulation report to the report file|
+|ENresetreport|Resets report options to default values|
+|ENrunH|Run a hydraulic solution period|
+|ENrunQ|Retrieves hydraulic & WQ results at time t|
+|ENsaveH|Saves hydraulic results to binary file|
+|ENsavehydfile|Copies binary hydraulics file to disk|
+|ENsaveinpfile|Saves current data to "INP" formatted text file|
 |ENsetbasedemand|Sets the nodes base demand for a category|
-|ENgetaveragepatternvalue|Retrieves the average value of a pattern|
+|ENsetcontrol|Specify parameters to define a simple control|
+|ENsetcoord|Sets coordinate x, y for a node|
+|ENsetcurve|Sets x,y values for a specific curve|
+|ENsetcurvevalue|Sets x,y point for a specific point and curve|
+|ENsetdemandpattern|Sets the index of the demand pattern assigned to a node for a category index|
+|ENsetheadcurveindex|Sets the curve index for a specified pump index|
+|ENsetlinkvalue|Set a proprty value for a link|
+|ENsetnodevalue|Set a property value for a node|
+|ENsetoption|Set a value for an anlysis option|
+|ENsetpattern|Set multipliers for a specific pattern|
+|ENsetpatternvalue|Set the multiplier for a specific pattern at a specific period|
+|ENsetqualtype|Sets the type of water quality analysis called|
+|ENsetreport|Processes a reporting format command|
+|ENsetstatusreport|Sets the level of hydraulic status reporting|
+|ENsettimeparam|Set the value for a time parameter|
+|ENsolveH|Solves the network hydraulics for all time periods|
+|ENsolveQ|Solves for network water quality in all time periods|
+|ENstepQ|Advances WQ simulation by a single WQ time step|
+|ENusehydfile|Opens previously saved binary hydraulics file|
+|ENwriteline|Writes line of text to the report file|
+
+&uparrow; [Back to top](#table-of-contents)

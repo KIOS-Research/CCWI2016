@@ -9,7 +9,4 @@
   
   Analysis begun Wed Mar 13 14:35:05 2019
 
-  Processing MSX input file C:\Users\mkiria01\Dropbox\CCWI2016\CCWI2016\Arsenite_temp.msx
-  
-  Processing MSX input file C:\Users\mkiria01\Dropbox\CCWI2016\CCWI2016\Arsenite_temp.msx
-  
+  Analysis ended Wed Mar 13 14:35:05 2019

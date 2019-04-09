@@ -3744,24 +3744,25 @@ classdef epanet <handle
             % msx.patterns{1} = {''}; %patternID
             % msx.patterns{2} = {''}; %multiplier            
             space=5;
-            f = writenewTemp(msx.msxFile);
+            f = writenewTemp(msx.msxFileName);
             fprintf(f,'[TITLE]\n');
-            if isfield(msx,'titleDescription')
-                for i=1:length(msx.titleDescription)
-                    fprintf(f,msx.titleDescription{i});
-                end
+            if isfield(msx,'title')
+                fprintf(f,msx.title);
             end
 
             fprintf(f,'\n\n[OPTIONS]\n');
             options = {'AREA_UNITS', 'RATE_UNITS', 'SOLVER', 'COUPLING', 'COMPILER',...
                 'TIMESTEP', 'ATOL', 'RTOL'};
             spaces=blanks(space);
+
             if isfield(msx,'options')
                 for i=1:length(msx.options)
-                    fprintf(f,num2str(options{i}));
-                    fprintf(f,spaces);
-                    fprintf(f,num2str(msx.options{i}));
-                    fprintf(f,'\n');
+                    if isfield(msx.options,options{i})
+                        fprintf(f,num2str(options{i}));
+                        fprintf(f,spaces);
+                        fprintf(f,num2str(msx.options{i}));
+                        fprintf(f,'\n');
+                    end
                 end
             end
 

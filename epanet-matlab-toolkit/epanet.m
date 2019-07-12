@@ -4,10 +4,10 @@ classdef epanet <handle
     %
     %
     %   How to run: 
-    %   d=epanet('networks/Net1_Rossman2000.inp');
+    %   d=epanet('Net1.inp');
     %   
     %   To select a different DLL version:  
-    %   d=epanet('networks/Net1_Rossman2000.inp','epanet2');
+    %   d=epanet('Net1.inp','epanet2');
     %
     %   EPANET is software that models water distribution piping systems
     %   developed by the US EPA and provided under a public domain licence.
@@ -48,8 +48,8 @@ classdef epanet <handle
     %   permissions and limitations under the Licence.
     properties
         ControlLevelValues;          % The control level values
-        ControlLinkIndex;            % Set of control types in links
-        ControlNodeIndex;            % Set of control types in nodes
+        ControlLinkIndex;            % Set of control links index
+        ControlNodeIndex;            % Set of control nodes index
         ControlRules;                % Retrieves the parameters of all control statements
         ControlRulesCount;           % Number of controls
         Controls;                    % Controls info
@@ -61,11 +61,11 @@ classdef epanet <handle
         EnergyEfficiencyUnits;       % Units for efficiency
         EnergyUnits;                 % Units for energy
         Errcode;                     % Code for the EPANET error message
-        HeadCurveIndex;              % Head curve indices
         InputFile;                   % Name of the input file
         Iterations;                  % Iterations to reach solution
         LibEPANET;                   % EPANET library dll
         LibEPANETpath;               % EPANET library dll path
+        libFunctions;                % EPANET functions in dll
         LinkBulkReactionCoeff;       % Bulk reaction coefficient of each link
         LinkCount;                   % Number of links
         LinkDiameter;                % Diameter of each link
@@ -86,6 +86,7 @@ classdef epanet <handle
         LinkPipeNameID;              % Name ID of pipe links
         LinkPipeRoughnessCoeffUnits; % Pipe roughness coefficient units
         LinkPumpCount;               % Number of pumps
+        LinkPumpHeadCurveIndex;      % Head curve indices
         LinkPumpIndex;               % Index of pumps
         LinkPumpNameID;              % Name ID of pumps
         LinkPumpPatternIndex;        % Index of pump pattern
@@ -131,7 +132,7 @@ classdef epanet <handle
         NodeSourceTypeIndex;         % Index of source type
         NodeTankBulkReactionCoeff;   % Bulk reaction coefficients in tanks
         NodeTankCount;               % Number of tanks
-        NodeTankDiameter;            % Tank Diameters
+        NodeTankDiameter;            % Diameters of tanks
         NodeTankDiameterUnits;       % Units for tank diameters
         NodeTankIndex;               % Indices of Tanks
         NodeTankInitialLevel;        % Initial water level in tanks
@@ -152,7 +153,7 @@ classdef epanet <handle
         NodeTypeIndex;               % Index of nodetype
         OptionsAccuracyValue;        % Convergence value (0.001 is default)
         OptionsEmitterExponent;      % Exponent of pressure at an emmiter node (0.5 is default)
-        OptionsHeadloss;             % Headloss formula (Hazen-Williams, Darcy-Weisbach or Chezy-Manning)
+        OptionsHeadloss;             % Headloss formula (Hazen-Williams, Darcy-Weisbach or Chezy-Manning)*** Not implemented *** BinOptionsHeadloss
         OptionsHydraulics;           % Save or Use hydraulic soltion. *** Not implemented ***
         OptionsMaxTrials;            % Maximum number of trials (40 is default)
         OptionsPattern;              % *** Not implemented *** % but get with BinOptionsPattern
@@ -161,7 +162,7 @@ classdef epanet <handle
         OptionsSpecificGravity;      % *** Not implemented *** % but get with BinOptionsSpecificGravity
         OptionsUnbalanced;           % *** Not implemented *** % but get with BinOptionsUnbalanced
         OptionsViscosity;            % *** Not implemented *** % but get with BinOptionsViscosity
-        Pattern;                     % Get all patterns 
+        Pattern;                     % Get all patterns - matrix
         PatternAverageValue;         % Average value of patterns
         PatternCount;                % Number of patterns
         PatternDemandsUnits;         % Units for demands
@@ -179,6 +180,11 @@ classdef epanet <handle
         QualityUnits;                % Units for quality concentration.
         QualityWaterAgeUnits;        % Units for water age
         RelativeError;               % Relative error - hydraulic simulation statistic
+%         RulePremises;
+%         RuleTrueActions;
+%         RuleFalseActions;
+%         RulePriority;  
+        TempInpFile;                 % Name of the temporary input file
         TimeHaltFlag;                % Number of halt flag
         TimeHTime;                   % Number of htime
         TimeHydraulicStep;           % Hydraulic time step
@@ -194,6 +200,7 @@ classdef epanet <handle
         TimeStartTime;               % Number of start time
         TimeStatisticsIndex;         % Index of time series post-processing type ('NONE':0,'AVERAGE':1,'MINIMUM':2,'MAXIMUM':3, 'RANGE':4)
         TimeStatisticsType;          % Type of time series post-processing ('NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE')
+        ToolkitConstants;            % Contains all parameters from epanet2.h
         Units_SI_Metric;             % Equal with 1 if is SI-Metric
         Units_US_Customary;          % Equal with 1 if is US-Customary
         Version;                     % EPANET version
@@ -230,153 +237,153 @@ classdef epanet <handle
         MSXSpeciesATOL;              % Absolute tolerance used to determine when two concentration levels of a species are the same
         MSXSpeciesIndex;             % Index name of species
         MSXSpeciesNameID;            % ID name of species
-        MSXSpeciesRTOL;              % Relative accuracy level on a species’ concentration used to adjust time steps in the RK5 and ROS2 integration methods
+        MSXSpeciesRTOL;              % Relative accuracy level on a species concentration used to adjust time steps in the RK5 and ROS2 integration methods
         MSXSpeciesType;              % Type of all species, bulk or wall
         MSXSpeciesUnits;             % Species mass units
         MSXEquationsTanks;           % Species dynamics in tanks
         MSXEquationsTerms;           % Species dynamics in terms
         
         % Parameters used when the Binary mode is used 
-        Bin;
-        BinControlLinksID;
-        BinControlNodesID;
-        BinControlRulesCount;
-        BinControlsInfo;
-        BinCountInitialQualitylines;
-        BinCountPatternlines;
-        BinCountReactionlines;
-        BinCountStatuslines;
-        BinCurveAllLines;
-        BinCurveCount; % Number of curves
-        BinCurveNameID; %ID name of curves
-        BinCurveTypes; % Type of curves 
-        BinCurveXvalue; %X-value of curves
-        BinCurveYvalue; %Y-value of curves
-        BinLinkBulkReactionCoeff;
-        BinLinkCount;
-        BinLinkDiameters;
-        BinLinkFlowUnits;
-        BinLinkFromNode;
-        BinLinkGlobalBulkReactionCoeff;
-        BinLinkGlobalWallReactionCoeff;
-        BinLinkInitialStatus;
-        BinLinkInitialStatusNameID;
-        BinLinkLengths;
-        BinLinkNameID;
-        BinLinkPipeCount;
-        BinLinkPipeDiameters;
-        BinLinkPipeIndex;
-        BinLinkPipeLengths;
-        BinLinkPipeMinorLoss;
-        BinLinkPipeNameID;
-        BinLinkPipeRoughness;
-        BinLinkPipeStatus;
-        BinLinkPumpCount;
-        BinLinkPumpCurveNameID;
-        BinLinkPumpIndex;
-        BinLinkPumpNameID;
-        BinLinkPumpNameIDPower;
-        BinLinkPumpPatterns;
-        BinLinkPumpPower;
-        BinLinkPumpStatus;  
-        BinLinkPumpStatusNameID;   
-        BinLinkRoughnessCoeff;
-        BinLinkSettings;
-        BinLinkToNode;
-        BinLinkType;
-        BinLinkValveCount;
-        BinLinkValveDiameters;
-        BinLinkValveIndex;
-        BinLinkValveMinorLoss;
-        BinLinkValveNameID;
-        BinLinkValveSetting;
-        BinLinkValveStatus;
-        BinLinkValveStatusNameID;
-        BinLinkValveType;
-        BinLinkWallReactionCoeff;
-        BinNodeBaseDemands;
-        BinNodeCoordinates;
-        BinNodeCount;  
-        BinNodeDemandPatternNameID;
-        BinNodeElevations;
-        BinNodeInitialQuality;
-        BinNodeJunctionCount; 
-        BinNodeJunctionElevation;
-        BinNodeJunctionIndex;
-        BinNodeJunctionNameID;
-        BinNodeJunctionsBaseDemands;
-        BinNodeJunctionsBaseDemandsID;
-        BinNodeNameID;
-        BinNodePressureUnits;
-        BinNodeResDemandPatternNameID;
-        BinNodeReservoirCount; 
-        BinNodeReservoirElevation;
-        BinNodeReservoirIndex;
-        BinNodeReservoirNameID;
-        BinNodeSourcePatternIndex;
-        BinNodeSourcePatternNameID;
-        BinNodeSourceQuality;
-        BinNodeSourceType;
-        BinNodeSourceTypeCode;
-        BinNodeSourceTypeIndex;
-        BinNodeTankCount;
-        BinNodeTankDiameter;
-        BinNodeTankElevation;
-        BinNodeTankIndex;
-        BinNodeTankInitLevel;
-        BinNodeTankMaxLevel;
-        BinNodeTankMinimumFraction;
-        BinNodeTankMinLevel;
-        BinNodeTankMinVol;
-        BinNodeTankMixID;
-        BinNodeTankMixModel;
-        BinNodeTankNameID;
-        BinNodeTankReservoirCount;   
-        BinNodeType;
-        BinOptionsAccuracyValue;
-        BinOptionsDiffusivity;
-        BinOptionsEmitterExponent;
-        BinOptionsHeadloss;
-        BinOptionsMaxTrials;
-        BinOptionsPattern;
-        BinOptionsPatternDemandMultiplier;
-        BinOptionsQualityTolerance;
-        BinOptionsSpecificGravity;
-        BinOptionsUnbalanced;
-        BinOptionsViscosity;
-        BinPatternCount;
-        BinPatternLengths;
-        BinPatternMatrix;
-        BinPatternNameID;
-        BinPatternValue; 
-        BinQualityCode;
-        BinQualityTraceNodeID;
-        BinQualityTraceNodeIndex;
-        BinQualityType;% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-        BinQualityUnits;
-        BinRulesControlLinksID;
-        BinRulesControlNodesID;
-        BinRulesControlsInfo;
-        BinRulesCount;
-        BinUnits_SI_Metric;
-        BinTempfile;
-        BinTimeHydraulicStep;
-        BinTimePatternStart;
-        BinTimePatternStep;
-        BinTimeQualityStep;
-        BinTimeReportingStart;
-        BinTimeReportingStep;
-        BinTimeSimulationDuration;
-        BinTimeStatistics;
-        BinTimeStatisticsIndex;
-        BinUnits;
-        BinUnits_US_Customary;
+        Bin;                         % Check if use Bin functions (use saveInputFile if is 1)
+        BinControlLinksID;           % Set of control links ID
+        BinControlNodesID;           % Set of control nodes ID
+        BinControlRulesCount;        % Number of controls
+        BinControlsInfo;             % Controls info
+        BinCountInitialQualitylines; % Count lines used by quality section
+        BinCountPatternlines;        % Count lines used by pattern section
+        BinCountReactionlines;       % Count lines used by reaction section
+        BinCountStatuslines;         % Count lines used by status section
+        BinCurveAllLines;            % Curves info from section 
+        BinCurveCount;               % Number of curves
+        BinCurveNameID;              % ID name of curves
+        BinCurveTypes;               % Type of curves 
+        BinCurveXvalue;              % X-value of curves
+        BinCurveYvalue;              % Y-value of curves
+        BinLinkBulkReactionCoeff;    % Bulk reaction coefficient of each link
+        BinLinkCount;                % Number of links
+        BinLinkDiameters;            % Diameter of each link
+        BinLinkFlowUnits;            % Units of flow
+        BinLinkFromNode;             % IDs of node at start of link
+        BinLinkGlobalBulkReactionCoeff;% Global Bulk Reaction Coeff
+        BinLinkGlobalWallReactionCoeff;% Global Wall Reaction Coeff
+        BinLinkInitialStatus;        % Initial status of links
+        BinLinkInitialStatusNameID;  % Name ID of links where is status refers in BinLinkInitialStatus
+        BinLinkLengths;              % Length of links
+        BinLinkNameID;               % Name ID of links
+        BinLinkPipeCount;            % Number of pipes
+        BinLinkPipeDiameters;        % Diameter of each pipe
+        BinLinkPipeIndex;            % Index of pipe links
+        BinLinkPipeLengths;          % Length of pipes
+        BinLinkPipeMinorLoss;        % Minor loss coefficient of pipes
+        BinLinkPipeNameID;           % Name ID of pipes
+        BinLinkPipeRoughness;        % Roughness coefficient of pipes
+        BinLinkPipeStatus;           % Initial status of pipes
+        BinLinkPumpCount;            % Number of pumps
+        BinLinkPumpCurveNameID;      % Curve Name ID used from pumps
+        BinLinkPumpIndex;            % Index of pumps
+        BinLinkPumpNameID;           % Name ID of pumps
+        BinLinkPumpNameIDPower;      % Name ID of pumps with Power
+        BinLinkPumpPatterns;         % Patterns used from pumps
+        BinLinkPumpPower;            % Power of pumps
+        BinLinkPumpStatus;           % Initial status of pumps
+        BinLinkPumpStatusNameID;     % Name ID of pumps where is status refers in BinLinkPumpStatus
+        BinLinkRoughnessCoeff;       % Roughness coefficient of links
+        BinLinkSettings;             % Initial settings of links
+        BinLinkToNode;               % IDs of node at start of link
+        BinLinkType;                 % ID of link type
+        BinLinkValveCount;           % Number of valves
+        BinLinkValveDiameters;       % Diameter of each valve
+        BinLinkValveIndex;           % Index of valve links
+        BinLinkValveMinorLoss;       % Minor loss coefficient of valves
+        BinLinkValveNameID;          % Name ID of valves
+        BinLinkValveSetting;         % Initial settings of valves
+        BinLinkValveStatus;          % Initial status of valves
+        BinLinkValveStatusNameID;    % Name ID of valves where is status refers in BinLinkValveStatus
+        BinLinkValveType;            % Valve type, 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', 'GPV'
+        BinLinkWallReactionCoeff;    % Wall reaction coefficient of links
+        BinNodeBaseDemands;          % Base demands of nodes
+        BinNodeCoordinates;          % Coordinates for each node (long/lat & intermediate pipe coordinates) - vertices
+        BinNodeCount;                % Number of nodes
+        BinNodeJunDemandPatternNameID;% ID of demand patterns
+        BinNodeElevations;           % Elevation of nodes
+        BinNodeInitialQuality;       % Initial quality of nodes
+        BinNodeJunctionCount;        % Number of junctions
+        BinNodeJunctionElevation;    % Elevation of junctions
+        BinNodeJunctionIndex;        % Index of junctions
+        BinNodeJunctionNameID;       % Name ID of junctions
+        BinNodeJunctionsBaseDemands; % Base demands of junctions
+        BinNodeJunctionsBaseDemandsID;% Name ID of junctions where is basedemand refers in BinNodeJunctionsBaseDemands
+        BinNodeNameID;               % Name ID of nodes
+        BinNodePressureUnits;        % Units for Pressure
+        BinNodeResDemandPatternNameID;% ID of demand patterns for reservoirs
+        BinNodeReservoirCount;       % Number of reservoirs
+        BinNodeReservoirElevation;   % Elevation of reservoirs
+        BinNodeReservoirIndex;       % Index of reservoirs
+        BinNodeReservoirNameID;      % Name ID of reservoirs
+        BinNodeSourcePatternIndex;   % Index of pattern for node sources
+        BinNodeSourcePatternNameID;  % ID of pattern for node sources
+        BinNodeSourceQuality;        % Quality of node sources
+        BinNodeSourceType;           % Source Types
+        BinNodeSourceTypeIndex;      % Index of source type   
+        BinNodeTankCount;            % Number of tanks
+        BinNodeTankDiameter;         % Diameters of tanks
+        BinNodeTankElevation;        % Elevations of tanks
+        BinNodeTankIndex;            % Index of tanks
+        BinNodeTankInitialLevel;     % Initial water level in tanks
+        BinNodeTankMaximumWaterLevel;% Maximum water level in tanks
+        BinNodeTankMinimumFraction;  % Fraction of the total tank volume devoted to the inlet/outlet compartment
+        BinNodeTankMinimumWaterLevel;% Minimum water level
+        BinNodeTankMinimumWaterVolume;% Minimum water volume
+        BinNodeTankMixID;            % Name ID of tanks mix
+        BinNodeTankMixModel;         % Mix Model Type
+        BinNodeTankNameID;           % Name ID of tanks
+        BinNodeTankReservoirCount;   % Number of reservoirs
+        BinNodeType;                 % ID of node type
+        BinOptionsAccuracyValue;     % Convergence value (0.001 is default)
+        BinOptionsDiffusivity;       % Diffusivity value (1 is default)
+        BinOptionsEmitterExponent;   % Exponent of pressure at an emmiter node (0.5 is default)
+        BinOptionsHeadloss;          % Headloss formula (Hazen-Williams, Darcy-Weisbach or Chezy-Manning)
+        BinOptionsMaxTrials;         % Maximum number of trials (40 is default)
+        BinOptionsPattern;           % Pattern to be applied to all junctions where no demand pattern was specified
+        BinOptionsPatternDemandMultiplier;% Multiply demand values (1 is default)
+        BinOptionsQualityTolerance;  % Tolerance for water quality (0.01 is default)
+        BinOptionsSpecificGravity;   % Ratio of the density of the fluid being modeled to that of water at 4 deg. C (unitless)
+        BinOptionsUnbalanced;        % Determines what happens if a hydraulic solution cannot be reached (STOP is default) STOP/CONTINUE 
+        BinOptionsViscosity;         % Kinematic viscosity of the fluid being modeled relative to that of water at 20 deg. C (1.0 centistoke)(1 is default)
+        BinPatternCount;             % Number of patterns
+        BinPatternLengths;           % Length of the patterns
+        BinPatternMatrix;            % Get all patterns - matrix
+        BinPatternNameID;            % ID of the patterns
+        BinPatternValue;             % Patterns values for all
+        BinQualityCode;              % Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
+        BinQualityTraceNodeID;       % ID of trace node (0 if QualityCode<3)
+        BinQualityTraceNodeIndex;    % Index of trace node (0 if QualityCode<3)
+        BinQualityType;              % Water quality analysis type (None:0/Chemical:1/Age:2/Trace:3)
+        BinQualityUnits;             % Units for quality concentration.
+        BinRulesControlLinksID;      % Set of rule links ID
+        BinRulesControlNodesID;      % Set of rule nodes ID
+        BinRulesControlsInfo;        % Rules info from section 
+        BinRulesCount;               % Number of rules
+        BinUnits_SI_Metric;          % Equal with 1 if is SI-Metric
+        BinTempfile;                 % Name of the temp input file
+        BinTimeHydraulicStep;        % Hydraulic time step
+        BinTimePatternStart;         % Pattern start time
+        BinTimePatternStep;          % Pattern Step
+        BinTimeQualityStep;          % Quality Step
+        BinTimeReportingStart;       % Start time for reporting
+        BinTimeReportingStep;        % Reporting time step
+        BinTimeSimulationDuration;   % Simulation duration
+        BinTimeStatistics;           % Type of time series post-processing ('NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE')
+        BinTimeStatisticsIndex;      % Index of time series post-processing type ('NONE':0,'AVERAGE':1,'MINIMUM':2,'MAXIMUM':3, 'RANGE':4)
+        BinUnits;                    % Units of all parameters
+        BinUnits_US_Customary;       % Equal with 1 if is US-Customary 
+        CMDCODE;                     % Code=1 Hide, Code=0 Show (messages at command window)
     end
     properties (Constant = true)
-        classversion='2.1a';
+        classversion='2.1.8'; % 24/1/2019
         
         TYPECONTROL={'LOWLEVEL','HIGHLEVEL', 'TIMER', 'TIMEOFDAY'}; % Constants for control: 'LOWLEVEL','HILEVEL', 'TIMER', 'TIMEOFDAY'
-        TYPECURVE={'PUMP','EFFICIENCY','VOLUME','HEADLOSS'}; % Constants for pump curves: 'PUMP','EFFICIENCY','VOLUME','HEADLOSS'
+        TYPECURVE={'VOLUME','PUMP','EFFICIENCY','HEADLOSS','GENERAL'}; % Constants for pump curves: 'PUMP','EFFICIENCY','VOLUME','HEADLOSS' % EPANET Version 2.2
         TYPELINK={'CVPIPE', 'PIPE', 'PUMP', 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', 'GPV'}; % Constants for links: 'CVPIPE', 'PIPE', 'PUMP', 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', 'GPV', 'VALVE'
         TYPEMIXMODEL={'MIX1','MIX2', 'FIFO','LIFO'}; % Constants for mixing models: 'MIX1','MIX2', 'FIFO','LIFO'
         TYPENODE={'JUNCTION','RESERVOIR', 'TANK'}; % Contants for nodes: 'JUNCTION','RESERVOIR', 'TANK'
@@ -386,6 +393,7 @@ classdef epanet <handle
         TYPESOURCE={'CONCEN','MASS', 'SETPOINT', 'FLOWPACED'}; % Constants for sources: 'CONCEN','MASS', 'SETPOINT', 'FLOWPACED'
         TYPESTATS={'NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE'}; % Constants for statistics: 'NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE'
         TYPEUNITS={'CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD'}; % Constants for units: 'CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD'
+        TYPESTATUS = {'CLOSED','OPEN'}; % Link status
         
         MSXTYPEAREAUNITS={'FT2','M2','CM2'}; % sets the units used to express pipe wall surface area
         MSXTYPERATEUNITS={'SEC','MIN','HR','DAY'}; % is the units in which all reaction rate terms are expressed
@@ -396,96 +404,116 @@ classdef epanet <handle
         MSXTYPENODE=0; % for a node
         MSXTYPELINK=1; % for a link
     end
+    properties (Access = private)
+        solve = 1;
+    end
     methods
         function obj = epanet(varargin)
             %Constructor of the EPANET Class
-            try unloadlibrary('epanet2');catch e; end
-            try unloadlibrary('epanetmsx');catch e; end
+            try unloadlibrary('epanet2');catch; end
+            try unloadlibrary('epanetmsx');catch; end
             % DLLs
-            pwdepanet = fileparts(which('epanet.m'));
-            if strcmp(computer('arch'),'win64')% if no DLL is given, select one automatically
-                %if exist('64bit')==7 % name is a folder.
-                obj.LibEPANETpath = [pwdepanet,'\64bit\'];
-                %else
-                %    warning('Folder "64bit" does not exit.');return;
-                %end
-            elseif strcmp(computer('arch'),'win32')
-                %if exist('32bit')==7
-                obj.LibEPANETpath = [pwdepanet,'\32bit\'];
-                %else
-                %    warning('Folder "32bit" does not exit.');return;
-                %end
+            arch = computer('arch');
+            pwdepanet = fileparts(which(mfilename));
+            if strcmpi(arch,'win64')% if no DLL is given, select one automatically
+                obj.LibEPANETpath = [pwdepanet,'/64bit/'];
+            elseif strcmpi(arch,'win32')
+                obj.LibEPANETpath = [pwdepanet,'/32bit/'];
             end
-            warning on;   
-            obj.InputFile=which(varargin{1}); % Get name of INP file
+            if isunix
+                obj.LibEPANETpath = [pwdepanet,'/glnx/'];
+                obj.LibEPANET = 'libepanet';
+            end
+%             if ismac
+%                 obj.LibEPANETpath = [pwdepanet,'/mac/'];
+%                 obj.LibEPANET = 'libepanet';
+%             end
+            if ~isdeployed
+                obj.InputFile=which(varargin{1}); % Get name of INP file
+            else
+                obj.InputFile=varargin{1};   
+            end
             % Bin functions
-            if nargin==2
-                if strcmp(upper(varargin{2}),'BIN')
+            if nargin>1
+                if strcmpi(varargin{2},'BIN')
+                    obj.LibEPANET = '';
                     obj.BinTempfile=[obj.InputFile(1:end-4),'_temp.inp'];
                     copyfile(obj.InputFile,obj.BinTempfile);
-                    value=obj.getBinCurvesInfo;
-                    if ~isempty(value.BinCurveNameID), obj.remAddBinCurvesID(obj.BinTempfile);end
                     obj.InputFile=obj.BinTempfile;
                     obj.Bin=0;
+                    if nargin==3, if strcmpi(varargin{3},'LOADFILE'); return; end; end
                     obj = BinUpdateClass(obj);
                     obj.saveBinInpFile;
                     return;
                 end
             end
             obj.Bin=1;
-            if nargin==2
-                if ~isempty(find(obj.InputFile==' '))
-                    warning(['File "', obj.InputFile, '" is not a valid']);return;
+            [~,inp]=fileparts(obj.InputFile);
+            if isempty(inp)
+                error(['File "', varargin{1}, '" is not a valid.']);
+            end
+            if nargin==2 && ~strcmpi(varargin{2},'loadfile')% e.g. d = epanet('Net1.inp', 'epanet2');
+                [pwdDLL,obj.LibEPANET] = fileparts(varargin{2}); % Get DLL LibEPANET (e.g. epanet20012x86 for 32-bit)
+                if isempty(pwdDLL)
+                    pwdDLL = pwd;
                 end
-                obj.LibEPANET=varargin{2}; % Get DLL LibEPANET (e.g. epanet20012x86 for 32-bit)
-                obj.LibEPANETpath = [pwd,'\'];
-                warning off;
-                try  loadlibrary([obj.LibEPANETpath,obj.LibEPANET],[obj.LibEPANETpath,obj.LibEPANET,'.h']); 
-                catch e
-                   warning on; 
+                obj.LibEPANETpath = [pwdDLL,'\'];
+                try ENLoadLibrary(obj.LibEPANETpath,obj.LibEPANET,0);
+                catch
                    obj.Errcode=-1;
-                   warning(['File "', obj.LibEPANET, '" is not a valid win application.']);return;
+                   error(['File "', obj.LibEPANET, '" is not a valid win application.']); 
                 end
-                warning on;
-                
-            elseif nargin==1
+            elseif ~isunix
                 obj.LibEPANET = 'epanet2';
-                [~,inp]=fileparts(obj.InputFile);
-                if ~isempty(find(inp==' '))
-                    warning(['File "', obj.InputFile, '" is not a valid.']);return;
+            end
+            if ~isdeployed
+                if ~exist(obj.InputFile,'file')
+                    error(['File "', varargin{1}, '" does not exist in folder. (e.g. addpath(genpath(pwd));)']);
                 end
             end
-            if ~exist(obj.InputFile,'file')
-                warning(['File "', obj.InputFile, '" does not exist in folder.']);return;
+            %Load EPANET Library
+            ENLoadLibrary(obj.LibEPANETpath,obj.LibEPANET);
+            %Load parameters
+            obj.ToolkitConstants = obj.getToolkitConstants;
+            %Open the file
+            obj.solve = 0;
+            obj.Errcode=ENopen(obj.InputFile,[obj.InputFile(1:end-4),'.txt'],'',obj.LibEPANET);
+            if obj.Errcode
+                error('Could not open the file, please check INP file.');
             end
-            if strcmp(computer('arch'),'win64') || strcmp(computer('arch'),'win32')
-                %Load EPANET Library
-                warning off;
-                ENLoadLibrary(obj.LibEPANETpath,obj.LibEPANET);
-                warning on;
-                %Open the file
-                obj.Errcode=ENopen(obj.InputFile,'','',obj.LibEPANET);
-                if obj.Errcode~=0
-                    warning('Could not open the file, please check INP file.');return;
-                end
-                %Save the temporary input file
-                obj.BinTempfile=[obj.InputFile(1:end-4),'_temp.inp'];
-                obj.saveInputFile(obj.BinTempfile,1); %create a new INP file (Working Copy) using the SAVE command of EPANET
-                obj.closeNetwork;  %ENclose; %Close input file
-                %Load temporary file
-                obj.Errcode=ENopen(obj.BinTempfile,[obj.InputFile(1:end-4),'_temp.txt'], [obj.InputFile(1:end-4),'_temp.bin'],obj.LibEPANET);
-                if obj.Errcode~=0
-                    warning('Could not open the file, please check INP file.');return;
+            %Save the temporary input file
+            obj.BinTempfile=[obj.InputFile(1:end-4),'_temp.inp'];
+            obj.saveInputFile(obj.BinTempfile); %create a new INP file (Working Copy) using the SAVE command of EPANET
+            obj.closeNetwork;  %ENclose; %Close input file
+            %Load temporary file
+            obj.Errcode=ENopen(obj.BinTempfile,[obj.InputFile(1:end-4),'_temp.txt'], [obj.InputFile(1:end-4),'_temp.bin'],obj.LibEPANET);
+            if obj.Errcode
+                error('Could not open the file, please check INP file.');
+            else
+                disp(['Input File "', varargin{1}, '" loaded sucessfuly.'])
+            end
+            % Hide messages at command window from bin computed
+            obj.CMDCODE=1;
+            obj.TempInpFile = obj.BinTempfile;
+            % Load file only, return
+            if nargin==2
+                if strcmpi(varargin{2},'LOADFILE') 
+                    obj.libFunctions = libfunctions(obj.LibEPANET);
+                    return;
                 end
             end
-            
             % Get some link data
-            [obj.LinkDiameter,obj.LinkLength,obj.LinkRoughnessCoeff,obj.LinkMinorLossCoeff,obj.LinkInitialStatus,...
-            obj.LinkInitialSetting,obj.LinkBulkReactionCoeff,obj.LinkWallReactionCoeff,obj.NodesConnectingLinksIndex,...
-            obj.LinkTypeIndex] = obj.getLinksInfo;
+            lnkInfo = obj.getLinksInfo;
+            getFields_link_info = fields(lnkInfo);
+            for i=1:length(getFields_link_info)
+                obj.(getFields_link_info{i}) = eval(['lnkInfo.',getFields_link_info{i}]);
+            end
             % Get some node data
-            [obj.NodeElevations,obj.NodeDemandPatternIndex,obj.NodeEmitterCoeff,obj.NodeInitialQuality,...
-            obj.NodeSourceQuality,obj.NodeSourcePatternIndex,obj.NodeSourceTypeIndex,obj.NodeTypeIndex] = obj.getNodesInfo; 
+            ndInfo = obj.getNodesInfo;
+            getFields_node_info = fields(ndInfo);
+            for i=1:length(getFields_node_info)
+                obj.(getFields_node_info{i}) = eval(['ndInfo.',getFields_node_info{i}]);
+            end
             %Get all the countable network parameters
             obj.NodeCount = obj.getNodeCount;
             obj.NodeTankReservoirCount = obj.getNodeTankReservoirCount;
@@ -498,7 +526,7 @@ classdef epanet <handle
             obj.LinkType=obj.TYPELINK(obj.LinkTypeIndex+1); 
             obj.NodeType=obj.TYPENODE(obj.NodeTypeIndex+1);
             %Get all the countable network parameters
-            obj.LinkPipeCount = sum(strcmp(obj.LinkType,'PIPE'))+sum(strcmp(obj.LinkType,'CVPIPE')); %obj.getLinkPipeCount;
+            obj.LinkPipeCount = sum(strcmp(obj.LinkType,'PIPE')+strcmp(obj.LinkType,'CVPIPE')); %obj.getLinkPipeCount;
             obj.LinkPumpCount = sum(strcmp(obj.LinkType,'PUMP')); %obj.getLinkPumpCount;
             obj.NodeReservoirCount = sum(strcmp(obj.NodeType,'RESERVOIR')); %obj.getNodeReservoirCount;
             obj.NodeTankCount = obj.NodeCount-obj.NodeJunctionCount-obj.NodeReservoirCount; %obj.getNodeTankCount;
@@ -558,10 +586,12 @@ classdef epanet <handle
             obj.QualityCode = obj.getQualityCode;
             obj.QualityTraceNodeIndex = obj.getQualityTraceNodeIndex;
 %             obj.QualityType = obj.getQualityType;
-            n = obj.getQualityInfo;
-            obj.QualityChemUnits = n.QualityChemUnits;
-            obj.QualityChemName= n.QualityChemName;
-            
+            obj.libFunctions = libfunctions(obj.LibEPANET);
+            if sum(strcmp(obj.libFunctions,'ENgetqualinfo'))
+                n = obj.getQualityInfo;
+                obj.QualityChemUnits = n.QualityChemUnits;
+                obj.QualityChemName= n.QualityChemName;
+            end
             %Get time parameters
             obj.TimeSimulationDuration = obj.getTimeSimulationDuration;
             obj.TimeHydraulicStep = obj.getTimeHydraulicStep;
@@ -576,7 +606,7 @@ classdef epanet <handle
             obj.TimeReportingPeriods = obj.getTimeReportingPeriods;
             % Get EPANET version
             obj.Version = obj.getVersion;
-            try%New version dev2.1.dll LibEPANET
+            try%EPANET Version 2.1.dll LibEPANET
                 obj.TimeStartTime = obj.getTimeStartTime;
                 obj.TimeHTime = obj.getTimeHTime;
                 obj.TimeHaltFlag = obj.getTimeHaltFlag;
@@ -590,13 +620,13 @@ classdef epanet <handle
                 obj.Iterations = n.Iterations;
                 obj.NodeDemandPatternNameID = obj.getNodeDemandPatternNameID;
                 obj.NodeDemandPatternIndex = obj.getNodeDemandPatternIndex;
-                obj.HeadCurveIndex = obj.getHeadCurveIndex;
+                obj.LinkPumpHeadCurveIndex = obj.getLinkPumpHeadCurveIndex;
                 obj.LinkPumpPatternNameID = obj.getLinkPumpPatternNameID;
                 obj.LinkPumpPatternIndex = obj.getLinkPumpPatternIndex;
                 obj.LinkPumpTypeCode = obj.getLinkPumpTypeCode;
                 obj.LinkPumpType = obj.getLinkPumpType;
-                obj.CurvesInfo = obj.getCurvesInfo; % New version dev2.1
-            catch e
+                obj.CurvesInfo = obj.getCurvesInfo; % EPANET Version 2.1
+            catch
             end
             %Get data from raw file (for information which cannot be
             %accessed by the epanet library)
@@ -607,62 +637,23 @@ classdef epanet <handle
             obj.NodeCoordinates{3} = value{3};
             obj.NodeCoordinates{4} = value{4};
             
-            %     US Customary - SI metric
-            if find(strcmp(obj.LinkFlowUnits, obj.TYPEUNITS))<6
-                obj.Units_US_Customary=1;
-            else
-                obj.Units_SI_Metric=1;
-            end
-
-            if obj.Units_US_Customary==1;
-                obj.NodePressureUnits='pounds per square inch';
-                obj.PatternDemandsUnits=obj.LinkFlowUnits;
-                obj.LinkPipeDiameterUnits='inches';
-                obj.NodeTankDiameterUnits='feet';
-                obj.EnergyEfficiencyUnits='percent';
-                obj.NodeElevationUnits='feet';
-                obj.NodeDemandUnits=obj.LinkFlowUnits;
-                obj.NodeEmitterCoefficientUnits='flow units @ 1 psi drop';
-                obj.EnergyUnits='kwatt-hours';
-                obj.LinkFrictionFactorUnits='unitless';
-                obj.NodeHeadUnits='feet';
-                obj.LinkLengthsUnits='feet';
-                obj.LinkMinorLossCoeffUnits='unitless';
-                obj.LinkPumpPowerUnits='horsepower';
-                obj.QualityReactionCoeffBulkUnits='1/day (1st-order)';
-                obj.QualityReactionCoeffWallUnits='mass/sq-ft/day (0-order), ft/day (1st-order)';
-                obj.LinkPipeRoughnessCoeffUnits='millifeet(Darcy-Weisbach), unitless otherwise';
-                obj.QualitySourceMassInjectionUnits='mass/minute';
-                obj.LinkVelocityUnits='ft/sec';
-                obj.NodeTankVolumeUnits='cubic feet';
-                obj.QualityWaterAgeUnits='hours';
-            else % SI Metric
-                obj.NodePressureUnits='meters';
-                obj.PatternDemandsUnits=obj.LinkFlowUnits;
-                obj.LinkPipeDiameterUnits='millimeters';
-                obj.NodeTankDiameterUnits='meters';
-                obj.EnergyEfficiencyUnits='percent';
-                obj.NodeElevationUnits='meters';
-                obj.NodeDemandUnits=obj.LinkFlowUnits;
-                obj.NodeEmitterCoefficientUnits='flow units @ 1 meter drop';
-                obj.EnergyUnits='kwatt-hours';
-                obj.LinkFrictionFactorUnits='unitless';
-                obj.NodeHeadUnits='meters';
-                obj.LinkLengthsUnits='meters';
-                obj.LinkMinorLossCoeffUnits='unitless';
-                obj.LinkPumpPowerUnits='kwatts';
-                obj.QualityReactionCoeffBulkUnits='1/day (1st-order)';
-                obj.QualityReactionCoeffWallUnits='mass/sq-m/day(0-order), meters/day (1st-order)';
-                obj.LinkPipeRoughnessCoeffUnits='mm(Darcy-Weisbach), unitless otherwise';
-                obj.QualitySourceMassInjectionUnits='mass/minute';
-                obj.LinkVelocityUnits='meters/sec';
-                obj.NodeTankVolumeUnits='cubic meters';
-                obj.QualityWaterAgeUnits='hours';
-            end
-            
+            % US Customary - SI metric
+            infoUnits = obj.getUnits;
+            getFields_infoUnits = fields(infoUnits);
+            for i=1:length(getFields_infoUnits)
+                obj.(getFields_infoUnits{i}) = eval(['infoUnits.', getFields_infoUnits{i}]);
+            end            
         end % End of epanet class constructor
         function Errcode = loadEPANETFile(obj,varargin)
-           [Errcode] = ENopen(varargin{1},[varargin{1}(1:end-4),'.txt'],[varargin{1}(1:end-4),'.bin'],obj.LibEPANET); 
+            %Load epanet file when use bin functions
+            % example: 
+            %   d.loadEPANETFile(d.TempInpFile);
+            obj.solve = 0;
+            if nargin==2
+                [Errcode] = ENopen(varargin{1},[varargin{1}(1:end-4),'.txt'],[varargin{1}(1:end-4),'.bin'],obj.LibEPANET); 
+            else
+                [Errcode] = ENopen(varargin{1},varargin{2},varargin{3},obj.LibEPANET); 
+            end
         end
         function [value] = plot(obj,varargin)
             %Plots network in a new Matlab figure
@@ -679,82 +670,174 @@ classdef epanet <handle
             % 'axes': axes coordinates
             % 'linksindex': yes
             % 'nodesindex': yes
+            % 'legend': show/hide
+            % 'extend': yes/no
+            % 'legendposition':
+                %       'North'              inside plot box near top
+                %       'South'              inside bottom
+                %       'East'               inside right
+                %       'West'               inside left
+                %       'NorthEast'          inside top right (default for 2-D plots)
+                %       'NorthWest'          inside top left
+                %       'SouthEast'          inside bottom right
+                %       'SouthWest'          inside bottom left
+                %       'NorthOutside'       outside plot box near top
+                %       'SouthOutside'       outside bottom
+                %       'EastOutside'        outside right
+                %       'WestOutside'        outside left
+                %       'NorthEastOutside'   outside top right (default for 3-D plots)
+                %       'NorthWestOutside'   outside top left
+                %       'SouthEastOutside'   outside bottom right
+                %       'SouthWestOutside'   outside bottom left
+                %       'Best'               least conflict with data in plot
+                %       'BestOutside'        least unused space outside plot
             % Example:
-            % d.plot('nodes','yes','links','yes','highlightnode',{'10','11'},'highlightlink',{'10'},'fontsize',8);
-            % d.plot('line','no');
-            % d.plot('point','no','linksindex','yes');
-            % d.plot('linksindex','yes','fontsize',8);
-            % d.plot('nodesindex','yes','fontsize',14);
-            [value] = ENplot(obj,'bin',0,varargin{:});
+            %   d.plot('nodes','yes','links','yes','highlightnode',{'10','11'},
+%             'highlightlink',{'10'},'fontsize',8);
+            %   d.plot('line','no');
+            %   d.plot('point','no','linksindex','yes');
+            %   d.plot('linksindex','yes','fontsize',8);
+            %   d.plot('nodesindex','yes','fontsize',14);
+            %   f=figure()
+            %   d.plot('axes', h) % d.plot('axes', handles.axes) #gui
+            %   d.plot('legend','hide')
+            %   d.plot('legendposition','northwest')
+            %   d = epanet('Net1.inp');
+            %   nodeSet1={'10','11','22'};
+            %   nodeSet2={'21','23','31'};
+            %   colorNodeSet1={'r','r','r'};
+            %   colorNodeSet2={'g','g','g'};
+            %   linkSet1={'111','122','121'};
+            %   linkSet2={'110','12','113'};
+            %   colorLinkSet1={'k','k','k'};
+            %   colorLinkSet2={'y','y','y'};
+            %   d.plot('nodes','yes','links','yes','highlightnode',[nodeSet1 nodeSet2],'colornode',[colorNodeSet1 colorNodeSet2],...
+            %   'highlightlink',[linkSet1 linkSet2],'colorlink',[colorLinkSet1 colorLinkSet2])
+            %   
+            %   % Highlight multiple links with different colors #nodes
+            %   linkSet1=d.getLinkNameID(1:4);
+            %   colorLinkSet1=repmat({'r'},1,length(linkSet1));
+            %   linkSet2=d.getLinkNameID([5,6,7,8]);
+            %   colorLinkSet2=repmat({'g'},1,length(linkSet2));
+            %   d.plot('highlightlink',[linkSet1 linkSet2],'colorlink',[colorLinkSet1 colorLinkSet2])
+            
+            [value] = plotnet(obj,'bin',0,varargin{:});
         end
-        function value = getControls(obj)
+        function value = getControls(obj, varargin)
             %Retrieves the parameters of all control statements
-            cnt=obj.getControlRulesCount;
-            if cnt
-                obj.ControlTypes{cnt}=[];
-                obj.ControlTypesIndex(cnt)=NaN;
-                obj.ControlLinkIndex(cnt)=NaN;
-                obj.ControlSettings(cnt)=NaN;
-                obj.ControlNodeIndex(cnt)=NaN;
-                obj.ControlLevelValues(cnt)=NaN;
-                for i=1:cnt
-                    [obj.Errcode, obj.ControlTypesIndex(i),obj.ControlLinkIndex(i),obj.ControlSettings(i),obj.ControlNodeIndex(i),obj.ControlLevelValues(i)] = ENgetcontrol(i,obj.LibEPANET);
-                    obj.ControlTypes(i)={obj.TYPECONTROL(obj.ControlTypesIndex(i)+1)};
-                    value{i}={obj.ControlTypes{i},obj.ControlTypesIndex(i),obj.ControlLinkIndex(i),obj.ControlSettings(i),obj.ControlNodeIndex(i),obj.ControlLevelValues(i)};
+            indices = getControlIndices(obj,varargin);j=1;            
+            value=struct();
+            obj.ControlTypes={};
+            for i=indices
+                [obj.Errcode, obj.ControlTypesIndex(j),...
+                    obj.ControlLinkIndex(j), obj.ControlSettings(j),...
+                    obj.ControlNodeIndex(j),obj.ControlLevelValues(j)]...
+                    = ENgetcontrol(i,obj.LibEPANET);
+                if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+                obj.ControlTypes(j)=obj.TYPECONTROL(obj.ControlTypesIndex(j)+1);
+                value(j).Type = obj.ControlTypes{j};
+                %value{i}.TypeIndex = obj.ControlTypesIndex(i);
+                value(j).LinkID = obj.getLinkNameID{obj.ControlLinkIndex(j)};
+                if all(obj.ControlSettings(j) ~= [0, 1])
+                    value(j).Setting = obj.ControlSettings(j);
+                else
+                    value(j).Setting = obj.TYPESTATUS{obj.ControlSettings(j)+1};
                 end
-            else
-                value=-1;
+                if obj.ControlNodeIndex(j)
+                    value(j).NodeID = obj.getNodeNameID{obj.ControlNodeIndex(j)};
+                else
+                    value(j).NodeID = NaN;
+                end
+                value(j).Value = obj.ControlLevelValues(j);   
+                switch obj.ControlTypes{j}
+                    case 'LOWLEVEL'
+                        value(j).Control = ['LINK ',value(j).LinkID,' ',...
+                            value(j).Setting,' IF NODE ',value(j).NodeID,...
+                            ' BELOW ',num2str(value(j).Value)];
+                    case 'HIGHLEVEL'
+                        value(j).Control = ['LINK ',value(j).LinkID,' ',...
+                            value(j).Setting,' IF NODE ',value(j).NodeID,...
+                            ' ABOVE ',num2str(value(j).Value)];
+                    case 'TIMER'
+                        value(j).Control = ['LINK ',value(j).LinkID,' ',...
+                            num2str(value(j).Setting),' AT TIME ',num2str(value(j).Value)];
+                    case 'TIMEOFDAY'
+                        value(j).Control = ['LINK ',value(j).LinkID,' ',...
+                            num2str(value(j).Setting),' AT CLOCKTIME ',num2str(value(j).Value)];
+                end
+                j=j+1;
             end
         end
+%         function value = getRules(obj)
+%             value={};
+%             cnt=obj.getRuleCount;
+%             if cnt
+%                 obj.RulePremises(cnt)=NaN;
+%                 obj.RuleTrueActions(cnt)=NaN;
+%                 obj.RuleFalseActions(cnt)=NaN;
+%                 obj.RulePriority(cnt)=NaN;
+%                 for i=1:cnt
+%                     [obj.Errcode, obj.RulePremises(i), obj.RuleTrueActions(i), obj.RuleFalseActions(i), obj.RulePriority(i)] = ENgetrule(i, obj.LibEPANET);
+%                     value{i}={obj.RulePremises(i), obj.RuleTrueActions(i),obj.RuleFalseActions(i),obj.RulePriority(i)};
+%                 end
+%             end
+%         end
         function value = getNodeCount(obj)
             % Retrieves the number of nodes
-            [obj.Errcode, value] = ENgetcount(0,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_NODECOUNT,obj.LibEPANET);
         end
         function value = getNodeTankReservoirCount(obj)
             % Retrieves the number of tanks
-            [obj.Errcode, value] = ENgetcount(1,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_TANKCOUNT,obj.LibEPANET);
         end
         function value = getLinkCount(obj)
-            % Retrieves the number of links
-            [obj.Errcode, value] = ENgetcount(2,obj.LibEPANET);
+            %Retrieves the number of links
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_LINKCOUNT,obj.LibEPANET);
         end
         function value = getPatternCount(obj)
-            % Retrieves the number of patterns
-            [obj.Errcode, value] = ENgetcount(3,obj.LibEPANET);
+            %Retrieves the number of patterns
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_PATCOUNT,obj.LibEPANET);
         end
         function value = getCurveCount(obj)
-            % Retrieves the number of curves
-            [obj.Errcode, value] = ENgetcount(4,obj.LibEPANET);
+            %Retrieves the number of curves
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_CURVECOUNT,obj.LibEPANET);
         end
         function value = getControlRulesCount(obj)
-            % Retrieves the number of controls
-            [obj.Errcode, value] = ENgetcount(5,obj.LibEPANET);
+            %Retrieves the number of controls
+            [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_CONTROLCOUNT,obj.LibEPANET);
         end
+%         function value = getRuleCount(obj)
+%             %Retrieves the number of rules
+%             [obj.Errcode, value] = ENgetcount(obj.ToolkitConstants.EN_RULECOUNT,obj.LibEPANET);
+%         end
         function value = getNodeTankCount(obj)
-            % Retrieves the number of Tanks
+            %Retrieves the number of Tanks
             value = sum(strcmp(obj.getNodeType,'TANK'));
         end
         function value = getNodeReservoirCount(obj)
-            % Retrieves the number of Reservoirs
+            %Retrieves the number of Reservoirs
             value = sum(strcmp(obj.getNodeType,'RESERVOIR'));
         end
         function value = getNodeJunctionCount(obj)
-            % Retrieves the number of junction nodes
-            value = sum(strcmp(obj.getNodeType,'JUNCTION'));
+            %Retrieves the number of junction nodes
+            value = obj.getNodeCount - obj.getNodeTankReservoirCount;
         end
         function value = getLinkPipeCount(obj)
-            % Retrieves the number of pipes
-            value = sum(strcmp(obj.getLinkType,'PIPE'))+sum(strcmp(obj.getLinkType,'CVPIPE'));
+            %Retrieves the number of pipes
+            LinkType1=obj.getLinkType;
+            value = sum(strcmp(LinkType1,'PIPE')+strcmp(LinkType1,'CVPIPE'));
         end
         function value = getLinkPumpCount(obj)
-            % Retrieves the number of pumps
+            %Retrieves the number of pumps
             value = sum(strcmp(obj.getLinkType,'PUMP'));
         end
         function value = getLinkValveCount(obj)
-            % Retrieves the number of valves
-            value = obj.getLinkCount - (obj.getLinkPipeCount + obj.getLinkPumpCount);
+            %Retrieves the number of valves
+            LinkType1=obj.getLinkType;
+            pipepump = sum(strcmp(LinkType1,'PIPE')+strcmp(LinkType1,'CVPIPE')+strcmp(LinkType1,'PUMP'));
+            value = obj.getLinkCount - pipepump;
         end
-        function errmssg = getError(obj,Errcode)
+        function [errmssg, Errcode] = getError(obj,Errcode)
             %Retrieves the text of the message associated with a particular error or warning code.
             [errmssg , Errcode] = ENgeterror(Errcode,obj.LibEPANET);
         end
@@ -764,23 +847,20 @@ classdef epanet <handle
             value=obj.TYPEUNITS(flowunitsindex+1);
         end
         function value = getLinkNameID(obj,varargin)
-            % Retrieves the ID label(s) of all links, or the IDs of an index set of links
+            %Retrieves the ID label(s) of all links, or the IDs of an index set of links
             if isempty(varargin)
-                value{obj.getLinkCount}=[];
+                value=cell(1, obj.getLinkCount);
                 for i=1:obj.getLinkCount
                     [obj.Errcode, value{i}]=ENgetlinkid(i,obj.LibEPANET);
                 end
             else
                 k=1;
-                if ~isempty(varargin{1})
-                    value{length(varargin{1})}=[];
-                    for i=varargin{1}
-                        [obj.Errcode, value{k}]=ENgetlinkid(i,obj.LibEPANET);
-                        if obj.Errcode==204, error(obj.getError(obj.Errcode)), return; end   
-                        k=k+1;
-                    end
-                else
-                    value=[];
+                value = cell(1, length(varargin{1}));
+                if isempty(varargin{1}), varargin{1}=0; end
+                for i=varargin{1}
+                    [obj.Errcode, value{k}]=ENgetlinkid(i,obj.LibEPANET);
+                    if obj.Errcode==204, value=[];  return; end   
+                    k=k+1;
                 end
             end
         end
@@ -802,30 +882,33 @@ classdef epanet <handle
                 value=1:obj.getLinkCount;
             elseif isa(varargin{1},'cell')
                 k=1;
+                value = zeros(1, length(varargin{1}));
                 for j=1:length(varargin{1})
                     [obj.Errcode, value(k)] = ENgetlinkindex(varargin{1}{j},obj.LibEPANET);
                     k=k+1;
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = ENgetlinkindex(varargin{1},obj.LibEPANET);
+            else
+                disp('Run function: getLinkIndex({''linkID''})) or getLinkIndex(''linkID''))');
             end
         end
         function value = getLinkPipeIndex(obj)
             %Retrieves the pipe indices
             tmpLinkTypes=obj.getLinkType;
             value = find(strcmp(tmpLinkTypes,'PIPE'));
-%             if isempty(value), value=-1; end
         end
-        function value = getLinkPumpIndex(obj)
+        function value = getLinkPumpIndex(obj, varargin)
             %Retrieves the pump indices
             tmpLinkTypes=obj.getLinkType;
             value = find(strcmp(tmpLinkTypes,'PUMP'));
-%             if isempty(value), value=-1; end
+            if ~isempty(varargin)
+                value = value(varargin{1});
+            end
         end
         function value = getLinkValveIndex(obj)
             %Retrieves the valve indices
             value = obj.getLinkPipeCount+obj.getLinkPumpCount+1:obj.getLinkCount;
-%             if isempty(value), value=-1; end
         end
         function value = getLinkNodesIndex(obj)
             %Retrieves the indexes of the from/to nodes of all links.
@@ -837,207 +920,217 @@ classdef epanet <handle
         end
         function value = getNodesConnectingLinksID(obj)
             %Retrieves the id of the from/to nodes of all links.
+            value={};
             obj.NodesConnectingLinksIndex=obj.getLinkNodesIndex;
             if obj.getLinkCount
                 value(:,1)=obj.getNodeNameID(obj.NodesConnectingLinksIndex(:,1)');
-                value(:,2) = obj.getNodeNameID(obj.NodesConnectingLinksIndex(:,2)');
-            else
-                value=-1;
+                value(:,2)=obj.getNodeNameID(obj.NodesConnectingLinksIndex(:,2)');
             end
         end
         function value = getLinkType(obj, varargin)
             %Retrieves the link-type code for all links.
-            indices = getLinkIndices(obj,varargin);
-            value=obj.TYPELINK(obj.getLinkTypeIndex(indices)+1);
+            if ~isempty(varargin), varargin=varargin{1}; end
+            value=obj.TYPELINK(obj.getLinkTypeIndex(varargin)+1);
         end
         function value = getLinkTypeIndex(obj, varargin)
             %Retrieves the link-type code for all links.
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
                 [obj.Errcode,value(j)] = ENgetlinktype(i,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end  
                 j=j+1;
             end
         end
-        function [LinkDiameter,LinkLength,LinkRoughnessCoeff,LinkMinorLossCoeff,LinkInitialStatus,...
-                LinkInitialSetting,LinkBulkReactionCoeff,LinkWallReactionCoeff,NodesConnectingLinksIndex,...
-                LinkTypeIndex] = getLinksInfo(obj)
+        function [value] = getLinksInfo(obj)
+            %Retrieves all link info
+            value = struct();
             for i=1:obj.getLinkCount
-                [~, LinkDiameter(i)] = ENgetlinkvalue(i,0,obj.LibEPANET);
-                [~, LinkLength(i)] = ENgetlinkvalue(i,1,obj.LibEPANET);
-                [~, LinkRoughnessCoeff(i)] = ENgetlinkvalue(i,2,obj.LibEPANET);
-                [~, LinkMinorLossCoeff(i)] = ENgetlinkvalue(i,3,obj.LibEPANET);
-                [~, LinkInitialStatus(i)] = ENgetlinkvalue(i,4,obj.LibEPANET);
-                [~, LinkInitialSetting(i)] = ENgetlinkvalue(i,5,obj.LibEPANET);
-                [~, LinkBulkReactionCoeff(i)] = ENgetlinkvalue(i,6,obj.LibEPANET);
-                [~, LinkWallReactionCoeff(i)] = ENgetlinkvalue(i,7,obj.LibEPANET);
-                [~,NodesConnectingLinksIndex(i,1),NodesConnectingLinksIndex(i,2)] = ENgetlinknodes(i,obj.LibEPANET);
-                [~,LinkTypeIndex(i)] = ENgetlinktype(i,obj.LibEPANET);
+                [~, value.LinkDiameter(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_DIAMETER,obj.LibEPANET);
+                [~, value.LinkLength(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_LENGTH,obj.LibEPANET);
+                [~, value.LinkRoughnessCoeff(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_ROUGHNESS,obj.LibEPANET);
+                [~, value.LinkMinorLossCoeff(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_MINORLOSS,obj.LibEPANET);
+                [~, value.LinkInitialStatus(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_INITSTATUS,obj.LibEPANET);
+                [~, value.LinkInitialSetting(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_INITSETTING,obj.LibEPANET);
+                [~, value.LinkBulkReactionCoeff(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_KBULK,obj.LibEPANET);
+                [~, value.LinkWallReactionCoeff(i)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_KWALL,obj.LibEPANET);
+                [~,value.NodesConnectingLinksIndex(i,1),value.NodesConnectingLinksIndex(i,2)] = ENgetlinknodes(i,obj.LibEPANET);
+                [~,value.LinkTypeIndex(i)] = ENgetlinktype(i,obj.LibEPANET);
             end
         end
         function value = getLinkDiameter(obj, varargin)
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             %Retrieves the value of all link diameters
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,0,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_DIAMETER,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkLength(obj, varargin)
             %Retrieves the value of all link lengths
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,1,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_LENGTH,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end 
                 j=j+1;
             end
         end
         function value = getLinkRoughnessCoeff(obj, varargin)
             %Retrieves the value of all link roughness
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,2,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_ROUGHNESS,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkMinorLossCoeff(obj, varargin)
             %Retrieves the value of all link minor loss coefficients
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,3,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_MINORLOSS,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkInitialStatus(obj, varargin)
             %Retrieves the value of all link initial status
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,4,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_INITSTATUS,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkInitialSetting(obj, varargin)
             %Retrieves the value of all link roughness for pipes or initial speed for pumps or initial setting for valves
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,5,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_INITSETTING,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkBulkReactionCoeff(obj, varargin)
             %Retrieves the value of all link bulk reaction coefficients
-            value=[];
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,6,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_KBULK,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkWallReactionCoeff(obj, varargin)
             %Retrieves the value of all link wall reaction coefficients
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,7,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_KWALL,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkFlows(obj, varargin)
             %Retrieves the value of all computed link flow rates
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,8,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_FLOW,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkVelocity(obj, varargin)
             %Retrieves the value of all computed link velocities
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,9,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_VELOCITY,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkHeadloss(obj, varargin)
             %Retrieves the value of all computed link headloss
-            value=[];
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,10,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_HEADLOSS,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkStatus(obj, varargin)
             %Retrieves the value of all computed link status (0 = closed, 1 = open)
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,11,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_STATUS,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkSettings(obj, varargin)
             %Retrieves the value of all computed link roughness for pipes or actual speed for pumps or actual setting for valves
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,12,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_SETTING,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
-        function value = getLinkPumpEnergy(obj, varargin)
+        function value = getLinkEnergy(obj, varargin)
             %Retrieves the value of all computed energy in kwatts
-            indices = getLinkIndices(obj,varargin);j=1;
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,13,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_ENERGY,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkQuality(obj, varargin)
-            %New version dev2.1
-            indices = getLinkIndices(obj,varargin);j=1;
+            %EPANET Version 2.1 #crash_matlab #check_this
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetlinkvalue(i,14,obj.LibEPANET);  
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_LINKQUAL,obj.LibEPANET);  
+                if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+                j=j+1;
+            end
+        end
+        function value = getLinkEfficiency(obj, varargin)
+            %EPANET Version 2.1
+            %Retrieves link efficiency
+            [indices, value] = getLinkIndices(obj,varargin);j=1;
+            for i=indices
+                [obj.Errcode, value(j)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_EFFICIENCY,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getLinkPumpPatternIndex(obj)
-            %New version dev2.1
-            value=zeros(1,obj.getLinkPumpCount);v=1;
+            %EPANET Version 2.1
+            %Retrieves link pump pattern index
+            value = int32(zeros(1,obj.getLinkPumpCount));v=1;
             for i=obj.getLinkPumpIndex
-                [obj.Errcode, value(v)] = ENgetlinkvalue(i,15,obj.LibEPANET);
+                [obj.Errcode, value(v)] = ENgetlinkvalue(i,obj.ToolkitConstants.EN_LINKPATTERN,obj.LibEPANET);
                 v=v+1;
             end
         end
         function value = getLinkPumpPatternNameID(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
+            %Retrieves link pump pattern name ID
             v = obj.getLinkPumpPatternIndex;
             value = obj.getPatternNameID(v);
         end
         function value = getNodeNameID(obj,varargin)
             %Retrieves the ID label of all nodes or some nodes with a specified index.
             if isempty(varargin)
-                value{obj.getNodeCount}=[];
+                value = cell(1, obj.getNodeCount);
                 for i=1:obj.getNodeCount
                     [obj.Errcode, value{i}]=ENgetnodeid(i,obj.LibEPANET);
                 end
             else
+                if isempty(varargin{1}), varargin{1}=0; end
                 k=1;
-                value{length(varargin{1})}=[];
+                value = cell(1, length(varargin{1}));
                 for i=varargin{1}
                     [obj.Errcode, value{k}]=ENgetnodeid(i,obj.LibEPANET);
-                    if obj.Errcode==203, value=NaN; return; end   
+                    if obj.Errcode==203, value=[]; return; end   
                     k=k+1;
                 end
             end
@@ -1056,31 +1149,26 @@ classdef epanet <handle
                 value=1:obj.getNodeCount;
             elseif isa(varargin{1},'cell')
                 k=1;
+                value = zeros(1, length(varargin{1}));
                 for j=1:length(varargin{1})
                     [obj.Errcode, value(k)] = ENgetnodeindex(varargin{1}{j},obj.LibEPANET);
                     k=k+1;
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = ENgetnodeindex(varargin{1},obj.LibEPANET);
+            else
+                disp('Run function: getNodeIndex({''nodeID''})) or getNodeIndex(''nodeID''))');
             end
         end
         function value = getNodeReservoirIndex(obj)
             %Retrieves the indices of reservoirs
-            if obj.getNodeReservoirCount
-                tmpNodeTypes=obj.getNodeType;
-                value = find(strcmp(tmpNodeTypes,'RESERVOIR'));
-            else
-                value=0;
-            end
+            tmpNodeTypes=obj.getNodeType;
+            value = find(strcmp(tmpNodeTypes,'RESERVOIR'));
         end
         function value = getNodeJunctionIndex(obj)
             %Retrieves the indices of junctions
-            if obj.getNodeJunctionCount
-                tmpNodeTypes=obj.getNodeType;
-                value = find(strcmp(tmpNodeTypes,'JUNCTION'));
-            else
-                value=0;
-            end
+            tmpNodeTypes=obj.getNodeType;
+            value = find(strcmp(tmpNodeTypes,'JUNCTION'));
         end
         function value = getNodeType(obj, varargin)
             %Retrieves the node-type code for all nodes
@@ -1089,41 +1177,44 @@ classdef epanet <handle
         end
         function value = getNodeTypeIndex(obj, varargin)
             %Retrieves the node-type code for all nodes
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
                 [obj.Errcode,value(j)] = ENgetnodetype(i,obj.LibEPANET);  
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end  
                 j=j+1;
             end
         end
-        function [NodeElevations,NodeDemandPatternIndex,NodeEmitterCoeff,NodeInitialQuality,...
-                NodeSourceQuality,NodeSourcePatternIndex,NodeSourceTypeIndex,NodeTypeIndex] = getNodesInfo(obj)
+        function value = getNodesInfo(obj)
+            %Retrieves nodes info (elevations, demand patterns, emmitter 
+            %coeff, initial quality, source quality, source pattern index, source type index, node type index)
+            value = struct();
             for i=1:obj.getNodeCount
-                [~, NodeElevations(i)] = ENgetnodevalue(i,0,obj.LibEPANET);
-                [~, NodeDemandPatternIndex(i)] = ENgetnodevalue(i,2,obj.LibEPANET);
-                [~, NodeEmitterCoeff(i)] = ENgetnodevalue(i,3,obj.LibEPANET);
-                [~, NodeInitialQuality(i)] = ENgetnodevalue(i,4,obj.LibEPANET);
-                [~, NodeSourceQuality(i)] = ENgetnodevalue(i,5,obj.LibEPANET);
-                [~, NodeSourcePatternIndex(i)] = ENgetnodevalue(i,6,obj.LibEPANET);
-                [~, NodeSourceTypeIndex(i)] = ENgetnodevalue(i,7,obj.LibEPANET);
-                [~, NodeTypeIndex(i)] = ENgetnodetype(i,obj.LibEPANET);
+                [~, value.NodeElevations(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_ELEVATION,obj.LibEPANET);
+                [~, value.NodeDemandPatternIndex(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_PATTERN,obj.LibEPANET);
+                [~, value.NodeEmitterCoeff(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_EMITTER,obj.LibEPANET);
+                [~, value.NodeInitialQuality(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_INITQUAL,obj.LibEPANET);
+                [~, value.NodeSourceQuality(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCEQUAL,obj.LibEPANET);
+                [~, value.NodeSourcePatternIndex(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCEPAT,obj.LibEPANET);
+                [~, value.NodeSourceTypeIndex(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCETYPE,obj.LibEPANET);
+                [~, value.NodeTypeIndex(i)] = ENgetnodetype(i,obj.LibEPANET);
             end
         end
         function value = getNodeElevations(obj, varargin)
             %Retrieves the value of all node elevations
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,0,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_ELEVATION,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeBaseDemands(obj, varargin)
-            %New version dev2.1
-            chckfunctions=libfunctions(obj.LibEPANET);
-            if sum(strcmp(chckfunctions,'ENgetbasedemand'))
+            %Retrieves the value of all node base demands
+            if sum(strcmp(obj.libFunctions,'ENgetbasedemand'))
+                %EPANET Version 2.1
                 numdemands = obj.getNodeDemandCategoriesNumber;
-                val=zeros(max(numdemands),obj.getNodeCount);
+                value = cell(1, max(numdemands));
+                val = zeros(max(numdemands),obj.getNodeCount);
                 for i=obj.getNodeIndex
                     v=1;
                     for u=1:numdemands(i)
@@ -1133,19 +1224,18 @@ classdef epanet <handle
                 for i=1:size(val,1)
                     value{i} = val(i,:);
                 end
-            else%version epanet20012
-                %Retrieves the value of all node base demands
-                indices = getNodeIndices(obj,varargin);j=1;
+            else%EPANET Version 2.0012
+                [indices, value] = getNodeIndices(obj,varargin);j=1;
                 for i=indices
-                    [obj.Errcode, value(j)] = ENgetnodevalue(i,1,obj.LibEPANET); 
+                    [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_BASEDEMAND,obj.LibEPANET); 
                     if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                     j=j+1;
                 end   
             end
         end
         function value = getNodeDemandCategoriesNumber(obj, varargin)
-            %New version dev2.1
-            indices = getNodeIndices(obj,varargin);j=1;
+            %EPANET Version 2.1
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
                 [obj.Errcode, value(j)] = ENgetnumdemands(i,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
@@ -1153,9 +1243,10 @@ classdef epanet <handle
             end
         end
         function value = getNodeDemandPatternIndex(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
             numdemands = obj.getNodeDemandCategoriesNumber;
-            val=zeros(max(numdemands),obj.getNodeCount);
+            value = cell(1, max(numdemands));
+            val = zeros(max(numdemands),obj.getNodeCount);
             for i=obj.getNodeIndex
                 v=1;
                 for u=1:numdemands(i)
@@ -1167,8 +1258,7 @@ classdef epanet <handle
             end
         end
         function value = getNodeDemandPatternNameID(obj, varargin)
-            %New version dev2.1
-            value={};
+            %EPANET Version 2.1
             v = obj.getNodeDemandPatternIndex;
             m = obj.getPatternNameID;
             if ~isempty(varargin)
@@ -1176,18 +1266,19 @@ classdef epanet <handle
             else
                 numdemands = obj.getNodeDemandCategoriesNumber;
             end
-            indices = getNodeIndices(obj,varargin);j=1;
+            indices = getNodeIndices(obj,varargin);
+            value = cell(1, max(numdemands));
+            val = cell(max(numdemands),obj.getNodeCount);
             for i=indices
                 for u=1:numdemands(i)
                     if v{u}(i)~=0 
-                        val{u,j}= char(m(v{u}(i))); 
+                        val{u,i}= char(m(v{u}(i))); 
                     else
-                        val{u,j}= '';
+                        val{u,i}= '';
                     end
-                    j=j+1;
                 end
                 if numdemands(i)==0
-                    val{1,j}= []; j=j+1;
+                    val{1,i}= [];
                 end
             end
             for i=1:size(val,1)
@@ -1195,87 +1286,89 @@ classdef epanet <handle
             end
         end
         function value = getStatistic(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
             %Input: none
             %Output: *iter = # of iterations to reach solution
             %*relerr = convergence error in solution
             %returns error code
-            [obj.Errcode, value.Iterations] = ENgetstatistic(0,obj.LibEPANET);
-            [obj.Errcode, value.RelativeError] = ENgetstatistic(1,obj.LibEPANET);
+            [obj.Errcode, value.Iterations] = ENgetstatistic(obj.ToolkitConstants.EN_ITERATIONS,obj.LibEPANET);
+            [obj.Errcode, value.RelativeError] = ENgetstatistic(obj.ToolkitConstants.EN_RELATIVEERROR,obj.LibEPANET);
         end    
         function value = getNodePatternIndex(obj, varargin)
             %Retrieves the value of all node demand pattern indices
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,2,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_PATTERN,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeEmitterCoeff(obj, varargin)
             %Retrieves the value of all node emmitter coefficients
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,3,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_EMITTER,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeInitialQuality(obj, varargin)
             %Retrieves the value of all node initial quality
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,4,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_INITQUAL,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeSourceQuality(obj, varargin)
             %Retrieves the value of all nodes source quality
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,5,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCEQUAL,obj.LibEPANET); 
+                if isnan(value(j)), value(j)=0; end
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeSourcePatternIndex(obj, varargin)
             %Retrieves the value of all node source pattern index
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,6,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCEPAT,obj.LibEPANET); 
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeSourceTypeIndex(obj, varargin)
             %Retrieves the value of all node source index
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,7,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCETYPE,obj.LibEPANET); 
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeSourceType(obj, varargin)
             %Retrieves the value of all node source type
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, ~] = getNodeIndices(obj,varargin);j=1;
+            value = cell(1, length(indices));
             for i=indices
-                [obj.Errcode, temp] = ENgetnodevalue(i,7,obj.LibEPANET);
+                [obj.Errcode, temp] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCETYPE,obj.LibEPANET);
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 if ~isnan(temp)
-                    value(j)=obj.TYPESOURCE(temp+1);
+                    value{j}=obj.TYPESOURCE(temp+1);
                 else
-                    value{j}=temp;
+                    value{j}=[];
                 end
                 j=j+1;
             end
         end
         function value = getNodeTankInitialLevel(obj, varargin)
             %Retrieves the value of all tank initial water levels
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,8,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_TANKLEVEL,obj.LibEPANET); 
                 if obj.Errcode==251, value(j)=NaN; end
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
@@ -1283,9 +1376,9 @@ classdef epanet <handle
         end
         function value = getNodeActualDemand(obj, varargin)
             %Retrieves the computed value of all actual demands
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,9,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_DEMAND,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
@@ -1294,42 +1387,41 @@ classdef epanet <handle
             %Retrieves the computed demand values at some sensing nodes
             value=zeros(1,length(varargin{1}));v=1;
             for i=varargin{1}
-                [obj.Errcode, value(v)] = ENgetnodevalue(i,9,obj.LibEPANET);v=v+1;
+                [obj.Errcode, value(v)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_DEMAND,obj.LibEPANET);v=v+1;
             end
         end
         function value = getNodeHydaulicHead(obj, varargin)
             %Retrieves the computed values of all hydraulic heads
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,10,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_HEAD,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodePressure(obj, varargin)
             %Retrieves the computed values of all node pressures
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,11,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_PRESSURE,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeActualQuality(obj, varargin)
             %Retrieves the computed values of the actual quality for all nodes
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,12,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_QUALITY,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeMassFlowRate(obj, varargin)
             %Retrieves the computed mass flow rates per minute of chemical sources
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,13,obj.LibEPANET); 
-%                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_SOURCEMASS,obj.LibEPANET); 
                 j=j+1;
             end
         end
@@ -1337,14 +1429,14 @@ classdef epanet <handle
             %Retrieves the computed quality values at some sensing nodes
             value=zeros(1,length(varargin{1}));v=1;
             for i=varargin{1}
-                [obj.Errcode, value(v)] = ENgetnodevalue(i,12,obj.LibEPANET);v=v+1;
+                [obj.Errcode, value(v)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_QUALITY,obj.LibEPANET);v=v+1;
             end
         end
         function value = getNodeTankInitialWaterVolume(obj, varargin)
             %Retrieves the tank initial volume
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,14,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_INITVOLUME,obj.LibEPANET); 
                 if obj.Errcode==251, value(j)=NaN; end
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
@@ -1357,7 +1449,7 @@ classdef epanet <handle
             obj.NodeTankMixingModelType={};
             if obj.getNodeTankCount
                 for i=obj.getNodeTankIndex
-                    [obj.Errcode, obj.NodeTankMixingModelCode(i)] = ENgetnodevalue(i, 15,obj.LibEPANET);
+                    [obj.Errcode, obj.NodeTankMixingModelCode(i)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MIXMODEL,obj.LibEPANET);
                     obj.NodeTankMixingModelType(i)=obj.TYPEMIXMODEL(obj.NodeTankMixingModelCode(i)+1);
                 end
             end
@@ -1373,103 +1465,99 @@ classdef epanet <handle
         end
         function value = getNodeTankMixZoneVolume(obj, varargin)
             %Retrieves the tank mixing zone volume
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,16,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MIXZONEVOL,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankDiameter(obj, varargin)
             %Retrieves the tank diameters
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,17,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_TANKDIAM,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankMinimumWaterVolume(obj, varargin)
             %Retrieves the tank minimum volume
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,18,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MINVOLUME,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankVolumeCurveIndex(obj, varargin)
             %Retrieves the tank volume curve index
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,19,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_VOLCURVE,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankMinimumWaterLevel(obj, varargin)
             %Retrieves the tank minimum water level
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,20,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MINLEVEL,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankMaximumWaterLevel(obj, varargin)
             %Retrieves the tank maximum water level
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,21,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MAXLEVEL,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankMinimumFraction(obj, varargin)
             %Retrieves the tank Fraction of total volume occupied by the inlet/outlet zone in a 2-compartment tank
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,22,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MIXFRACTION,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankBulkReactionCoeff(obj, varargin)
             %Retrieves the tank bulk rate coefficient
-            indices = getNodeIndices(obj,varargin);j=1;
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,23,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_TANK_KBULK,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankVolume(obj, varargin)
-            %New version dev2.1
-            indices = getNodeIndices(obj,varargin);j=1;
+            %EPANET Version 2.1
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,24,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_TANKVOLUME,obj.LibEPANET); 
                 if obj.Errcode==251, value(j)=NaN; end
                 if obj.Errcode==203, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankMaximumWaterVolume(obj, varargin)
-            %New version dev2.1
-            indices = getNodeIndices(obj,varargin);j=1;
+            %EPANET Version 2.1
+            [indices, value] = getNodeIndices(obj,varargin);j=1;
             for i=indices
-                [obj.Errcode, value(j)] = ENgetnodevalue(i,25,obj.LibEPANET); 
+                [obj.Errcode, value(j)] = ENgetnodevalue(i,obj.ToolkitConstants.EN_MAXVOLUME,obj.LibEPANET); 
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 j=j+1;
             end
         end
         function value = getNodeTankIndex(obj)
             %Retrieves the tank index
-            if obj.getNodeTankCount
-                tmpNodeTypes=obj.getNodeType;
-                value = find(strcmp(tmpNodeTypes,'TANK'));
-            else
-                value=0;
-            end
+            tmpNodeTypes=obj.getNodeType;
+            value = find(strcmp(tmpNodeTypes,'TANK'));
         end
         function value = getNodeTankNameID(obj)
             %Retrieves the tank id
@@ -1477,38 +1565,38 @@ classdef epanet <handle
         end
         function value = getOptionsMaxTrials(obj)
             % Retrieve maximum number of analysis trials
-            [obj.Errcode, value] = ENgetoption(0,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetoption(obj.ToolkitConstants.EN_TRIALS,obj.LibEPANET);
         end
         function value = getOptionsAccuracyValue(obj)
             % Retrieve the analysis convergence criterion (0.001)
-            [obj.Errcode, value] = ENgetoption(1,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetoption(obj.ToolkitConstants.EN_ACCURACY,obj.LibEPANET);
         end
         function value = getOptionsQualityTolerance(obj)
             % Retrieve the water quality analysis tolerance
-            [obj.Errcode, value] = ENgetoption(2,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetoption(obj.ToolkitConstants.EN_TOLERANCE,obj.LibEPANET);
         end
         function value = getOptionsEmitterExponent(obj)
             % Retrieve power exponent for the emmitters (0.5)
-            [obj.Errcode, value] = ENgetoption(3,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetoption(obj.ToolkitConstants.EN_EMITEXPON,obj.LibEPANET);
         end
         function value = getOptionsPatternDemandMultiplier(obj)
             % Retrieve the demand multiplier (x1)
-            [obj.Errcode, value] = ENgetoption(4,obj.LibEPANET);
+            [obj.Errcode, value] = ENgetoption(obj.ToolkitConstants.EN_DEMANDMULT,obj.LibEPANET);
         end
         function value = getPatternNameID(obj,varargin)
             %Retrieves the ID label of all or some time patterns indices
-            value={};
-            if obj.getPatternCount
+            patCnt = obj.getPatternCount;
+            if patCnt
                 if isempty(varargin) 
-                    value{obj.getPatternCount}=[];
-                    for i=1:obj.getPatternCount
+                    value = cell(1, patCnt);
+                    for i=1:patCnt
                         [obj.Errcode, value{i}]=ENgetpatternid(i,obj.LibEPANET);
                     end
                 else
                     k=1;
+                    value = cell(1, length(varargin{1}));
                     for i=varargin{1}
                         [obj.Errcode, value{k}]=ENgetpatternid(i,obj.LibEPANET);
-    %                     if obj.Errcode==205, error(obj.getError(obj.Errcode)), return; end   
                         k=k+1;
                     end
                 end
@@ -1516,18 +1604,19 @@ classdef epanet <handle
         end
         function value = getCurveNameID(obj,varargin)
             %Retrieves ID of a curve with specific index
-            %New version dev2.1
-            if obj.getCurveCount
+            %EPANET Version 2.1
+            curCnt = obj.getCurveCount;
+            if curCnt
                 if isempty(varargin) 
-                    value{obj.getCurveCount}=[];
-                    for i=1:obj.getCurveCount
+                    value = cell(1, curCnt);
+                    for i=1:curCnt
                         [obj.Errcode, value{i}]=ENgetcurveid(i,obj.LibEPANET);
                     end
                 else
                     k=1;
+                    value = cell(1, length(varargin{1}));
                     for i=varargin{1}
                         [obj.Errcode, value{k}]=ENgetcurveid(i,obj.LibEPANET);
-                        if obj.Errcode==206, error('Input Error 205: function call  refers to undefined curve.'), return; end   
                         k=k+1;
                     end
                 end
@@ -1535,15 +1624,19 @@ classdef epanet <handle
         end
         function value = getCurveLengths(obj,varargin)
             %Retrieves number of points in a curve 
-            %New version dev2.1
+            %EPANET Version 2.1
             if isempty(varargin)
-                tmpCurves=1:obj.getCurveCount;
+                curCnt = obj.getCurveCount;
+                tmpCurves = 1:curCnt;
+                value = zeros(1, curCnt);
                 for i=tmpCurves
                     [obj.Errcode, value(i)]=ENgetcurvelen(i,obj.LibEPANET);
                 end
             elseif isa(varargin{1},'cell')
                 k=1;
-                for j=1:length(varargin{1})
+                lentmpCurves = length(varargin{1});
+                value = zeros(1, lentmpCurves);
+                for j=1:lentmpCurves
                     [obj.Errcode, value(k)] = ENgetcurvelen(obj.getCurveIndex(varargin{1}{j}),obj.LibEPANET);
                     k=k+1;
                 end
@@ -1551,6 +1644,7 @@ classdef epanet <handle
                 [obj.Errcode, value] = ENgetcurvelen(obj.getCurveIndex(varargin{1}),obj.LibEPANET);
             elseif isa(varargin{1},'numeric')
                 k=1;
+                value = zeros(1, length(varargin{1}));
                 for i=varargin{1}
                     [obj.Errcode, value(k)]=ENgetcurvelen(i,obj.LibEPANET);
                     k=k+1;
@@ -1559,7 +1653,7 @@ classdef epanet <handle
         end
         function value = getCurveIndex(obj,varargin)
             %Retrieves index of curve with specific ID
-            %New version dev2.1
+            %EPANET Version 2.1
             if isempty(varargin)
                 value=1:obj.getCurveCount;
             elseif isa(varargin{1},'cell')
@@ -1573,15 +1667,29 @@ classdef epanet <handle
                 [obj.Errcode, value] = ENgetcurveindex(varargin{1},obj.LibEPANET);
             end
         end
+        function value = getCurveTypeIndex(obj, varargin)
+            %Retrieves the curve-type index for all curves
+            [indices, value] = getCurveIndices(obj,varargin);j=1;
+            for i=indices
+                [obj.Errcode,value(j)] = ENgetcurvetype(i,obj.LibEPANET);  
+                if obj.Errcode, error(obj.getError(obj.Errcode)), return; end  
+                j=j+1;
+            end
+        end
+        function value = getCurveType(obj, varargin)
+            %Retrieves the curve-type for all curves
+            indices = getCurveIndices(obj,varargin);
+            value=obj.TYPECURVE(obj.getCurveTypeIndex(indices)+1);
+        end
         function setCurve(obj,index,curveVector)
             %Sets x,y values for a specific curve
-            %New version dev2.1
+            %EPANET Version 2.1
             nfactors=size(curveVector,1);%x = number of points in curve
             [obj.Errcode] = ENsetcurve(index, curveVector(:,1), curveVector(:,2), nfactors,obj.LibEPANET);
         end
         function setCurveValue(obj,index, curvePnt, value)
             %Retrieves x,y point for a specific point number and curve
-            %New version dev2.1
+            %EPANET Version 2.1
             x=value(1); y=value(2);
             [obj.Errcode] = ENsetcurvevalue(index, curvePnt, x, y, obj.LibEPANET);
         end
@@ -1603,13 +1711,17 @@ classdef epanet <handle
         function value = getPatternLengths(obj,varargin)
             %Retrieves the number of time periods in all or some patterns
             if isempty(varargin)
-                tmpPatterns=1:obj.getPatternCount;
+                patCnt = obj.getPatternCount;
+                tmpPatterns=1:patCnt;
+                value = zeros(1, patCnt);
                 for i=tmpPatterns
                     [obj.Errcode, value(i)]=ENgetpatternlen(i,obj.LibEPANET);
                 end
             elseif isa(varargin{1},'cell')
                 k=1;
-                for j=1:length(varargin{1})
+                lentmppat = length(varargin{1});
+                value = zeros(1, lentmppat);
+                for j=1:lentmppat
                     [obj.Errcode, value(k)] = ENgetpatternlen(obj.getPatternIndex(varargin{1}{j}),obj.LibEPANET);
                     k=k+1;
                 end
@@ -1617,6 +1729,7 @@ classdef epanet <handle
                 [obj.Errcode, value] = ENgetpatternlen(obj.getPatternIndex(varargin{1}),obj.LibEPANET);
             elseif isa(varargin{1},'numeric')
                 k=1;
+                value = zeros(1, length(varargin{1}));
                 for i=varargin{1}
                     [obj.Errcode, value(k)]=ENgetpatternlen(i,obj.LibEPANET);
                     k=k+1;
@@ -1637,7 +1750,6 @@ classdef epanet <handle
                         value(i,j)=value(i,j-tmplength);
                     end
                 end
-                
             end
         end
         function value = getPatternValue(obj,patternIndex, patternStep)
@@ -1646,15 +1758,12 @@ classdef epanet <handle
         end
         function value = getQualityType(obj,varargin)
             %Retrieves the type of water quality analysis type
-%             [obj.Errcode, obj.QualityCode,obj.QualityTraceNodeIndex] = ENgetqualinfo(obj.LibEPANET); % bug
-%             value=obj.TYPEQUALITY(obj.QualityCode+1);
-            if nargin>1
-                obj.saveInputFile(obj.BinTempfile,1);
+            if any(strcmp(obj.getLibFunctions, 'ENgetqualinfo'))
+                [obj.Errcode, ~, value] = ENgetqualinfo(obj.LibEPANET); 
             else
                 obj.saveInputFile(obj.BinTempfile);
+                value = obj.getBinQualType;
             end
-            value = obj.getBinQualType;
-%             value = {obj.getBinOptionsInfo.BinQualityType};
         end 
         function value = getQualityInfo(obj)
             [obj.Errcode, ~,value.QualityChemName,value.QualityChemUnits,~] = ENgetqualinfo(obj.LibEPANET);
@@ -1669,68 +1778,72 @@ classdef epanet <handle
         end
         function value = getTimeSimulationDuration(obj)
             %Retrieves the value of simulation duration
-            [obj.Errcode, value] = ENgettimeparam(0,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_DURATION,obj.LibEPANET);
         end
         function value = getTimeHydraulicStep(obj)
             %Retrieves the value of the hydraulic time step
-            [obj.Errcode, value] = ENgettimeparam(1,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_HYDSTEP,obj.LibEPANET);
         end
         function value = getTimeQualityStep(obj)
             %Retrieves the value of the water quality time step
-            [obj.Errcode, value] = ENgettimeparam(2,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_QUALSTEP,obj.LibEPANET);
         end
         function value = getTimePatternStep(obj)
             %Retrieves the value of the pattern time step
-            [obj.Errcode, value] = ENgettimeparam(3,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_PATTERNSTEP,obj.LibEPANET);
         end
         function value = getTimePatternStart(obj)
             %Retrieves the value of pattern start time
-            [obj.Errcode, value] = ENgettimeparam(4,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_PATTERNSTART,obj.LibEPANET);
         end
         function value = getTimeReportingStep(obj)
             %Retrieves the value of the reporting time step
-            [obj.Errcode, value] = ENgettimeparam(5,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_REPORTSTEP,obj.LibEPANET);
         end
         function value = getTimeReportingStart(obj)
             %Retrieves the value of the reporting start time
-            [obj.Errcode, value] = ENgettimeparam(6,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_REPORTSTART,obj.LibEPANET);
         end
         function value = getTimeRuleControlStep(obj)
             %Retrieves the time step for evaluating rule-based controls
-            [obj.Errcode, value] = ENgettimeparam(7,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_RULESTEP,obj.LibEPANET);
         end
         function value = getTimeStatisticsType(obj)
             %Retrieves the type of time series post-processing ('NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE')
-            [obj.Errcode, obj.TimeStatisticsIndex] = ENgettimeparam(8,obj.LibEPANET);
+            [obj.Errcode, obj.TimeStatisticsIndex] = ENgettimeparam(obj.ToolkitConstants.EN_STATISTIC,obj.LibEPANET);
             value=obj.TYPESTATS(obj.TimeStatisticsIndex+1);
         end
         function value = getTimeStatisticsIndex(obj)
             %Retrieves the type of time series post-processing ('NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE')
-            [obj.Errcode, value] = ENgettimeparam(8,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_STATISTIC,obj.LibEPANET);
         end
         function value = getTimeReportingPeriods(obj)
             %Retrieves the number of reporting periods saved to the binary
-            [obj.Errcode, value] = ENgettimeparam(9,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_PERIODS,obj.LibEPANET);
         end
-        %%%%% New version dev2.1 %%%%%
+        %%%%% EPANET Version 2.1 %%%%%
         function value = getTimeStartTime(obj)
             %Retrieves the number of start time
-            [obj.Errcode, value] = ENgettimeparam(10,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_STARTTIME,obj.LibEPANET);
         end
         function value = getTimeHTime(obj)
             %Retrieves the number of htime
-            [obj.Errcode, value] = ENgettimeparam(11,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_HTIME,obj.LibEPANET);
+        end
+        function value = getTimeQTime(obj)
+            %Retrieves the number of qtime
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_QTIME,obj.LibEPANET);
         end
         function value = getTimeHaltFlag(obj)
             %Retrieves the number of  halt flag
-            [obj.Errcode, value] = ENgettimeparam(12,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_HALTFLAG,obj.LibEPANET);
         end
         function value = getTimeNextEvent(obj)
             %Retrieves the number of next event 
-            [obj.Errcode, value] = ENgettimeparam(13,obj.LibEPANET);
+            [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_NEXTEVENT,obj.LibEPANET);
         end
         function value = getCurvesInfo(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
             %Input:   curveIndex = curve index
             %Output:  *nValues = number of points on curve
             %         *xValues = values for x
@@ -1751,86 +1864,87 @@ classdef epanet <handle
                 chIndex = find(mS);
                 connFinal = conn(chIndex,:);
                 mmFinal = mm(chIndex,:);
-                Ok = connFinal(find(mmFinal==0));
+                Ok = connFinal(~mmFinal);
                 nodesIndOk = obj.getNodeIndex(Ok);
                 value(i,nodesIndOk) = 1;
             end
         end
         function valueIndex = addCurve(obj,varargin)
-            %New version dev2.1
+            %EPANET Version 2.1
             %Adds a new curve appended to the end of the existing curves
-            valueIndex=-1;
-            if nargin==2
+            valueIndex = 0;
+            if (4>nargin && nargin>1) 
                 [obj.Errcode] = ENaddcurve(varargin{1},obj.LibEPANET);
                 valueIndex = getCurveIndex(obj,varargin{1});
-            elseif nargin==3
-                [obj.Errcode] = ENaddcurve(varargin{1},obj.LibEPANET);
-                valueIndex = getCurveIndex(obj,varargin{1});
-                setCurve(obj,valueIndex,varargin{2});
+                if nargin==3
+                    setCurve(obj,valueIndex,varargin{2});
+                end
             end
         end
         function value = getCurveValue(obj,index,varargin)
-            %New version dev2.1
+            %EPANET Version 2.1
             %Retrieves x,y point for a specific point number and curve
             if nargin<3
-                tmplen=obj.getCurveLengths;
-                value=zeros(tmplen(index),2);
+                tmplen = obj.getCurveLengths;
+                value = zeros(tmplen(index),2);
                 for i=1:tmplen(index)
                     [obj.Errcode, value(i,1), value(i,2)] = ENgetcurvevalue(index, i,obj.LibEPANET);
                 end
             else
                 [obj.Errcode, x, y] = ENgetcurvevalue(index, varargin{1},obj.LibEPANET);
-                %if obj.Errcode, error(obj.getError(obj.Errcode)), return; end
                 value = [x y];
             end
         end
-        function value = getHeadCurveIndex(obj)
-            %New version dev2.1
+        function [curveIndex, pumpIndex] = getLinkPumpHeadCurveIndex(obj)
+            %EPANET Version 2.1
             %Retrieves index of a head curve for specific link index
-            v=1;
-            for i=obj.getLinkPumpIndex
-                [obj.Errcode, value(v)] = ENgetheadcurveindex(i,obj.LibEPANET);
-                v=v+1;
+            j = 1;
+            pumpIndex = obj.getLinkPumpIndex;
+            curveIndex = zeros(1, length(pumpIndex));
+            for i=pumpIndex
+                [obj.Errcode, curveIndex(j)] = ENgetheadcurveindex(i,obj.LibEPANET); 
+                j=j+1;
             end
         end
         function value = getLinkPumpTypeCode(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
             %Input:   index = index of pump in list of links
             %Output:  type = PumpType
             %Returns: error code                              
             %Purpose: retrieves type of a pump for specific link index
-            v=1;
-            if obj.getLinkPumpCount
+            j = 1;
+            pumpCnt = obj.getLinkPumpCount;
+            value = ones(1, pumpCnt);
+            if pumpCnt
                 for i=obj.getLinkPumpIndex
-                    [obj.Errcode, value(v)] = ENgetpumptype(i,obj.LibEPANET);
-                    v=v+1;
+                    [obj.Errcode, value(j)] = ENgetpumptype(i,obj.LibEPANET);
+                    j=j+1;
                 end
-            else
-                value=[];
             end
         end
         function value = getLinkPumpType(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
             v = obj.getLinkPumpTypeCode;
             value = obj.TYPEPUMP(v+1);
         end
         function value = getPatternAverageValue(obj)
-            %New version dev2.1
+            %EPANET Version 2.1
+            value = zeros(1, obj.getPatternCount);
             for i=obj.getPatternIndex
                 [obj.Errcode, value(i)] = ENgetaveragepatternvalue(i,obj.LibEPANET);
             end
         end
         function value = getENfunctionsImpemented(obj)
             [tline]=regexp(fileread([mfilename,'.m']), '\n', 'split');
-            value={};
-            u=1;
+            u=1;obj.Errcode;
+            value = cell(1, 1);
             for i=1:length(tline)
                 if ~isempty(regexp(tline{i},'EN\w','match'))
                     enfunc = regexp(tline{i},'\w*EN\w*','match');
                     checkL = isstrprop(enfunc,'upper');
                     if length(checkL{1})>2
                         if strcmp(enfunc{1}(1:2),'EN') && ~checkL{1}(3) && ~strcmp(enfunc{1}(1:3),'EN_')
-                            value(u) = enfunc;
+                            value(u) = enfunc(1);
                             u=u+1;
                         end
                     end
@@ -1839,12 +1953,20 @@ classdef epanet <handle
             value = unique(value)';
         end
         function value = getLibFunctions(obj)
-            value = libfunctions(obj.LibEPANET)'';
+            value = obj.libFunctions;
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function value = getVersion(obj)
             % Retrieve the current EPANET LibEPANET
             [obj.Errcode, value] = ENgetversion(obj.LibEPANET);
+        end
+        function value = getLinkPumpSwitches(obj)
+            value=[];
+            s = obj.getComputedTimeSeries;
+            for i=1:obj.getLinkPumpCount
+                index = find(diff(s.Status(:,obj.getLinkPumpIndex(i))));
+                value(i) = length(index);
+            end
         end
         function value = getComputedHydraulicTimeSeries(obj,varargin)
             % Compute hydraulic simulation and retrieve all time-series
@@ -1854,7 +1976,10 @@ classdef epanet <handle
             initnodematrix=zeros(totalsteps, obj.getNodeCount);
             initlinkmatrix=zeros(totalsteps, obj.getLinkCount);
             if size(varargin,2)==0
-                varargin={'time','pressure','demand','head','tankvolume','flow','velocity','headloss','status','setting','energy'};
+                varargin={'time','pressure','demand','head','tankvolume','flow','velocity','headloss','status','setting','energy','efficiency'};
+                if ~sum(strcmpi(fields(obj.ToolkitConstants),'EN_EFFICIENCY'))
+                    varargin{end}={''};
+                end
             else
                 for i=1:length(varargin)
                     if isnumeric(varargin{i})
@@ -1899,6 +2024,9 @@ classdef epanet <handle
             if find(strcmpi(varargin,'energy'))
                 value.Energy=initlinkmatrix;
             end
+            if find(strcmpi(varargin,'efficiency'))
+                value.Efficiency=initlinkmatrix;
+            end
             clear initlinkmatrix initnodematrix;
             k=1;tstep=1;
             while (tstep>0)
@@ -1937,7 +2065,10 @@ classdef epanet <handle
                     value.Setting(k,:)=obj.getLinkSettings;
                 end
                 if find(strcmpi(varargin,'energy'))
-                    value.Energy(k,:)=obj.getLinkPumpEnergy;
+                    value.Energy(k,:)=obj.getLinkEnergy;
+                end
+                if find(strcmpi(varargin,'efficiency'))
+                    value.Efficiency(k,:)=obj.getLinkEfficiency;
                 end
                 tstep = obj.nextHydraulicAnalysisStep;
                 k=k+1;
@@ -1946,13 +2077,17 @@ classdef epanet <handle
         end
         function value = getComputedQualityTimeSeries(obj,varargin)
             % Compute Quality simulation and retrieve all or some time-series
-            obj.openQualityAnalysis
-            obj.initializeQualityAnalysis
+            if ~obj.solve
+                obj.solveCompleteHydraulics;
+                obj.solve = 1;
+            end
+            obj.openQualityAnalysis;
+            obj.initializeQualityAnalysis;
             %tleft=obj.nextQualityAnalysisStep;
             totalsteps=obj.getTimeSimulationDuration/obj.getTimeHydraulicStep;
             initnodematrix=zeros(totalsteps, obj.getNodeCount);
             if size(varargin,2)==0
-                varargin={'time', 'quality', 'mass'};
+                varargin={'time', 'quality', 'linkquality', 'mass'};
             else
                 for i=1:length(varargin)
                     if isnumeric(varargin{i})
@@ -1964,7 +2099,10 @@ classdef epanet <handle
                 value.Time=zeros(totalsteps,1);
             end
             if find(strcmpi(varargin,'quality'))
-                value.Quality=initnodematrix;
+                value.NodeQuality=initnodematrix;
+            end
+            if find(strcmpi(varargin,'linkquality'))
+                value.LinkQuality=zeros(totalsteps, obj.getLinkCount);
             end
             if find(strcmpi(varargin,'qualitySensingNodes'))
                 value.QualitySensingNodes=zeros(totalsteps, length(varargin{sensingnodes}));
@@ -1988,7 +2126,10 @@ classdef epanet <handle
                     value.Time(k,:)=t;
                 end
                 if find(strcmpi(varargin,'quality'))
-                    value.Quality(k,:)=obj.getNodeActualQuality;
+                    value.NodeQuality(k,:)=obj.getNodeActualQuality;
+                end
+                if find(strcmpi(varargin,'linkquality'))
+                    value.LinkQuality(k,:)=obj.getLinkQuality;
                 end
                 if find(strcmpi(varargin,'mass'))
                     value.MassFlowRate(k,:)=obj.getNodeMassFlowRate;
@@ -2010,84 +2151,285 @@ classdef epanet <handle
             end
             obj.closeQualityAnalysis;
         end
+        function value = getComputedTimeSeries(obj)
+            cnt = obj.getNodeCount;
+            LinkNodesIndex = unique(obj.getLinkNodesIndex);
+            if (length(LinkNodesIndex)~=cnt)
+                lenLinkNodes = [LinkNodesIndex; zeros(cnt-length(LinkNodesIndex),1)];
+                value =[];
+                fIndex = setdiff(obj.getNodeIndex,lenLinkNodes);
+                for i=fIndex
+                    disp(['Input Error 233: Node ',obj.getNodeNameID{i},' is unconnected.']);  
+                end
+                return;
+            end
+            obj.saveInputFile(obj.BinTempfile);
+            [~, rptfile, binfile]= createTempfiles(obj.BinTempfile);
+            obj.loadEPANETFile(obj.BinTempfile);
+            obj.Errcode=calllib(obj.LibEPANET,'ENepanet',obj.BinTempfile,rptfile,binfile,lib.pointer);
+            if sum(obj.Errcode==[302,303])
+                while obj.Errcode %fix this error
+                    ENMatlabCleanup(obj.LibEPANET);
+                    ENLoadLibrary(obj.LibEPANETpath,obj.LibEPANET,0);
+                    obj.Errcode=calllib(obj.LibEPANET,'ENepanet',obj.BinTempfile,rptfile,binfile,lib.pointer);
+                end
+            elseif ~sum(obj.Errcode==[0,1,2,3,4,5,6])
+                disp(obj.getError(obj.Errcode));
+                obj.loadEPANETFile(obj.BinTempfile);
+                value = obj.getComputedHydraulicTimeSeries;
+                v = obj.getComputedQualityTimeSeries; 
+                value.LinkQuality = v.LinkQuality;
+                value.NodeQuality = v.NodeQuality;
+                value.MassFlowRate = v.MassFlowRate;
+                return;
+            end
+                
+            fid = fopen(binfile,'r');            
+            value = readEpanetBin(fid,binfile,rptfile,0);
+            obj.loadEPANETFile(obj.BinTempfile);
+        end
+        function value = getUnits(obj)
+            % Retrieves the Units of Measurement
+            % More info: https://github.com/OpenWaterAnalytics/EPANET/wiki/Units-of-Measurement
+            if find(strcmp(obj.getFlowUnits, obj.TYPEUNITS))<6
+                value.Units_US_Customary=1;
+                value.Units_SI_Metric=0;
+            else
+                value.Units_SI_Metric=1;
+                value.Units_US_Customary=0;
+            end
+               
+            value.LinkFlowUnits = obj.getFlowUnits{1};
+            if value.Units_US_Customary
+                value.NodePressureUnits='psi';
+                value.PatternDemandsUnits=value.LinkFlowUnits;
+                value.LinkPipeDiameterUnits='inches';
+                value.NodeTankDiameterUnits='feet';
+                value.EnergyEfficiencyUnits='percent';
+                value.NodeElevationUnits='feet';
+                value.NodeDemandUnits=value.LinkFlowUnits;
+                value.NodeEmitterCoefficientUnits='flow units @ 1 psi drop';
+                value.EnergyUnits='kwatt-hours';
+                value.LinkFrictionFactorUnits='unitless';
+                value.NodeHeadUnits='feet';
+                value.LinkLengthsUnits='feet';
+                value.LinkMinorLossCoeffUnits='unitless';
+                value.LinkPumpPowerUnits='horsepower';
+                value.QualityReactionCoeffBulkUnits='1/day (1st-order)';
+                value.QualityReactionCoeffWallUnits='mass/sq-ft/day (0-order), ft/day (1st-order)';
+                value.LinkPipeRoughnessCoeffUnits='millifeet(Darcy-Weisbach), unitless otherwise';
+                value.QualitySourceMassInjectionUnits='mass/minute';
+                value.LinkVelocityUnits='ft/sec';
+                value.NodeTankVolumeUnits='cubic feet';
+                value.QualityWaterAgeUnits='hours';
+            else % SI Metric
+                value.NodePressureUnits='meters';
+                value.PatternDemandsUnits=value.LinkFlowUnits;
+                value.LinkPipeDiameterUnits='millimeters';
+                value.NodeTankDiameterUnits='meters';
+                value.EnergyEfficiencyUnits='percent';
+                value.NodeElevationUnits='meters';
+                value.NodeDemandUnits=value.LinkFlowUnits;
+                value.NodeEmitterCoefficientUnits='flow units @ 1 meter drop';
+                value.EnergyUnits='kwatt-hours';
+                value.LinkFrictionFactorUnits='unitless';
+                value.NodeHeadUnits='meters';
+                value.LinkLengthsUnits='meters';
+                value.LinkMinorLossCoeffUnits='unitless';
+                value.LinkPumpPowerUnits='kwatts';
+                value.QualityReactionCoeffBulkUnits='1/day (1st-order)';
+                value.QualityReactionCoeffWallUnits='mass/sq-m/day(0-order), meters/day (1st-order)';
+                value.LinkPipeRoughnessCoeffUnits='mm(Darcy-Weisbach), unitless otherwise';
+                value.QualitySourceMassInjectionUnits='mass/minute';
+                value.LinkVelocityUnits='meters/sec';
+                value.NodeTankVolumeUnits='cubic meters';
+                value.QualityWaterAgeUnits='hours';
+            end 
+        end
         function solveCompleteHydraulics(obj)
             [obj.Errcode] = ENsolveH(obj.LibEPANET);
         end
         function solveCompleteQuality(obj)
             [obj.Errcode] = ENsolveQ(obj.LibEPANET);
         end
-        function valueIndex = addPattern(obj,varargin)
-            valueIndex=-1;
+        function index = addPattern(obj,varargin)
+            index=-1;
             if nargin==2
                 [obj.Errcode] = ENaddpattern(varargin{1},obj.LibEPANET);
-                valueIndex = getPatternIndex(obj,varargin{1});
+                index = getPatternIndex(obj,varargin{1});
             elseif nargin==3
                 [obj.Errcode] = ENaddpattern(varargin{1},obj.LibEPANET);
-                valueIndex = getPatternIndex(obj,varargin{1});
-                setPattern(obj,valueIndex,varargin{2});
+                index = getPatternIndex(obj,varargin{1});
+                setPattern(obj,index,varargin{2});
             end
         end
-        function setControl(obj,controlRuleIndex,controlTypeIndex,linkIndex,controlSettingValue,nodeIndex,controlLevel)
-            % Example: d.setControl(1,1,13,1,11,150)
-            if controlRuleIndex<=obj.getControlRulesCount
-                [obj.Errcode] = ENsetcontrol(controlRuleIndex,controlTypeIndex,linkIndex,controlSettingValue,nodeIndex,controlLevel,obj.LibEPANET);
+        function index = addNodeJunction(obj,juncID)
+            index = ENaddnode(obj,juncID,obj.ToolkitConstants.EN_JUNCTION);
+        end
+        function index = addNodeReservoir(obj,resID)
+            index = ENaddnode(obj,resID,obj.ToolkitConstants.EN_RESERVOIR);
+        end
+        function index = addNodeTank(obj,tankID)
+            index = ENaddnode(obj,tankID,obj.ToolkitConstants.EN_TANK);
+        end
+        function index = addLinkPipeCV(obj,cvpipeID,fromNode,toNode)
+            index = ENaddlink(obj,cvpipeID,obj.ToolkitConstants.EN_CVPIPE,fromNode,toNode);
+        end
+        function index = addLinkPipe(obj,pipeID,fromNode,toNode)
+            index = ENaddlink(obj,pipeID,obj.ToolkitConstants.EN_PIPE,fromNode,toNode);
+        end
+        function index = addLinkPump(obj,pumpID,fromNode,toNode)
+            index = ENaddlink(obj,pumpID,obj.ToolkitConstants.EN_PUMP,fromNode,toNode);
+        end
+        function index = addLinkValvePRV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_PRV,fromNode,toNode);
+        end
+        function index = addLinkValvePSV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_PSV,fromNode,toNode);
+        end        
+        function index = addLinkValvePBV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_PBV,fromNode,toNode);
+        end
+        function index = addLinkValveFCV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_FCV,fromNode,toNode);
+        end
+        function index = addLinkValveTCV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_TCV,fromNode,toNode);
+        end
+        function index = addLinkValveGPV(obj,vID, fromNode, toNode)
+            index = ENaddlink(obj,vID,obj.ToolkitConstants.EN_GPV,fromNode,toNode);
+        end 
+        function Errcode = deleteNode(obj,indexNode)
+            [Errcode] = ENdeletenode(obj,indexNode);
+        end
+        function Errcode = deleteLink(obj,indexLink)
+            [Errcode] = ENdeletelink(obj,indexLink);
+        end
+        function setControls(obj, index, control)
+            
+            if isstruct(index)
+                for c=1:length(index)
+                    setControlFunction(obj, c, index(c).Control)
+                end
             else
-                disp('New rules cannot be added in this LibEPANET')
+                if length(index)> 1
+                    tmpC = index;
+                    index = 1:length(index);
+                elseif length(index)== 1
+                    if isnumeric(index) 
+                        tmpC{1} = control;
+                    else
+                        tmpC{1} = index{1};
+                        index = 1;
+                    end
+                end
+                j=1;
+                for i=index
+                    setControlFunction(obj, i, tmpC{j}); 
+                    j=j+1;
+                end
             end
         end
         function setLinkDiameter(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i,0, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_DIAMETER, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end            
         end
+        function index = setLinkTypePipe(obj, id)
+            % Set the link type pipe for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkPipe(id, nodesID{1}, nodesID{2});
+            %[Errcode] = ENsetlinktype(id, obj.ToolkitConstants.EN_PIPE, obj.LibEPANET);
+%             if Errcode, error(obj.getError(Errcode)), return; end   
+        end
+        function index = setLinkTypePipeCV(obj, id)
+            % Set the link type cvpipe for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkPipeCV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypePump(obj, id)
+            % Set the link type pump for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkPump(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValveFCV(obj, id)
+            % Set the link type valve FCV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValveFCV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValveGPV(obj, id)
+            % Set the link type valve GPV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValveGPV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValvePBV(obj, id)
+            % Set the link type valve PBV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValvePBV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValvePRV(obj, id)
+            % Set the link type valve PRV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValvePRV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValvePSV(obj, id)
+            % Set the link type valve PSV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValvePSV(id, nodesID{1}, nodesID{2});
+        end
+        function index = setLinkTypeValveTCV(obj, id)
+            % Set the link type valve TCV for a specified link
+            nodesID = setLinkType(obj, id);
+            index = obj.addLinkValveTCV(id, nodesID{1}, nodesID{2});
+        end
         function setLinkLength(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 1, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_LENGTH, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkRoughnessCoeff(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 2, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_ROUGHNESS, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkMinorLossCoeff(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 3, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_MINORLOSS, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkInitialStatus(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices% Cannot set status for a check valve
-                [obj.Errcode] = ENsetlinkvalue(i, 4, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_INITSTATUS, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkInitialSetting(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 5, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_INITSETTING, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkBulkReactionCoeff(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 6, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_KBULK, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
@@ -2095,63 +2437,63 @@ classdef epanet <handle
             if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 7, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_KWALL, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkStatus(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 11, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_STATUS, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setLinkSettings(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getLinkIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getLinkIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetlinkvalue(i, 12, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetlinkvalue(i,obj.ToolkitConstants.EN_SETTING, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setNodeElevations(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetnodevalue(i, 0, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetnodevalue(i,obj.ToolkitConstants.EN_ELEVATION, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setNodeBaseDemands(obj, value, varargin)
-            if nargin==3, 
+            if nargin==3 
                 indices = value; value=varargin{1};j=1;
                 for i=indices
-                    [obj.Errcode] = ENsetnodevalue(i, 1, value(j),obj.LibEPANET); j=j+1;
+                    [obj.Errcode] = ENsetnodevalue(i,obj.ToolkitConstants.EN_BASEDEMAND, value(j),obj.LibEPANET); j=j+1;
                     if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 end
                 return;
             end
-            %New version dev2.1
+            %EPANET Version 2.1
             chckfunctions=libfunctions(obj.LibEPANET);
             if sum(strcmp(chckfunctions,'ENsetbasedemand'))
                 NodeNumDemandC=obj.getNodeDemandCategoriesNumber;
                 for i=1:obj.getNodeJunctionCount
                     for u=1:NodeNumDemandC(i)
-                        [obj.Errcode] = ENsetbasedemand(i, NodeNumDemandC(u), value{NodeNumDemandC(u)}(i),obj.LibEPANET);
+                        [obj.Errcode] = ENsetbasedemand(i, u, value{u}(i),obj.LibEPANET);
                     end
                 end
             else %version epanet20012
-                if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+                if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
                 j=1;
                 for i=indices
-                    [obj.Errcode] = ENsetnodevalue(i, 1, value(j),obj.LibEPANET); j=j+1;
+                    [obj.Errcode] = ENsetnodevalue(i,obj.ToolkitConstants.EN_BASEDEMAND, value(j),obj.LibEPANET); j=j+1;
                     if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 end
             end
         end
         function setNodeCoordinates(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             if ~isempty(varargin)
                 for i=indices
                     [obj.Errcode] = ENsetcoord(i,value(1),value(2),obj.LibEPANET);
@@ -2166,201 +2508,225 @@ classdef epanet <handle
             end
         end
         function setNodeDemandPatternIndex(obj, value, varargin)
-            if nargin==3, 
+            if nargin==3
                 indices = value; value=varargin{1};j=1;
                 for i=indices
-                    [obj.Errcode] = ENsetnodevalue(i, 2, value(j),obj.LibEPANET); j=j+1;
+                    [obj.Errcode] = ENsetnodevalue(i,obj.ToolkitConstants.EN_PATTERN, value(j),obj.LibEPANET); j=j+1;
                     if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
                 end
                 return;
             end
-            if iscell(value)
-                value=value{1};
-            end
-            for i=1:length(value)
-                [obj.Errcode] = ENsetnodevalue(i, 2, value(i),obj.LibEPANET);
+
+            chckfunctions=libfunctions(obj.LibEPANET);
+            if sum(strcmp(chckfunctions,'ENsetdemandpattern')) && iscell(value)
+                NodeNumDemandC=obj.getNodeDemandCategoriesNumber;
+                for i=1:obj.getNodeJunctionCount
+                    for u=1:NodeNumDemandC(i)
+                        [obj.Errcode] = ENsetdemandpattern(i, u, value{u}(i),obj.LibEPANET);
+                    end
+                end
+%                 warning('Can changes the demand pattern index based on the number of categories.');
+            else
+                if iscell(value)
+                    value=value{1};
+                end
+                for i=1:length(value)
+                    [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_PATTERN, value(i),obj.LibEPANET);
+                end
             end
         end
         function setNodeEmitterCoeff(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetnodevalue(i, 3, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_EMITTER, value(j),obj.LibEPANET); j=j+1;
 %                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setNodeInitialQuality(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetnodevalue(i, 4, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_INITQUAL, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setNodeTankInitialLevel(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 8, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_TANKLEVEL, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 8, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_TANKLEVEL, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankMixingModelType(obj, value, varargin)
             if nargin==3
                 code=strfind(strcmpi(varargin{1},obj.TYPEMIXMODEL),1)-1;
-                [obj.Errcode] = ENsetnodevalue(value, 15, code,obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_MIXMODEL, code,obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
                 code=strfind(strcmpi(value(i),obj.TYPEMIXMODEL),1)-1;
-                [obj.Errcode] = ENsetnodevalue(i, 15, code,obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_MIXMODEL, code,obj.LibEPANET);
             end
         end
         function setNodeTankDiameter(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 17, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_TANKDIAM, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 17, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_TANKDIAM, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankMinimumWaterLevel(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 20, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_MINLEVEL, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 20, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_MINLEVEL, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankMinimumWaterVolume(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 18, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_MINVOLUME, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 18, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_MINVOLUME, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankMaximumWaterLevel(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 21, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_MAXLEVEL, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 21, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_MAXLEVEL, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankMinimumFraction(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 22, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_MIXFRACTION, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 22, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_MIXFRACTION, value(i),obj.LibEPANET);
             end
         end
         function setNodeTankBulkReactionCoeff(obj, value, varargin)
             if nargin==3
-                [obj.Errcode] = ENsetnodevalue(value, 23, varargin{1},obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(value, obj.ToolkitConstants.EN_TANK_KBULK, varargin{1},obj.LibEPANET);
                 if obj.Errcode, error(obj.getError(obj.Errcode)); end 
                 return;
             end
             for i=obj.getNodeTankIndex
-                [obj.Errcode] = ENsetnodevalue(i, 23, value(i),obj.LibEPANET);
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_TANK_KBULK, value(i),obj.LibEPANET);
             end
         end
         function setNodeSourceQuality(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetnodevalue(i, 5, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_SOURCEQUAL, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
             end
         end
         function setNodeSourcePatternIndex(obj, value, varargin)
-            if nargin==3, indices = value; value=varargin{1}; else  indices = getNodeIndices(obj,varargin); end
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
             j=1;
             for i=indices
-                [obj.Errcode] = ENsetnodevalue(i, 6, value(j),obj.LibEPANET); j=j+1;
+                [obj.Errcode] = ENsetnodevalue(i, obj.ToolkitConstants.EN_SOURCEPAT, value(j),obj.LibEPANET); j=j+1;
                 if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+            end
+        end
+        function value = setLinkPumpHeadCurveIndex(obj, value, varargin)
+            if nargin==3, indices = value; value=varargin{1}; else indices = getNodeIndices(obj,varargin); end
+            j=1;
+            for i=indices
+                [obj.Errcode] = ENsetheadcurveindex(obj,i,value(j)); j=j+1;
             end
         end
         function setNodeSourceType(obj, index, value)
             value=find(strcmpi(obj.TYPESOURCE,value)==1)-1;
-            [obj.Errcode] = ENsetnodevalue(index, 7, value,obj.LibEPANET);
+            [obj.Errcode] = ENsetnodevalue(index, obj.ToolkitConstants.EN_SOURCETYPE, value,obj.LibEPANET);
         end
         function setOptionsMaxTrials(obj,value)
-            [obj.Errcode] = ENsetoption(0,value,obj.LibEPANET);
+            [obj.Errcode] = ENsetoption(obj.ToolkitConstants.EN_TRIALS,value,obj.LibEPANET);
         end
         function setOptionsAccuracyValue(obj,value)
-            [obj.Errcode] = ENsetoption(1,value,obj.LibEPANET);
+            [obj.Errcode] = ENsetoption(obj.ToolkitConstants.EN_ACCURACY,value,obj.LibEPANET);
         end
         function setOptionsQualityTolerance(obj,value)
-            [obj.Errcode] = ENsetoption(2,value,obj.LibEPANET);
+            [obj.Errcode] = ENsetoption(obj.ToolkitConstants.EN_TOLERANCE,value,obj.LibEPANET);
         end
         function setOptionsEmitterExponent(obj,value)
-            [obj.Errcode] = ENsetoption(3,value,obj.LibEPANET);
+            [obj.Errcode] = ENsetoption(obj.ToolkitConstants.EN_EMITEXPON,value,obj.LibEPANET);
         end
         function setOptionsPatternDemandMultiplier(obj,value)
-            [obj.Errcode] = ENsetoption(4,value,obj.LibEPANET);
+            [obj.Errcode] = ENsetoption(obj.ToolkitConstants.EN_DEMANDMULT,value,obj.LibEPANET);
         end
         function setTimeSimulationDuration(obj,value)
-            [obj.Errcode] = ENsettimeparam(0,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_DURATION,value,obj.LibEPANET);
         end
         function setTimeHydraulicStep(obj,value)
             % Hstep = min(Pstep,Hstep)
             % Hstep = min(Rstep,Hstep)
             % Hstep = min(Qstep,Hstep)
-            [obj.Errcode] = ENsettimeparam(1,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_HYDSTEP,value,obj.LibEPANET);
         end
         function setTimeQualityStep(obj,value)
             % Qstep = min(Qstep,Hstep)
-            [obj.Errcode] = ENsettimeparam(2,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_QUALSTEP,value,obj.LibEPANET);
         end
         function setTimePatternStep(obj,value)
-            [obj.Errcode] = ENsettimeparam(3,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_PATTERNSTEP,value,obj.LibEPANET);
         end
         function setTimePatternStart(obj,value)
-            [obj.Errcode] = ENsettimeparam(4,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_PATTERNSTART,value,obj.LibEPANET);
         end
         function setTimeReportingStep(obj,value)
-            [obj.Errcode] = ENsettimeparam(5,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_REPORTSTEP,value,obj.LibEPANET);
         end
         function setTimeReportingStart(obj,value)
-            [obj.Errcode] = ENsettimeparam(6,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_REPORTSTART,value,obj.LibEPANET);
         end
         function setTimeRuleControlStep(obj,value)
-            [obj.Errcode] = ENsettimeparam(7,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_RULESTEP,value,obj.LibEPANET);
         end
         function setTimeStatisticsType(obj,value)
             %'NONE','AVERAGE','MINIMUM','MAXIMUM', 'RANGE'
             tmpindex=find(strcmpi(obj.TYPESTATS,value)==1)-1;
-            [obj.Errcode] = ENsettimeparam(8,tmpindex,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_STATISTIC,tmpindex,obj.LibEPANET);
         end
         function setTimeHTime(obj,value)
             % epanet20100
-            [obj.Errcode] = ENsettimeparam(11,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_HTIME,value,obj.LibEPANET);
         end
+%         function setTimeQTime(obj,value)
+%             % epanet20100
+%             [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_QTIME,value,obj.LibEPANET);
+%         end
         function setTimeHaltFlag(obj,value)
             % epanet20100
-            [obj.Errcode] = ENsettimeparam(12,value,obj.LibEPANET);
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_HALTFLAG,value,obj.LibEPANET);
         end
 %         function value = setTimeReportingPeriods(obj)
-%             [obj.Errcode, value] = ENgettimeparam(9,obj.LibEPANET);
-%         function value = setTimeStartTime(obj)
-%             [obj.Errcode, value] = ENgettimeparam(10,obj.LibEPANET);
+%             [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_PERIODS,obj.LibEPANET);
+        function setTimeStartTime(obj, value)
+            [obj.Errcode] = ENsettimeparam(obj.ToolkitConstants.EN_STARTTIME,value,obj.LibEPANET);
+        end
 %         function value = setTimeNextEvent(obj)
-%             [obj.Errcode, value] = ENgettimeparam(13,obj.LibEPANET);
+%             [obj.Errcode, value] = ENgettimeparam(obj.ToolkitConstants.EN_NEXTEVENT,obj.LibEPANET);
 %         end
         function setPattern(obj,index,patternVector)
             nfactors=length(patternVector);
@@ -2376,6 +2742,10 @@ classdef epanet <handle
             [obj.Errcode] = ENsetpatternvalue(index, patternTimeStep, patternFactor,obj.LibEPANET);
         end
         function setQualityType(obj,varargin)
+            % Sets the type of water quality analysis
+            % Example:
+            %     d.setQualtype (chemname, chemunits, tracenode)
+                 
             qualcode=0;chemname='';chemunits='';tracenode='';
             if find(strcmpi(varargin,'none')==1)
                 [obj.Errcode] = ENsetqualtype(qualcode,chemname,chemunits,tracenode,obj.LibEPANET);
@@ -2432,11 +2802,21 @@ classdef epanet <handle
         function useHydraulicFile(obj,hydname)
             [obj.Errcode]=ENusehydfile(hydname,obj.LibEPANET);
         end
-        function initializeHydraulicAnalysis(obj)
-            [obj.Errcode] = ENinitH(1,obj.LibEPANET);
+        function initializeHydraulicAnalysis(obj,varargin)
+            code=obj.ToolkitConstants.EN_SAVE;
+            if ~isempty(varargin)
+                code=varargin{1};
+            end
+            [obj.Errcode] = ENinitH(code,obj.LibEPANET);
         end
-        function initializeQualityAnalysis(obj)
-            [obj.Errcode] = ENinitQ(1,obj.LibEPANET);
+        function initializeQualityAnalysis(obj,varargin)
+            code=obj.ToolkitConstants.EN_SAVE;
+            if ~isempty(varargin)
+% obj.ToolkitConstants.EN_SAVE_AND_INIT; obj.ToolkitConstants.EN_NOSAVE;
+% obj.ToolkitConstants.EN_INITFLOW;
+                code=varargin{1};
+            end
+            [obj.Errcode] = ENinitQ(code,obj.LibEPANET);
         end
         function tstep = nextHydraulicAnalysisStep(obj)
             [obj.Errcode, tstep] = ENnextH(obj.LibEPANET);
@@ -2462,36 +2842,30 @@ classdef epanet <handle
         function tleft=stepQualityAnalysisTimeLeft(obj)
             [obj.Errcode, tleft] = ENstepQ(obj.LibEPANET);
         end
-        function Errcode = saveInputFile(obj,inpname,varargin)
-            if strcmp(inpname,obj.BinTempfile) && nargin<3 %&& ~isempty(varargin)
-                [addSectionCoordinates,addSectionRules] = obj.getBinCoordRuleSections;
-                [obj.Errcode] = ENsaveinpfile(inpname,obj.LibEPANET);
-                % Open epanet input file
-                [~,info] = obj.readInpFile;
-                endSectionIndex=find(~cellfun(@isempty,regexp(info,'END','match')));
-                coordSectionIndex=find(~cellfun(@isempty,regexp(info,'COORDINATES','match')));
-%                 verticesSectionIndex=find(~cellfun(@isempty,regexp(info,'VERTICES','match')));
-                info(endSectionIndex)='';
-                f1=fopen([obj.BinTempfile],'w');
-                if ~isempty(coordSectionIndex)
-                    fprintf(f1, '%s\n', info{1:coordSectionIndex-1});
-                else
-                    fprintf(f1, '%s\n', info{:});
-                end
-                if ~isempty(addSectionRules)
-                    fprintf(f1, '%s\n', addSectionRules{:});
-                end
-                if ~isempty(addSectionCoordinates) % && isempty(coordSectionIndex)
-                    fprintf(f1, '%s\n', addSectionCoordinates{:});
-                else
-                    fprintf(f1, '[END]\n');
-                end
-                fclose(f1);return;
-            end
+        function Errcode = saveInputFile(obj,inpname)
+%             [addSectionCoordinates,addSectionRules] = obj.getBinCoordRuleSections(obj.InputFile);
             [Errcode] = ENsaveinpfile(inpname,obj.LibEPANET);
-            % The code below is because of a bug in EPANET 2.00.12
-            % When saving using ENsaveinpfile, it does not save the type of the curves.
-            obj.remAddBinCurvesID(inpname);
+%             [~,info] = obj.readInpFile;
+%             endSectionIndex=find(~cellfun(@isempty,regexp(info,'END','match')));
+%             endInpIndex=find(~cellfun(@isempty,regexp(addSectionCoordinates,'END','match')));
+%             info(endSectionIndex)='';
+%             f1 = writenewTemp(obj.BinTempfile);
+%             coordSectionIndex=find(~cellfun(@isempty,regexp(info,'COORDINATES','match')));
+%             if ~isempty(coordSectionIndex)
+%                 fprintf(f1, '%s\n', info{1:coordSectionIndex-1});
+%             else
+%                 fprintf(f1, '%s\n', info{:});
+%             end
+%             if ~isempty(addSectionRules)
+%                 fprintf(f1, '%s\n', addSectionRules{:});
+%             end
+%             if ~isempty(addSectionCoordinates) % && isempty(coordSectionIndex)
+%                 fprintf(f1, '%s\n', addSectionCoordinates{:});
+%             end
+%             if isempty(endInpIndex)
+%                 fprintf(f1, '[END]\n');
+%             end
+%             fclose(f1);
         end
         function writeLineInReportFile(obj, line)
             [obj.Errcode] = ENwriteline (line,obj.LibEPANET);
@@ -2501,17 +2875,20 @@ classdef epanet <handle
             [obj.Errcode]=ENreport(obj.LibEPANET);
         end
         function unload(obj)
-            ENclose(obj.LibEPANET);
+            %ENclose(obj.LibEPANET);
             ENMatlabCleanup(obj.LibEPANET);
-            fclose all;
-            if exist([obj.BinTempfile(1:end-4),'.bin'])==2
+            fclose('all');
+            files=dir('@#*');
+            try delete([obj.InputFile(1:end-4),'.txt']), catch; end
+            if ~isempty(files); delete('@#*'); end
+            if exist([obj.BinTempfile(1:end-4),'.bin'], 'file')==2
                 delete([obj.BinTempfile(1:end-4),'.bin']);
             end
             delete(obj.BinTempfile);
-            if exist([obj.BinTempfile(1:end-4),'.txt'])==2
+            if exist([obj.BinTempfile(1:end-4),'.txt'], 'file')==2
                 delete([obj.BinTempfile(1:end-4),'.txt']);
             end
-            if exist(obj.MSXTempFile)==2
+            if exist(obj.MSXTempFile, 'file')==2
                 delete(obj.MSXTempFile);
             end
             disp('EPANET Class is unloaded')
@@ -2522,20 +2899,6 @@ classdef epanet <handle
             else
                 MSXMatlabSetup(obj,msxname,varargin);
             end
-        end
-        function [status,result] = runMSXexe(obj, varargin)
-            inpfile=obj.BinTempfile;
-            if isempty(varargin)
-                rptfile=[inpfile(1:length(inpfile)-4),'.txt'];
-            else
-                rptfile=varargin{1};
-            end
-            if strcmp(computer('arch'),'win64') || strcmp(computer('arch'),'win32')
-                [~,lpwd]=system(['cmd /c for %A in ("',obj.MSXLibEPANETPath,'") do @echo %~sA']);
-                libPwd=regexp(lpwd,'\s','split');
-                r = sprintf('%s\\epanetmsx.exe %s %s %s',libPwd{1},inpfile,obj.MSXTempFile,rptfile);
-            end
-            [status,result] = system(r);
         end
         function value = getMSXEquationsTerms(obj)
             [value,~,~] = getEquations(obj.MSXFile);
@@ -2593,12 +2956,15 @@ classdef epanet <handle
         end
         function value = getMSXSpeciesNameID(obj,varargin)
             if isempty(varargin)
-                for i=1:obj.getMSXSpeciesCount
+                spcnt = obj.getMSXSpeciesCount;
+                value = cell(1, spcnt); 
+                for i=1:spcnt
                     [obj.Errcode, len] = MSXgetIDlen(3,i,obj.MSXLibEPANET);
                     [obj.Errcode, value{i}]=MSXgetID(3,i,len,obj.MSXLibEPANET);
                 end
             else
                 k=1;
+                value = cell(1, length(varargin{1}));
                 for i=varargin{1}
                     [obj.Errcode, len] = MSXgetIDlen(3,i,obj.MSXLibEPANET);
                     [obj.Errcode, value{k}]=MSXgetID(3,i,len,obj.MSXLibEPANET);
@@ -2607,81 +2973,77 @@ classdef epanet <handle
             end
         end
         function value = getMSXSpeciesType(obj)
-            if obj.getMSXSpeciesCount
-                for i=1:obj.getMSXSpeciesCount
+            msxSpCnt = obj.getMSXSpeciesCount;
+            value = cell(1, msxSpCnt);
+            if msxSpCnt
+                for i=1:msxSpCnt
                     [obj.Errcode,value{i},~,~,~] = MSXgetspecies(i,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXSpeciesUnits(obj)
-            if obj.getMSXSpeciesCount
-                for i=1:obj.getMSXSpeciesCount
+            msxSpCnt = obj.getMSXSpeciesCount;
+            value = cell(1, msxSpCnt);
+            if msxSpCnt
+                for i=1:msxSpCnt
                     [obj.Errcode,~,value{i},~,~] = MSXgetspecies(i,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXSpeciesATOL(obj)
-            if obj.getMSXSpeciesCount
-                for i=1:obj.getMSXSpeciesCount
+            value = [];
+            msxSpCnt = obj.getMSXSpeciesCount;
+            if msxSpCnt
+                for i=1:msxSpCnt
                     [obj.Errcode,~,~,value,~] = MSXgetspecies(i,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXSpeciesRTOL(obj)
-            if obj.getMSXSpeciesCount
-                for i=1:obj.getMSXSpeciesCount
+            value = [];
+            msxSpCnt = obj.getMSXSpeciesCount;
+            if msxSpCnt
+                for i=1:msxSpCnt
                     [obj.Errcode,~,~,~,value] = MSXgetspecies(i,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXSpeciesIndex(obj,varargin)
             if isempty(varargin)
                 value=1:obj.getMSXSpeciesCount;
+                if isempty(value), value=[]; end
             elseif isa(varargin{1},'cell')
-                k=1;
                 for j=1:length(varargin{1})
-                    [obj.Errcode, value(k)] = MSXgetindex(3,varargin{1}{j},obj.MSXLibEPANET);
-                    k=k+1;
+                    [obj.Errcode, value(j)] = MSXgetindex(3,varargin{1}{j},obj.MSXLibEPANET);
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = MSXgetindex(obj.MSXLibEPANET,3,varargin{1});
             end
         end
         function value = getMSXConstantsNameID(obj)
+            value={};
             if obj.getMSXConstantsCount
                 for i=1:obj.getMSXConstantsCount
                     [obj.Errcode, len] = MSXgetIDlen(6,i,obj.MSXLibEPANET);
                     [obj.Errcode, value{i}] = MSXgetID(6,i,len,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXConstantsValue(obj)
+            value=[];
             if obj.getMSXConstantsCount
                 for i=1:obj.getMSXConstantsCount
                     [obj.Errcode, value(i)] = MSXgetconstant(i,obj.MSXLibEPANET);
                 end
-            else
-                value=-1;
             end
         end
         function value = getMSXConstantsIndex(obj,varargin)
             if isempty(varargin)
                 value=1:obj.getMSXConstantsCount;
+                if isempty(value), value=[]; end
             elseif isa(varargin{1},'cell')
-                k=1;
                 for j=1:length(varargin{1})
-                    [obj.Errcode, value(k)] = MSXgetindex(6,varargin{1}{j},obj.MSXLibEPANET);
-                    k=k+1;
+                    [obj.Errcode, value(j)] = MSXgetindex(6,varargin{1}{j},obj.MSXLibEPANET);
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = MSXgetindex(obj.MSXLibEPANET,6,varargin{1});
@@ -2689,12 +3051,10 @@ classdef epanet <handle
         end
         function value = getMSXParametersNameID(obj,varargin)
             if isempty(varargin)
+                if ~obj.getMSXParametersCount, value={};return; end
                 for i=1:obj.getMSXParametersCount
                     [obj.Errcode, len] = MSXgetIDlen(5,i,obj.MSXLibEPANET);
                     [obj.Errcode, value{i}]=MSXgetID(5,i,len,obj.MSXLibEPANET);
-                end
-                if ~obj.getMSXParametersCount
-                    value=0;
                 end
             else
                 k=1;
@@ -2708,14 +3068,10 @@ classdef epanet <handle
         function value = getMSXParametersIndex(obj,varargin)
             if isempty(varargin)
                 value=1:obj.getMSXParametersCount;
-                if ~length(value)
-                    value=0;
-                end
+                if isempty(value), value=[]; end
             elseif isa(varargin{1},'cell')
-                k=1;
                 for j=1:length(varargin{1})
-                    [obj.Errcode, value(k)] = MSXgetindex(5,varargin{1}{j},obj.MSXLibEPANET);
-                    k=k+1;
+                    [obj.Errcode, value(j)] = MSXgetindex(5,varargin{1}{j},obj.MSXLibEPANET);
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = MSXgetindex(5,varargin{1},obj.MSXLibEPANET);
@@ -2726,15 +3082,13 @@ classdef epanet <handle
             if ~obj.getMSXParametersCount, value=0;return;end
             if ~length(obj.NodeTankIndex), value=0;return;end
             for i=1:length(obj.NodeTankIndex)
-                for j=1:obj.MSXParametersCount%
+                for j=1:obj.MSXParametersCount
                     [obj.Errcode, value{obj.NodeTankIndex(i)}(j)] = MSXgetparameter(0,obj.NodeTankIndex(i),j,obj.MSXLibEPANET);
                 end
             end
         end
         function value = getMSXParametersPipesValue(obj)
-            if ~obj.getMSXParametersCount
-                value=0;return;
-            end
+            if ~obj.getMSXParametersCount, value=[];return; end
             for i=1:obj.getLinkPipeCount
                 for j=1:obj.getMSXParametersCount
                     [obj.Errcode, value{i}(j)] = MSXgetparameter(1,i,j,obj.MSXLibEPANET);
@@ -2743,12 +3097,10 @@ classdef epanet <handle
         end
         function value = getMSXPatternsNameID(obj,varargin)
             if isempty(varargin)
+                if ~obj.getMSXPatternsCount, value={};return; end
                 for i=1:obj.getMSXPatternsCount
                     [obj.Errcode, len] = MSXgetIDlen(7,i,obj.MSXLibEPANET);
                     [obj.Errcode, value{i}]=MSXgetID(7,i,len,obj.MSXLibEPANET);
-                end
-                if ~obj.getMSXPatternsCount
-                    value=0;
                 end
             else
                 k=1;
@@ -2762,39 +3114,26 @@ classdef epanet <handle
         function value = getMSXPatternsIndex(obj,varargin)
             if isempty(varargin)
                 value=1:obj.getMSXPatternsCount;
-                if ~length(value)
-                    value=0;
-                end
+                if isempty(value), value=[]; end
             elseif isa(varargin{1},'cell')
-                k=1;
                 for j=1:length(varargin{1})
-                    [obj.Errcode, value] = MSXgetindex(obj.MSXLibEPANET,7,varargin{1});
-                    if obj.Errcode
-                        value{k}=0;
-                    end
-                    k=k+1;
+                    [obj.Errcode, value(j)] = MSXgetindex(obj.MSXLibEPANET,7,varargin{1}{j});
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = MSXgetindex(obj.MSXLibEPANET,7,varargin{1});
-                if obj.Errcode
-                    value=0;
-                end
             end
         end
         function value = getMSXPatternsLengths(obj,varargin)
+            value =[];
             if isempty(varargin)
                 if obj.getMSXPatternsCount
                     for i=obj.getMSXPatternsIndex
                         [obj.Errcode, value(i)]=MSXgetpatternlen(i,obj.MSXLibEPANET);
                     end
-                else
-                    value=-1;
                 end
             elseif isa(varargin{1},'cell')
-                k=1;
                 for j=1:length(varargin{1})
-                    [obj.Errcode, value(k)] = MSXgetpatternlen(obj.getMSXPatternsIndex(varargin{1}{j}),obj.MSXLibEPANET);
-                    k=k+1;
+                    [obj.Errcode, value(j)] = MSXgetpatternlen(obj.getMSXPatternsIndex(varargin{1}{j}),obj.MSXLibEPANET);
                 end
             elseif isa(varargin{1},'char')
                 [obj.Errcode, value] = MSXgetpatternlen(obj.getMSXPatternsIndex(varargin{1}),obj.MSXLibEPANET);
@@ -2807,10 +3146,7 @@ classdef epanet <handle
             end
         end
         function value = getMSXNodeInitqualValue(obj)
-            if obj.getMSXSpeciesCount==0
-                value{1}(1)=0;
-                return;
-            end
+            if ~obj.getMSXSpeciesCount, value{1}(1)=0; return; end
             for i=1:obj.getNodeCount
                 for j=1:obj.getMSXSpeciesCount
                     [obj.Errcode, value{i}(j)] = MSXgetinitqual(0,i,j,obj.MSXLibEPANET);
@@ -2818,10 +3154,7 @@ classdef epanet <handle
             end
         end
         function value = getMSXLinkInitqualValue(obj)
-            if obj.getMSXSpeciesCount==0
-                value{1}(1)=0;
-                return;
-            end
+            if ~obj.getMSXSpeciesCount, value{1}(1)=0; return; end
             for i=1:obj.getLinkCount
                 for j=1:obj.getMSXSpeciesCount
                     [obj.Errcode, value{i}(j)] = MSXgetinitqual(1,i,j,obj.MSXLibEPANET);
@@ -2889,7 +3222,76 @@ classdef epanet <handle
         function value = getMSXSpeciesConcentration(obj, type, index, species)
             [obj.Errcode, value] = MSXgetqual(type, index, species, obj.MSXLibEPANET);
         end
-        function value = getMSXComputedQualityNode(obj,varargin)
+        function value = getMSXComputedQualitySpecie(obj, specie)
+            % Return the quality nodes for specific specie
+            % Example: 
+            %       MSX_comp = d.getMSXComputedQualitySpecie('CL2')
+            %            MSX_comp.NodeQuality % row: time, col: node index
+            %            MSX_comp.LinkQuality % row: time, col: link index
+            %            MSX_comp.Time
+           
+            if obj.getMSXSpeciesCount==0
+                value=0;
+                return;
+            end
+            link_indices = 1:obj.getLinkCount;%for all link index
+            node_indices = 1:obj.getNodeCount;%for all node index
+            specie_name = obj.getMSXSpeciesIndex(specie);
+            
+            value.NodeQuality = nan(1, length(node_indices));
+            value.LinkQuality = nan(1, length(node_indices));
+            % Obtain a hydraulic solution
+            obj.solveMSXCompleteHydraulics(obj.MSXLibEPANET);
+            % Run a step-wise water quality analysis without saving
+            % RESULTS to file
+            obj.initializeMSXQualityAnalysis(0);
+            % Retrieve species concentration at node
+            k=1; tleft=1;t=0;
+            value.Time(k, :)=0;
+            time_step = obj.getMSXTimeStep;
+            timeSmle=obj.getTimeSimulationDuration;%bug at time
+            while(tleft>0 && obj.Errcode==0 && timeSmle~=t)
+                [t, tleft]=obj.stepMSXQualityAnalysisTimeLeft;
+                if t<time_step || t==time_step
+                    if node_indices(end) < link_indices(end)
+                        for lnk=link_indices
+                            value.LinkQuality(k, lnk)=obj.getMSXLinkInitqualValue{lnk}(specie_name);
+                            if lnk < node_indices(end) + 1
+                                value.NodeQuality(k, lnk)=obj.getMSXNodeInitqualValue{lnk}(specie_name);
+                            end
+                        end
+                    else
+                        for lnk=node_indices
+                            value.NodeQuality(k, lnk)=obj.getMSXNodeInitqualValue{lnk}(specie_name);
+                            if lnk < link_indices(end) + 1
+                                value.LinkQuality(k, lnk)=obj.getMSXLinkInitqualValue{lnk}(specie_name);
+                            end
+                        end
+                    end
+                else
+                    if node_indices(end) < link_indices(end)
+                        for lnk=link_indices
+                            value.LinkQuality(k, lnk)=obj.getMSXSpeciesConcentration(1, lnk, specie_name);%link code 1
+                            if lnk < node_indices(end) + 1
+                                value.NodeQuality(k, lnk)=obj.getMSXSpeciesConcentration(0, lnk, specie_name);%node code0
+                            end
+                        end
+                    else
+                        for lnk=node_indices
+                            value.NodeQuality(k, lnk)=obj.getMSXSpeciesConcentration(0, lnk, specie_name);%link code 1
+                            if lnk < link_indices(end) + 1
+                                value.LinkQuality(k, lnk)=obj.getMSXSpeciesConcentration(1, lnk, specie_name);%node code0
+                            end
+                        end
+                    end
+                end
+                if k>1
+                    value.Time(k, :)=t;
+                end
+                k=k+1;
+            end
+        end
+        function value = getMSXComputedQualityNode(obj, varargin)
             if obj.getMSXSpeciesCount==0
                 value=0;
                 return;
@@ -2906,60 +3308,71 @@ classdef epanet <handle
                 ss=1:obj.getNodeCount;%index node
                 uu=1:obj.getMSXSpeciesCount;
             end
-            value.Quality = cell(1,length(ss));
+            value.Quality = cell(1, length(ss));
             % Obtain a hydraulic solution
             obj.solveMSXCompleteHydraulics(obj.MSXLibEPANET);
             % Run a step-wise water quality analysis without saving
             % RESULTS to file
             obj.initializeMSXQualityAnalysis(0);
             % Retrieve species concentration at node
-            k=2; tleft=1;t=0;
-            value.Time(k,:)=0;
+            k=1; tleft=1;t=0;
+            value.Time(k, :)=0;
+            time_step = obj.getMSXTimeStep;
             timeSmle=obj.getTimeSimulationDuration;%bug at time
             while(tleft>0 && obj.Errcode==0 && timeSmle~=t)
                 [t, tleft]=obj.stepMSXQualityAnalysisTimeLeft;
                 if ~isempty(varargin)
-                    if t<3600 || t==3600
+                    if t<time_step || t==time_step
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXNodeInitqualValue{nl}(j);
+                                value.Quality{i}(k, g)=obj.getMSXNodeInitqualValue{nl}(j);
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     else
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXSpeciesConcentration(0, nl, j);%node code0
+                                value.Quality{i}(k, g)=obj.getMSXSpeciesConcentration(0, nl, j);%node code0
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     end
                 else
-                    if t<3600 || t==3600
+                    if t<time_step || t==time_step
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXNodeInitqualValue{(nl)}(j);
+                                value.Quality{i}(k, g)=obj.getMSXNodeInitqualValue{(nl)}(j);
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     else
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXSpeciesConcentration(0, (nl), j);%node code0
+                                value.Quality{i}(k, g)=obj.getMSXSpeciesConcentration(0, (nl), j);%node code0
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     end
                 end
-                value.Time(k,:)=t;
+                if k>1
+                    value.Time(k, :)=t;
+                end
                 k=k+1;
             end
         end
-        function value = getMSXComputedQualityLink(obj,varargin)
+        function value = getMSXComputedQualityLink(obj, varargin)
             if obj.getMSXSpeciesCount==0
                 value=0;
                 return;
@@ -2976,55 +3389,66 @@ classdef epanet <handle
                 ss=1:obj.getLinkCount;%index link
                 uu=1:obj.getMSXSpeciesCount;
             end
-            value.Quality = cell(1,length(ss));
+            value.Quality = cell(1, length(ss));
             % Obtain a hydraulic solution
             obj.solveMSXCompleteHydraulics(obj.MSXLibEPANET);
             % Run a step-wise water quality analysis without saving
             % RESULTS to file
             obj.initializeMSXQualityAnalysis(0);
             % Retrieve species concentration at node
-            k=2;tleft=1;
-            value.Time(k,:)=0;
+            k=1;tleft=1;
+            time_step = obj.getMSXTimeStep;
+            value.Time(k, :)=0;
             while(tleft>0 && obj.Errcode==0)
                 [t, tleft]=obj.stepMSXQualityAnalysisTimeLeft;
                 if ~isempty(varargin)
-                    if t<3600 || t==3600
+                    if t<time_step || t==time_step
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXLinkInitqualValue{nl}(j);
+                                value.Quality{i}(k, g)=obj.getMSXLinkInitqualValue{nl}(j);
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     else
                         i=1;
-                        for nl=ss                        
+                        for nl=ss  
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXSpeciesConcentration(1, nl, j);
+                                value.Quality{i}(k, g)=obj.getMSXSpeciesConcentration(1, nl, j);
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     end
                 else
-                    if t<3600 || t==3600
+                    if t<time_step || t==time_step
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXLinkInitqualValue{(nl)}(j);
+                                value.Quality{i}(k, g)=obj.getMSXLinkInitqualValue{(nl)}(j);
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     else
                         i=1;
                         for nl=ss
+                            g=1;
                             for j=uu
-                                value.Quality{i}(k,j)=obj.getMSXSpeciesConcentration(1, (nl), j);%link code1
+                                value.Quality{i}(k, g)=obj.getMSXSpeciesConcentration(1, (nl), j);%link code1
+                                g=g+1;
                             end
                             i=i+1;
                         end
                     end
                 end
-                value.Time(k,:)=t;
+                if k>1
+                    value.Time(k, :)=t;
+                end
                 k=k+1;
             end
         end
@@ -3079,13 +3503,29 @@ classdef epanet <handle
             [obj.Errcode]=MSXreport(obj.MSXLibEPANET);
         end
         function [status,result] = writeMSXReportExe(obj, varargin)
-            if ~isempty(varargin)
-                varargin=varargin{1};
+            if isempty(varargin)
+                rptfile=['@#',char(java.util.UUID.randomUUID),'.txt'];
             else
-                varargin=[obj.BinTempfile(1:length(obj.BinTempfile)-4),'.txt'];
+                rptfile=varargin{1};
             end
-            [status,result] = obj.runMSXexe(varargin);
+            [status,result] = runMSX(obj, rptfile);
         end
+%         function value = getMSXComputedResultsBinary(obj)
+%             uuID = char(java.util.UUID.randomUUID);
+%             binfile=['@#',uuID,'.bin'];
+%             obj.solveMSXCompleteHydraulics;
+%             obj.saveHydraulicsOutputReportingFile;
+%             obj.solveMSXCompleteQuality;
+%             obj.saveMSXQualityFile(binfile);
+%             value = readMSXBinaryFile(binfile);
+%         end
+%         function value = getMSXComputedResultsBinaryExe(obj)
+%             uuID = char(java.util.UUID.randomUUID);
+%             rptfile=['@#',uuID,'.txt'];
+%             binfile=['@#',uuID,'.bin'];
+%             runMSX(obj, rptfile, binfile);
+%             value = readMSXBinaryFile(binfile);
+%         end
         function index = addMSXPattern(obj,varargin)
             index=-1;
             if nargin==2
@@ -3100,7 +3540,7 @@ classdef epanet <handle
         function setMSXSources(obj, nodeID, speciesID, sourcetype, concentration, patID)
             node = obj.getNodeIndex(nodeID);
             species = obj.getMSXSpeciesIndex(speciesID);
-            type = find(strcmp(obj.MSXTYPESOURCE,upper(sourcetype)))-2;
+            type = find(strcmpi(obj.MSXTYPESOURCE,sourcetype))-2;
             pat = obj.getMSXPatternsIndex(patID);
             MSXsetsource(node, species, type, concentration, pat, obj.MSXLibEPANET);
         end
@@ -3302,191 +3742,106 @@ classdef epanet <handle
             % % section Patterns
             % % <patternID> <multiplier> <multiplier> 
             % msx.patterns{1} = {''}; %patternID
-            % msx.patterns{2} = {''}; %multiplier
+            % msx.patterns{2} = {''}; %multiplier            
             space=5;
-            f = fopen(msx.msxFile,'w');
+            f = writenewTemp(msx.msxFileName);
             fprintf(f,'[TITLE]\n');
-            if isfield(msx,'titleDescription')
-                for i=1:length(msx.titleDescription)
-                    fprintf(f,msx.titleDescription{i});
-                end
+            if isfield(msx,'title')
+                fprintf(f,msx.title);
             end
 
             fprintf(f,'\n\n[OPTIONS]\n');
             options = {'AREA_UNITS', 'RATE_UNITS', 'SOLVER', 'COUPLING', 'COMPILER',...
                 'TIMESTEP', 'ATOL', 'RTOL'};
             spaces=blanks(space);
+
             if isfield(msx,'options')
                 for i=1:length(msx.options)
-                    fprintf(f,num2str(options{i}));
-                    fprintf(f,spaces);
-                    fprintf(f,num2str(msx.options{i}));
-                    fprintf(f,'\n');
+                    if isfield(msx.options,options{i})
+                        fprintf(f,num2str(options{i}));
+                        fprintf(f,spaces);
+                        fprintf(f,num2str(msx.options{i}));
+                        fprintf(f,'\n');
+                    end
                 end
             end
 
-            fprintf(f,'\n[SPECIES]\n');
-            if isfield(msx,'species')
-                for u=1:length(msx.species{1})
-                    for i=1:length(msx.species)
-                        if isnumeric(msx.species{i}{u})
-                            fprintf(f,num2str(msx.species{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.species{i}{u})));
+            FIELDS = {'SPECIES', 'COEFFICIENTS', 'TERMS', 'PIPES',...
+                'TANKS', 'SOURCES', 'QUALITY', 'GLOBAL', 'PARAMETERS', 'PATTERNS'};
+            for sect=FIELDS
+                section = char(sect);
+                if ~strcmpi(section, 'GLOBAL')
+                    fprintf(f,['\n[',section,']\n']);
+                end
+                sp_field = lower(section);
+                if isfield(msx,lower(section))
+                    for u=1:length(eval(['msx.',sp_field,'{1}']))
+                        for i=1:length(eval(['msx.',sp_field]))
+                            if isnumeric(eval(['msx.',sp_field,'{i}{u}']))
+                                fprintf(f,num2str(eval(['msx.',sp_field,'{i}{u}'])));
+                            else
+                                fprintf(f,num2str(char(eval(['msx.',sp_field,'{i}{u}']))));
+                            end
+                            fprintf(f,spaces);
                         end
-                        fprintf(f,spaces);
+                        fprintf(f,'\n');
                     end
-                    fprintf(f,'\n');
                 end
             end
-            fprintf(f,'\n[COEFFICIENTS]\n');
-            if isfield(msx,'coefficients')
-                for u=1:length(msx.coefficients{1})
-                    for i=1:length(msx.coefficients)
-                        if isnumeric(msx.coefficients{i}{u})
-                            fprintf(f,num2str(msx.coefficients{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.coefficients{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'\n[TERMS]\n');
-            if isfield(msx,'terms')
-                for u=1:length(msx.terms{1})
-                    for i=1:length(msx.terms)
-                        if isnumeric(msx.terms{i}{u})
-                            fprintf(f,num2str(msx.terms{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.terms{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'\n[PIPES]\n');
-            if isfield(msx,'pipes')
-                for u=1:length(msx.pipes{1})
-                    for i=1:length(msx.pipes)
-                        if isnumeric(msx.pipes{i}{u})
-                            fprintf(f,num2str(msx.pipes{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.pipes{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'\n[TANKS]\n');
-            if isfield(msx,'tanks')
-                for u=1:length(msx.tanks{1})
-                    for i=1:length(msx.tanks)
-                        if isnumeric(msx.tanks{i}{u})
-                            fprintf(f,num2str(msx.tanks{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.tanks{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'\n[SOURCES]\n');
-            if isfield(msx,'sources')
-                for u=1:length(msx.sources{1})
-                    for i=1:length(msx.sources)
-                        if isnumeric(msx.sources{i}{u})
-                            fprintf(f,num2str(msx.sources{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.sources{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'\n[QUALITY]\n');
-            if isfield(msx,'global')
-                for u=1:length(msx.global{1})
-                    for i=1:length(msx.global)
-                        if isnumeric(msx.global{i}{u})
-                            fprintf(f,num2str(msx.global{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.global{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-            if isfield(msx,'quality')
-                for u=1:length(msx.quality{1})
-                    for i=1:length(msx.quality)
-                        if isnumeric(msx.quality{i}{u})
-                            fprintf(f,num2str(msx.quality{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.quality{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'[PARAMETERS]\n');
-            if isfield(msx,'parameters')
-                for u=1:length(msx.parameters{1})
-                    for i=1:length(msx.parameters)
-                        if isnumeric(msx.parameters{i}{u})
-                            fprintf(f,num2str(msx.parameters{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.parameters{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
-            fprintf(f,'[PATTERNS]\n');
-            if isfield(msx,'patterns')
-                for u=1:length(msx.patterns{1})
-                    for i=1:length(msx.patterns)
-                        if isnumeric(msx.patterns{i}{u})
-                            fprintf(f,num2str(msx.patterns{i}{u}));
-                        else
-                            fprintf(f,num2str(char(msx.patterns{i}{u})));
-                        end
-                        fprintf(f,spaces);
-                    end
-                    fprintf(f,'\n');
-                end
-            end
-
+           
             fprintf(f,'[REPORT]\n');
             fprintf(f,'NODES ALL\n');
             fprintf(f,'LINKS ALL\n');
-            fclose(f)
+            fclose(f);
         end
         function unloadMSX(obj)
             MSXclose(obj);
             MSXMatlabCleanup(obj);
+            fclose('all');
+            disp('MSX unloaded');
+        end
+        function ToolkitConstants = getToolkitConstants(obj)
+            file = [obj.LibEPANETpath,obj.LibEPANET,'.h'];
+            if isdeployed
+                file=[file(1:end-1),'txt'];%epanet2.h-->epanet2.txt
+            end
+            fid = fopen(file);
+            tline = fgetl(fid);
+            i=1; constants={};
+            while ischar(tline)
+               if ~isempty(regexp(tline,'typedef enum','match'))
+                   tline = fgetl(fid);
+                   while isempty(regexp(tline,'}','match')) || isempty(tline)
+                       while isempty(tline)
+                           tline = fgetl(fid);
+                       end
+                       n = regexp(tline, {'\w*EN_\w*','\d*'}, 'match');
+                       constants(i) = n{1};
+                       codes(i) = str2double(n{2}{end}); 
+                       ToolkitConstants.(constants{i}) = codes(i);
+                       i=i+1;
+                       tline = fgetl(fid);
+                   end
+               else
+                   n = regexp(tline, {'\w*EN_\w*','\d*'}, 'match');
+                   if sum(cellfun(@isempty,n)), tline = fgetl(fid); continue; end
+                   if length(constants)>118, break; end %temporary
+                   constants(i) = n{1};
+                   codes(i) = str2double(n{2}{1}); 
+                   ToolkitConstants.(constants{i}) = codes(i);
+                   i=i+1;
+                   tline = fgetl(fid);
+               end
+            end
+            fclose(fid);
         end
         function obj = BinUpdateClass(obj)
             sect=0;i=1;t=1;q=1;
             typecode=0;x=1;b=1;d=1;
             if obj.Bin
-                obj.saveInputFile([obj.BinTempfile]);
+                obj.saveInputFile(obj.BinTempfile);
             end
+            obj.BinUnits_SI_Metric=0; obj.BinUnits_US_Customary=0;
             [~,info] = obj.readInpFile;
             for hc=1:length(info)
                 tline = info{hc};
@@ -3506,7 +3861,7 @@ classdef epanet <handle
                         obj.BinNodeType={};
                         obj.BinNodeJunctionsBaseDemands=[];
                         obj.BinNodeJunctionsBaseDemandsID={};
-                        obj.BinNodeDemandPatternNameID={};
+                        obj.BinNodeJunDemandPatternNameID={};
                         continue;
                         % [RESERVOIRS] section
                     elseif strcmpi(tok(1:5),'[RESE')
@@ -3522,11 +3877,11 @@ classdef epanet <handle
                         obj.BinNodeTankNameID={};
                         obj.BinNodeTankIndex=[];
                         obj.BinNodeTankElevation=[];
-                        obj.BinNodeTankInitLevel=[]; 
-                        obj.BinNodeTankMinLevel=[];  
-                        obj.BinNodeTankMaxLevel=[]; 
+                        obj.BinNodeTankInitialLevel=[]; 
+                        obj.BinNodeTankMinimumWaterLevel=[];  
+                        obj.BinNodeTankMaximumWaterLevel=[]; 
                         obj.BinNodeTankDiameter=[];  
-                        obj.BinNodeTankMinVol=[];
+                        obj.BinNodeTankMinimumWaterVolume=[];
                         continue;
                         % [PIPES] section
                     elseif strcmpi(tok(1:5),'[PIPE')
@@ -3578,7 +3933,7 @@ classdef epanet <handle
                         continue;
                         % [DEMANDS] section
                     elseif strcmpi(tok(1:5),'[DEMA') %&& max(obj.BinNodeJunctionsBaseDemands)==0
-                        sect=8;d=1;pd=1;pk=1;                       
+                        sect=8;d=1;pd=1;                     
                         continue;
                         % [STATUS] section
                     elseif strcmpi(tok(1:5),'[STAT')
@@ -3607,7 +3962,7 @@ classdef epanet <handle
                         for i=1:obj.BinPatternCount
                             tmplength=obj.BinPatternLengths(i);
                             for j=1:tmplength
-                                obj.BinPatternMatrix(i,j)=single(obj.BinPatternValue{i}(j));
+                                obj.BinPatternMatrix(i,j)=double(obj.BinPatternValue{i}(j));
                             end
                             if tmplength<tmpmaxlen
                                 for j=(tmplength+1):tmpmaxlen
@@ -3618,11 +3973,10 @@ classdef epanet <handle
                         continue;
                         % [RULES] section
                     elseif strcmpi(tok(1:5),'[RULE')
-                        sect=20;d=1;dd=0; 
+                        sect=20;d=1;obj.BinRulesCount=0; 
                         obj.BinRulesControlsInfo={};
                         obj.BinRulesControlLinksID={};
                         obj.BinRulesControlNodesID={};
-                        obj.BinRulesCount=1;
                         continue;
                         % [QUALITY] section
                     elseif strcmpi(tok(1:5),'[QUAL')
@@ -3634,7 +3988,7 @@ classdef epanet <handle
                         sect=13;
                         obj.BinNodeSourcePatternIndex = nan(1,obj.BinNodeCount);
                         obj.BinNodeSourceQuality = nan(1,obj.BinNodeCount);
-                        obj.BinNodeSourceTypeCode = nan(1,obj.BinNodeCount);
+                        obj.BinNodeSourceTypeIndex = nan(1,obj.BinNodeCount);
                         obj.BinNodeSourceType = cell(1,obj.BinNodeCount);
                         obj.BinNodeSourcePatternNameID = cell(1,obj.BinNodeCount);
                         continue;
@@ -3718,35 +4072,25 @@ classdef epanet <handle
                     end
                 end
                 clear atline;
-                a = regexp(tline, '\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
+                atline = checktlines(tline);
                 if sect==0
                     continue;
                     % Nodes
                 elseif sect==1                 
                     obj.BinNodeJunctionNameID{k}=atline{1};
                     obj.BinNodeJunctionIndex(k)=k;
-                    obj.BinNodeJunctionElevation(k)=str2num(atline{2});
+                    obj.BinNodeJunctionElevation(k)=str2double(atline{2});
                     if length(atline)>2
                         if ~isempty(atline{3}) && ~sum(atline{3}==';')
-                            obj.BinNodeJunctionsBaseDemands(k)=str2num(atline{3});
+                            obj.BinNodeJunctionsBaseDemands(k)=str2double(atline{3});
                             if length(atline)>3
                                 if ~sum(atline{4}==';')
-                                    obj.BinNodeDemandPatternNameID{k}=atline{4};
+                                    obj.BinNodeJunDemandPatternNameID{k}=atline{4};
                                 else
-                                    obj.BinNodeDemandPatternNameID{k}='';
+                                    obj.BinNodeJunDemandPatternNameID{k}='';
                                 end
                             else
-                                obj.BinNodeDemandPatternNameID{k}='';
+                                obj.BinNodeJunDemandPatternNameID{k}='';
                             end
                         end
                     end
@@ -3754,7 +4098,7 @@ classdef epanet <handle
                 elseif sect==2
                     obj.BinNodeReservoirNameID{r}=atline{1};
                     obj.BinNodeReservoirIndex(r)=k;
-                    obj.BinNodeReservoirElevation(r)=str2num(atline{2});
+                    obj.BinNodeReservoirElevation(r)=str2double(atline{2});
                     if length(atline)>2
                         if ~isempty(atline{3}) && ~sum(atline{3}==';')
                             obj.BinNodeResDemandPatternNameID{r}=atline{3};
@@ -3769,12 +4113,12 @@ classdef epanet <handle
                 elseif sect==3
                     obj.BinNodeTankNameID{p}=atline{1};
                     obj.BinNodeTankIndex(p)=k;
-                    obj.BinNodeTankElevation(p)=str2num(atline{2});
-                    obj.BinNodeTankInitLevel(p)=single(str2num(atline{3}));
-                    obj.BinNodeTankMinLevel(p)=str2num(atline{4});
-                    obj.BinNodeTankMaxLevel(p)=single(str2num(atline{5}));
-                    obj.BinNodeTankDiameter(p)=str2num(atline{6});
-                    obj.BinNodeTankMinVol(p)=single(str2num(atline{7}));
+                    obj.BinNodeTankElevation(p)=str2double(atline{2});
+                    obj.BinNodeTankInitialLevel(p)=single(str2double(atline{3}));
+                    obj.BinNodeTankMinimumWaterLevel(p)=str2double(atline{4});
+                    obj.BinNodeTankMaximumWaterLevel(p)=single(str2double(atline{5}));
+                    obj.BinNodeTankDiameter(p)=str2double(atline{6});
+                    obj.BinNodeTankMinimumWaterVolume(p)=single(str2double(atline{7}));
                     k=k+1;
                     p=p+1;
                     % Links
@@ -3783,10 +4127,10 @@ classdef epanet <handle
                     obj.BinLinkPipeIndex(t)=t;
                     obj.BinLinkFromNode{t}=atline{2};
                     obj.BinLinkToNode{t}=atline{3};
-                    obj.BinLinkPipeLengths(t)=str2num(atline{4});
-                    obj.BinLinkPipeDiameters(t)=str2num(atline{5});
-                    obj.BinLinkPipeRoughness(t)=str2num(atline{6});
-                    obj.BinLinkPipeMinorLoss(t)=str2num(atline{7});
+                    obj.BinLinkPipeLengths(t)=str2double(atline{4});
+                    obj.BinLinkPipeDiameters(t)=str2double(atline{5});
+                    obj.BinLinkPipeRoughness(t)=str2double(atline{6});
+                    obj.BinLinkPipeMinorLoss(t)=str2double(atline{7});
                     BinCNameID={};
                     if length(atline)>7
                         obj.BinLinkPipeStatus{t}=atline{8};
@@ -3802,7 +4146,7 @@ classdef epanet <handle
                     if strcmp(regexp(tline,'\w*HEAD*\w','match'),'HEAD')
                         obj.BinLinkPumpCurveNameID{q}=atline{5};
                     elseif strcmp(regexp(tline,'\w*POWER*\w','match'),'POWER')
-                        obj.BinLinkPumpPower(q)=str2num(atline{5});
+                        obj.BinLinkPumpPower(q)=str2double(atline{5});
                         obj.BinLinkPumpNameIDPower{q}=atline{1};
                     end
                     if length(atline)>6
@@ -3815,11 +4159,11 @@ classdef epanet <handle
                     obj.BinLinkValveIndex(i)=t;
                     obj.BinLinkFromNode{t}=atline{2};
                     obj.BinLinkToNode{t}=atline{3};
-                    obj.BinLinkValveDiameters(i)=str2num(atline{4});
+                    obj.BinLinkValveDiameters(i)=str2double(atline{4});
                     obj.BinLinkValveType{i}=atline{5};
-                    obj.BinLinkValveSetting(i)=str2num(atline{6});
+                    obj.BinLinkValveSetting(i)=str2double(atline{6});
                     if length(atline)>6
-                        obj.BinLinkValveMinorLoss(i)=str2num(atline{7});
+                        obj.BinLinkValveMinorLoss(i)=str2double(atline{7});
                     end
                     t=t+1;
                     i=i+1;
@@ -3855,25 +4199,25 @@ classdef epanet <handle
                     indd=find(strcmpi(obj.BinNodeNameID,atline{1}));
                     if ~isempty(obj.BinNodeJunctionsBaseDemandsID)
                         if strcmp(obj.BinNodeJunctionsBaseDemandsID{end},atline{1})
-                            pd=pd+1;obj.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2})); 
+                            pd=pd+1;obj.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2})); 
                         else
-                            obj.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2})); pd=1;
+                            obj.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2})); pd=1;
                         end
                     else
-                        obj.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2})); pd=1;
+                        obj.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2})); pd=1;
                     end                    
                     if length(atline)>2
                         if ~isempty(obj.BinNodeJunctionsBaseDemandsID)
                             if strcmp(obj.BinNodeJunctionsBaseDemandsID{end},atline{1})
-                                obj.BinNodeDemandPatternNameID{indd}=atline{3};
+                                obj.BinNodeJunDemandPatternNameID{indd}=atline{3};
                             else
-                                obj.BinNodeDemandPatternNameID{indd}=atline{3}; 
+                                obj.BinNodeJunDemandPatternNameID{indd}=atline{3}; 
                             end
                         else
-                            obj.BinNodeDemandPatternNameID{indd}=atline{3};
+                            obj.BinNodeJunDemandPatternNameID{indd}=atline{3};
                         end
                     else
-                        obj.BinNodeDemandPatternNameID{indd}='';
+                        obj.BinNodeJunDemandPatternNameID{indd}='';
                     end
                     obj.BinNodeJunctionsBaseDemandsID{d}=atline{1};                       
                     d=d+1;
@@ -3909,22 +4253,21 @@ classdef epanet <handle
                     d=d+1;
                     % Rules
                 elseif sect==20
-                    if strcmp(upper(atline{1}),{'RULE'})
-                        dd=dd+1;d=1;
+                    if strcmpi(atline{1},{'RULE'})
+                        obj.BinRulesCount=obj.BinRulesCount+1;d=1;
                     end
-                    obj.BinRulesControlsInfo{dd}{d}=atline;
+                    obj.BinRulesControlsInfo{obj.BinRulesCount}{d}=atline;
                     
-                    if sum(strcmp(upper(atline{2}),{'LINK','PIPE','PUMP','VALVE'}))
-                        obj.BinRulesControlLinksID{dd}{d}=atline{3}; 
-                    elseif sum(strcmp(upper(atline{2}),{'NODE','JUNCTION','RESERVOIR','TANK'}))
-                        obj.BinRulesControlNodesID{dd}{d}=atline{3}; 
+                    if sum(strcmpi(atline{2},{'LINK','PIPE','PUMP','VALVE'}))
+                        obj.BinRulesControlLinksID{obj.BinRulesCount}{d}=atline{3}; 
+                    elseif sum(strcmpi(atline{2},{'NODE','JUNCTION','RESERVOIR','TANK'}))
+                        obj.BinRulesControlNodesID{obj.BinRulesCount}{d}=atline{3}; 
                     end
                     d=d+1;     
-                    obj.BinRulesCount=obj.BinRulesCount+1;
                     % Quality
                 elseif sect==12
                     h=find(strcmpi(obj.BinNodeNameID,atline{1}));
-                    obj.BinNodeInitialQuality(h)=str2num(atline{2});
+                    obj.BinNodeInitialQuality(h)=str2double(atline{2});
                     obj.BinCountInitialQualitylines=d;
                     d=d+1;
                     % Sources
@@ -3935,21 +4278,21 @@ classdef epanet <handle
                         obj.BinNodeSourcePatternIndex(indexPat)= find(strcmpi(obj.BinPatternNameID,atline{4}));
                         obj.BinNodeSourcePatternNameID{indexNode}=atline{4};
                     end
-                    obj.BinNodeSourceQuality(indexNode)=str2num(atline{3});
-                    obj.BinNodeSourceTypeCode(indexNode)=find((strcmpi(obj.TYPESOURCE,atline{2})-1)>-1)-1;
-                    obj.BinNodeSourceType{indexNode}=obj.TYPESOURCE{obj.BinNodeSourceTypeCode(indexNode)+1};
+                    obj.BinNodeSourceQuality(indexNode)=str2double(atline{3});
+                    obj.BinNodeSourceTypeIndex(indexNode)=find((strcmpi(obj.TYPESOURCE,atline{2})-1)>-1)-1;
+                    obj.BinNodeSourceType{indexNode}=obj.TYPESOURCE{obj.BinNodeSourceTypeIndex(indexNode)+1};
                     % Mixing
                 elseif sect==14
                     obj.BinNodeTankMixID{d}=atline{1};
                     obj.BinNodeTankMixModel{d}=atline{2};
-                    obj.BinNodeTankMinimumFraction(d)=str2num(atline{3});
+                    obj.BinNodeTankMinimumFraction(d)=str2double(atline{3});
                     d=d+1;
                     % Reactions
                 elseif sect==15
-                    if strcmpi(upper(atline{1}),'GLOBAL') && strcmpi(upper(atline{2}),'BULK')
-                        obj.BinLinkGlobalBulkReactionCoeff=str2num(atline{3});
-                    elseif strcmpi(upper(atline{1}),'GLOBAL') && strcmpi(upper(atline{2}),'WALL')
-                        obj.BinLinkGlobalWallReactionCoeff=str2num(atline{3});
+                    if strcmpi(atline{1},'GLOBAL') && strcmpi(atline{2},'BULK')
+                        obj.BinLinkGlobalBulkReactionCoeff=str2double(atline{3});
+                    elseif strcmpi(atline{1},'GLOBAL') && strcmpi(atline{2},'WALL')
+                        obj.BinLinkGlobalWallReactionCoeff=str2double(atline{3});
                         obj.BinLinkWallReactionCoeff=obj.BinLinkGlobalWallReactionCoeff*ones(1,obj.BinLinkCount);
                         obj.BinLinkBulkReactionCoeff=obj.BinLinkGlobalBulkReactionCoeff*ones(1,obj.BinLinkCount);
                         obj.BinLinkWallReactionCoeff(obj.BinLinkPumpIndex)=0;
@@ -3957,123 +4300,55 @@ classdef epanet <handle
                         obj.BinLinkBulkReactionCoeff(obj.BinLinkPumpIndex)=0;
                         obj.BinLinkBulkReactionCoeff(obj.BinLinkValveIndex)=0;
                     end
-                    if strcmpi(upper(atline{1}),'BULK')
+                    if strcmpi(atline{1},'BULK')
                         LinkIndex = find(strcmpi(obj.BinLinkNameID,atline{2}));
-                        obj.BinLinkBulkReactionCoeff(LinkIndex)=str2num(atline{3});
-                    elseif strcmpi(upper(atline{1}),'WALL')
+                        obj.BinLinkBulkReactionCoeff(LinkIndex)=str2double(atline{3});
+                    elseif strcmpi(atline{1},'WALL')
                         LinkIndex = find(strcmpi(obj.BinLinkNameID,atline{2}));
-                        obj.BinLinkWallReactionCoeff(LinkIndex)=str2num(atline{3});
+                        obj.BinLinkWallReactionCoeff(LinkIndex)=str2double(atline{3});
                     end
                     obj.BinCountReactionlines=d;
                     d=d+1;
                     % Times
                 elseif sect==16
-                    if strcmp(upper(atline{1}),'DURATION')
-                        r=atline{2};
-                    elseif length(atline)>2
-                        r=atline{3};
+                    r=atline{2};
+                    if length(atline)>2 
+                        if find(~strcmpi(atline{end},{'HOURS','MIN','SECONDS','MINUTES','DAYS'})==0)
+                            r=atline{end-1};
+                        else
+                            r=atline{end};
+                        end
                     end
-                    if sum(r==':')
-                        hrs=str2num(r(1:find(r==':')-1));
-                        min=str2num(r((find(r==':')+1):end-find(r==':')-1));
-                        if isempty(min), min=0; end
-                        if isempty(hrs), hrs=0; end
-                        secnd=hrs*3600+min*60;
-                    elseif sum(r=='.')
-                        min=str2num(r(1:find(r=='.')-1));
-                        secnd1=str2num(r((find(r=='.')+1):end));
-                        if isempty(min), min=0; end
-                        if isempty(secnd1), secnd1=0; end
-                        secnd=min*60+secnd1;
-                    elseif ~sum(r==':') && ~sum(r=='.')
-                        secnd=str2num(r)*3600;
-                    end
-                    if strcmp(upper(atline{1}),'DURATION')
-                        obj.BinTimeSimulationDuration=secnd;
-                    elseif strcmp(upper(atline{1}),'HYDRAULIC')
-                        obj.BinTimeHydraulicStep=secnd;
-                    elseif strcmp(upper(atline{1}),'QUALITY')
-                        obj.BinTimeQualityStep=secnd;
-                    elseif strcmp(upper(atline{1}),'PATTERN') && strcmp(upper(atline{2}),'TIMESTEP')
-                        obj.BinTimePatternStep=secnd;
-                    elseif strcmp(upper(atline{1}),'PATTERN') && strcmp(upper(atline{2}),'START')
-                        obj.BinTimePatternStart=secnd;
-                    elseif strcmp(upper(atline{1}),'REPORT') && strcmp(upper(atline{2}),'TIMESTEP')
-                        obj.BinTimeReportingStep=secnd;
-                    elseif strcmp(upper(atline{1}),'REPORT') && strcmp(upper(atline{2}),'START')
-                        obj.BinTimeReportingStart=secnd;
-                    elseif strcmp(upper(atline{1}),'STATISTIC') 
-                        obj.BinTimeStatisticsIndex=find((strcmpi(obj.TYPESTATS,atline{2})-1)>-1)-1;
-                        obj.BinTimeStatistics=obj.TYPESTATS{obj.BinTimeStatisticsIndex+1};
-                    end                  
+                    obj = getTimes(obj, r, atline, obj);                
                     % Options
                 elseif sect==17
-                    if strcmp(upper(atline{1}),'UNITS')
-                        obj.BinLinkFlowUnits=atline{2};
-                    elseif strcmp(upper(atline{1}),'HEADLOSS')
-                        obj.BinOptionsHeadloss=atline{2};
-                    elseif strcmp(upper(atline{1}),'PRESSURE')
-                        obj.BinNodePressureUnits=atline{2};
-                    elseif strcmp(upper(atline{1}),'SPECIFIC')
-                        obj.BinOptionsSpecificGravity=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'VISCOSITY')
-                        obj.BinOptionsViscosity=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'TRIALS')
-                        obj.BinOptionsMaxTrials=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'ACCURACY')
-                        obj.BinOptionsAccuracyValue=single(str2num(atline{2}));
-                    elseif strcmp(upper(atline{1}),'UNBALANCED')
-                        obj.BinOptionsUnbalanced= atline(2:end);
-                    elseif strcmp(upper(atline{1}),'PATTERN')
-                        obj.BinOptionsPattern=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'DEMAND')
-                        obj.BinOptionsPatternDemandMultiplier=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'EMITTER')
-                        obj.BinOptionsEmitterExponent=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'QUALITY')
-                        obj.BinQualityType=atline{2};% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                        obj.BinQualityCode=find((strcmpi(obj.TYPEQUALITY,atline{2})-1)>-1)-1;
-                        if isempty(obj.BinQualityCode)
-                            obj.BinQualityCode=1;
-                        end
-                        if obj.BinQualityCode==3
-                            obj.BinQualityTraceNodeIndex=find(strcmpi(obj.BinNodeNameID,atline{3}));
-                            obj.BinQualityTraceNodeID=atline{3};
-                        else
-                            if length(atline)>2
-                                obj.BinQualityUnits=atline{3};
-                            end
-                        end
-                    elseif strcmp(upper(atline{1}),'DIFFUSIVITY')
-                        obj.BinOptionsDiffusivity=str2num(atline{2});% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                    elseif strcmp(upper(atline{1}),'TOLERANCE')
-                        obj.BinOptionsQualityTolerance=single(str2num(atline{2}));% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                    end
+                    obj = getOptionsValues(obj, obj, atline);
                     % Coordinates
                 elseif sect==18
                     A = textscan(tline,'%s %f %f');
                     % get the node index
                     a=strcmp(A{1},obj.BinNodeNameID);
                     index=strfind(a,1);
-                    if length(index)==0
-                        return;
-                    end
+                    if isempty(index), return; end
                     vx(index) = A{2};
                     vy(index) = A{3};
                     % Vertices
                 elseif sect==19
                     A = textscan(tline,'%s %f %f');
+                    if isempty(A), return;  end
                     vertx(indexV) = A(2);
                     verty(indexV) = A(3);
                     indexV = indexV + 1;
                 end
             end
             if ~sum(obj.BinLinkBulkReactionCoeff)
+                if isempty(obj.BinLinkGlobalBulkReactionCoeff), obj.BinLinkGlobalBulkReactionCoeff=0;end
                 obj.BinLinkBulkReactionCoeff=obj.BinLinkGlobalBulkReactionCoeff*ones(1,obj.BinLinkCount);
                 obj.BinLinkBulkReactionCoeff(obj.BinLinkPumpIndex)=0;
                 obj.BinLinkBulkReactionCoeff(obj.BinLinkValveIndex)=0;
             end
             if ~sum(obj.BinLinkWallReactionCoeff)
+                if isempty(obj.BinLinkGlobalWallReactionCoeff), obj.BinLinkGlobalWallReactionCoeff=0;end
                 obj.BinLinkWallReactionCoeff=obj.BinLinkGlobalWallReactionCoeff*ones(1,obj.BinLinkCount);
                 obj.BinLinkWallReactionCoeff(obj.BinLinkPumpIndex)=0;
                 obj.BinLinkWallReactionCoeff(obj.BinLinkValveIndex)=0;
@@ -4097,10 +4372,10 @@ classdef epanet <handle
             obj.BinLinkRoughnessCoeff = [obj.BinLinkPipeRoughness zeros(1,obj.BinLinkPumpCount) zeros(1,obj.BinLinkValveCount)];
 %             obj.BinNodeJunctionsBaseDemands(length(obj.BinNodeJunctionsBaseDemands):obj.BinNodeJunctionCount)=0;
             obj.BinNodeBaseDemands = single([obj.BinNodeJunctionsBaseDemands zeros(1,obj.BinNodeReservoirCount) zeros(1,obj.BinNodeTankCount)]);
-            obj.BinNodeDemandPatternNameID=[obj.BinNodeDemandPatternNameID obj.BinNodeResDemandPatternNameID];
-            for i=obj.BinNodeTankIndex
-               obj.BinNodeDemandPatternNameID{i}=''; 
-            end
+%             obj.BinNodeJunDemandPatternNameID=[obj.BinNodeJunDemandPatternNameID obj.BinNodeResDemandPatternNameID];
+%             for i=obj.BinNodeTankIndex
+%                obj.BinNodeDemandPatternNameID{i}=''; 
+%             end
             
             b={};
             for i=1:obj.BinLinkCount
@@ -4124,7 +4399,7 @@ classdef epanet <handle
             obj.BinLinkInitialStatus=bb;
             if ~isempty(obj.BinLinkPumpIndex)
                 obj.BinLinkPumpStatus=obj.BinLinkInitialStatus(obj.BinLinkPumpIndex);
-                obj.BinLinkPumpStatusNameID=obj.BinLinkInitialStatusNameID(1:obj.BinLinkPumpCount);
+                obj.BinLinkPumpStatusNameID=obj.BinLinkInitialStatusNameID(obj.BinLinkPumpIndex);
             end
             if ~isempty(obj.BinLinkPumpIndex)
                 obj.BinLinkValveStatus=obj.BinLinkInitialStatus(obj.BinLinkValveIndex);
@@ -4143,6 +4418,12 @@ classdef epanet <handle
             end
             obj.BinControlRulesCount=length(obj.BinControlsInfo);
             obj.BinUnits=getBinUnits(obj);
+            % US Customary - SI metric
+            if find(strcmp(obj.BinLinkFlowUnits, obj.TYPEUNITS))<6
+                obj.BinUnits_US_Customary=1;
+            else
+                obj.BinUnits_SI_Metric=1;
+            end
         end
         function [Errcode]=setBinNodeInitialQuality(obj,varargin)
             parameter=varargin{1};
@@ -4168,7 +4449,7 @@ classdef epanet <handle
            links=obj.getBinLinkNameID;
            BinLinkCount=length(links.BinLinkNameID);
            [tlines]=regexp( fileread(obj.BinTempfile), '\n', 'split');
-           fid = fopen([obj.BinTempfile],'w');start=0;
+           fid = writenewTemp(obj.BinTempfile);start=0;
            for i=1:length(tlines)
                tt=regexp(tlines{i}, '\s*', 'split');
                tok = strtok(tlines{i});m=1;
@@ -4177,7 +4458,7 @@ classdef epanet <handle
                elseif isempty(tt{m})
                    m=m+1;
                end
-               if strcmp(upper(tt{m}),'GLOBAL') && strcmp(upper(tt{m+1}),'WALL')
+               if strcmpi(tt{m},'GLOBAL') && strcmpi(tt{m+1},'WALL')
                    start=i;
                end
                if strcmp(tt{m},'[MIXING]')
@@ -4205,9 +4486,7 @@ classdef epanet <handle
            for i=start:stop
                % Get first token in the line
                tok = strtok(tlines{i});
-               if isempty(tok)
-                   tok='1';
-               end
+               if isempty(tok), continue; end
                if strcmp(tok(1),';')
                else
                    if ~isempty(wall) 
@@ -4360,19 +4639,19 @@ classdef epanet <handle
             indexParameter=2;
             [Errcode]=setBinParam(obj,indexParameter,parameter,sections);        
         end
-        function [Errcode]=setBinNodeTankInitLevel(obj,varargin)
+        function [Errcode]=setBinNodeTankInitialLevel(obj,varargin)
             parameter=varargin{1};
             sections={'[TANKS]','[PIPES]'};
             indexParameter=3;
             [Errcode]=setBinParam(obj,indexParameter,parameter,sections);        
         end
-        function [Errcode]=setBinNodeTankMinLevel(obj,varargin)
+        function [Errcode]=setBinNodeTankMinimumWaterLevel(obj,varargin)
             parameter=varargin{1};
             sections={'[TANKS]','[PIPES]'};
             indexParameter=4;
             [Errcode]=setBinParam(obj,indexParameter,parameter,sections);        
         end
-        function [Errcode]=setBinNodeTankMaxLevel(obj,varargin)
+        function [Errcode]=setBinNodeTankMaximumWaterLevel(obj,varargin)
             parameter=varargin{1};
             sections={'[TANKS]','[PIPES]'};
             indexParameter=5;
@@ -4384,7 +4663,7 @@ classdef epanet <handle
             indexParameter=6;
             [Errcode]=setBinParam(obj,indexParameter,parameter,sections);        
         end
-        function [Errcode]=setBinNodeTankMinVol(obj,varargin)
+        function [Errcode]=setBinNodeTankMinimumWaterVolume(obj,varargin)
             parameter=varargin{1};
             sections={'[TANKS]','[PIPES]'};
             indexParameter=7;
@@ -4413,7 +4692,6 @@ classdef epanet <handle
             end
             if ~libisloaded(obj.LibEPANET)
                 delete(obj.BinTempfile);
-                delete([obj.BinTempfile(1:end-4),'.txt']);
             end
             if exist([obj.BinTempfile(1:end-4),'.msx'])==2
                 delete([obj.BinTempfile(1:end-4),'.msx'])
@@ -4445,7 +4723,7 @@ classdef epanet <handle
                     case 'minorloss' 
                         MinorLoss=varargin{2*i};
                     case 'status'  
-                        if sum(strcmp(lower(varargin{2*i}),'closed')+strcmp(lower(varargin{2*i}),'open')+strcmp(lower(varargin{2*i}),'none')+strcmp(lower(varargin{2*i}),'nonestatus'))==obj.LinkValveCount
+                        if sum(strcmpi(varargin{2*i},'closed')+strcmpi(varargin{2*i},'open')+strcmpi(varargin{2*i},'none')+strcmpi(varargin{2*i},'nonestatus'))==obj.LinkValveCount
                             Status=varargin{2*i};
                         else
                             warning('Invalid argument found.');Errcode=-1;
@@ -4460,7 +4738,7 @@ classdef epanet <handle
                 end
             end            
             [tlines]=regexp( fileread(obj.BinTempfile), '\n', 'split');
-            fid = fopen([obj.BinTempfile],'w');
+            fid = writenewTemp(obj.BinTempfile);
             for i=1:length(tlines)
                 tt=regexp(tlines{i}, '\s*', 'split');
                 if strcmp(tt{1},'[VALVES]')
@@ -4490,29 +4768,18 @@ classdef epanet <handle
                for i=start:stop
                    % Get first token in the line
                    tok = strtok(tlines{i});
-                   if isempty(tok), tok(1)='1'; end
-                   % Skip blank Clines and comments
+                   if isempty(tok), tok='1'; end 
                    if strcmp(tok(1),';')
                    elseif sum(tlines{i}=='[')
                    elseif isempty(tok)
                    % skip
                    else
-                       a = regexp(tlines{i}, '\s*','split');uu=1;
                        clear atlines;
-                       for tt=1:length(a)
-                            if isempty(a{tt})
-                                %skip
-                            elseif sum(a{tt}==';')
-                                %skip
-                                if tt>1,  break; end
-                            else
-                                atlines{uu}=a{tt}; uu=uu+1;
-                            end
-                       end
+
                        if ll<obj.BinLinkValveCount+1
-                           atlines(1)=obj.BinLinkNameID(obj.BinLinkValveIndex(ll));
-                           atlines(2)=obj.BinLinkFromNode(obj.BinLinkValveIndex(ll));
-                           atlines(3)=obj.BinLinkToNode(obj.BinLinkValveIndex(ll));
+                           atlines{1}=obj.BinLinkNameID{obj.BinLinkValveIndex(ll)};
+                           atlines{2}=obj.BinLinkFromNode{obj.BinLinkValveIndex(ll)};
+                           atlines{3}=obj.BinLinkToNode{obj.BinLinkValveIndex(ll)};
                            if ~isempty(Diameter)%Diameters
                                atlines{4} = num2str(Diameter(ll));  
                                newlines=[];
@@ -4580,7 +4847,7 @@ classdef epanet <handle
             indexParameter=3;
             [Errcode]=setBinParam(obj,indexParameter,parameter,sections); 
         end
-        function [Errcode]=setBinNodeDemandPatternNameID(obj,varargin)
+        function [Errcode]=setBinNodeJunDemandPatternNameID(obj,varargin)
             parameter=varargin{1};
             sections={'[JUNCTIONS]','[RESERVOIRS]','[DEMANDS]','[STATUS]','[EMITTERS]'};
             indexParameter=4;
@@ -4628,9 +4895,12 @@ classdef epanet <handle
             values=varargin{1};
             [Errcode]=setBinParam(obj,11,values,sections);
         end
-        function saveBinInpFile(obj)
+        function saveBinInpFile(obj, varargin)
+            if ~isempty(varargin)
+                copyfile(obj.BinTempfile,varargin{1}); return;
+            end
             [tlines]=regexp( fileread([obj.BinTempfile]), '\n', 'split');
-            f = fopen([obj.BinTempfile],'w');
+            f = writenewTemp(obj.BinTempfile);
             % /*Write [TITLE] section */
                for i=1:length(tlines)
                    tok = strtok(tlines{i});
@@ -4654,8 +4924,8 @@ classdef epanet <handle
                fprintf(f,'\n[TANKS]');b=1;
                for u=obj.BinNodeTankIndex
 %                    InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
-                   fprintf(f,'\n%s%s%f%s%f%s%f%s%f%s%f%s%f',obj.BinNodeNameID{u},sps,obj.BinNodeElevations(u),sps,obj.BinNodeTankInitLevel(b),sps,obj.BinNodeTankMinLevel(b),...
-                       sps,obj.BinNodeTankMaxLevel(b),sps,obj.BinNodeTankDiameter(b),sps,obj.BinNodeTankMinVol(b));
+                   fprintf(f,'\n%s%s%f%s%f%s%f%s%f%s%f%s%f',obj.BinNodeNameID{u},sps,obj.BinNodeElevations(u),sps,obj.BinNodeTankInitialLevel(b),sps,obj.BinNodeTankMinimumWaterLevel(b),...
+                       sps,obj.BinNodeTankMaximumWaterLevel(b),sps,obj.BinNodeTankDiameter(b),sps,obj.BinNodeTankMinimumWaterVolume(b));
                    b=b+1;
                end
             % % /*Write [PIPES] section */
@@ -4692,10 +4962,10 @@ classdef epanet <handle
             % % /*Write [DEMANDS] section */
                fprintf(f,'\n[DEMANDS]');
                for u=1:obj.BinNodeJunctionCount
-                   if isempty(obj.BinNodeDemandPatternNameID{u})
+                   if isempty(obj.BinNodeJunDemandPatternNameID{u})
                        fprintf(f,'\n%s%s%f%s%s',obj.BinNodeNameID{u},sps,obj.BinNodeBaseDemands(u),sps,obj.BinPatternNameID{1});
                    else
-                       fprintf(f,'\n%s%s%f%s%s',obj.BinNodeNameID{u},sps,obj.BinNodeBaseDemands(u),sps,obj.BinNodeDemandPatternNameID{u});
+                       fprintf(f,'\n%s%s%f%s%s',obj.BinNodeNameID{u},sps,obj.BinNodeBaseDemands(u),sps,obj.BinNodeJunDemandPatternNameID{u});
                    end
                end
                % % /*Write [EMITTERS] section */
@@ -4872,36 +5142,23 @@ classdef epanet <handle
             newDemandPattern=varargin{6};
             toNode=varargin{8}; 
             fromNode=varargin{1};
-            switch upper(varargin{end})
-                case 'PIPE' % typecode PIPE=1;PUMP=2 PRV=3, PSV=4, PBV=5, FCV=6, TCV=7, GPV=8
-                    typecode=1;
-                case 'PUMP'
-                    typecode=2;
-                case 'PRV'
-                    typecode=3;
-                case 'PSV'
-                    typecode=4;
-                case 'PBV'   
-                    typecode=5;
-                case 'FCV'
-                    typecode=6;
-                case 'TCV'     
-                    typecode=7;
-                case 'GPV'
-                    typecode=8;
-            end                    
+            typecode = getTypeLink(varargin{end});                 
             Errcode=addLinkWarnings(obj,typecode,varargin{7},toNode); 
             if Errcode==-1, return; end
             [Errcode]=addNode(obj,0,newID,X,Y,newElevation,newBaseDemand,newDemandPattern);
             if Errcode~=200 && obj.Bin==1
                 return;
             end
-            if typecode==1
+            if sum(typecode==[0,1])
                 newPipeID=varargin{7}; 
                 newLength=varargin{9};
                 newDiameter=varargin{10};
                 newRoughness=varargin{11};
-                [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                if typecode
+                    [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                else
+                    [Errcode]=addBinCVPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                end
             elseif typecode==2
                 newPumpID=varargin{7}; 
                 newCurveIDofPump=varargin{9}; 
@@ -4923,36 +5180,21 @@ classdef epanet <handle
             newElevation=varargin{4}; 
             fromNode=varargin{1};
             toNode=varargin{6};
-            switch upper(varargin{end})
-                case 'PIPE' % typecode PIPE=1;PUMP=2 PRV=3, PSV=4, PBV=5, FCV=6, TCV=7, GPV=8
-                    typecode=1;
-                case 'PUMP'
-                    typecode=2;
-                case 'PRV'
-                    typecode=3;
-                case 'PSV'
-                    typecode=4;
-                case 'PBV'   
-                    typecode=5;
-                case 'FCV'
-                    typecode=6;
-                case 'TCV'     
-                    typecode=7;
-                case 'GPV'
-                    typecode=8;
-            end 
+            typecode = getTypeLink(varargin{end});
             Errcode=addLinkWarnings(obj,typecode,varargin{5},toNode); 
             if Errcode==-1, return; end            
             [Errcode]=addNode(obj,1,newID,X,Y,newElevation);
-            if Errcode
-                return;
-            end
-            if strcmp(upper(varargin{end}),'PIPE')
+            if Errcode, return; end
+            if sum(typecode==[0,1])
                 newPipeID=varargin{5}; 
                 newLength=varargin{7};
                 newDiameter=varargin{8};
                 newRoughness=varargin{9};
-                [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                if typecode
+                    [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                else
+                    [Errcode]=addBinCVPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                end            
             elseif typecode==2
                 newPumpID=varargin{5}; 
                 newCurveIDofPump=varargin{7}; 
@@ -4980,36 +5222,23 @@ classdef epanet <handle
             MinVol=varargin{10};
             fromNode=varargin{1};
             toNode=varargin{12};
-            switch upper(varargin{end})
-                case 'PIPE' % typecode PIPE=1;PUMP=2 PRV=3, PSV=4, PBV=5, FCV=6, TCV=7, GPV=8
-                    typecode=1;
-                case 'PUMP'
-                    typecode=2;
-                case 'PRV'
-                    typecode=3;
-                case 'PSV'
-                    typecode=4;
-                case 'PBV'   
-                    typecode=5;
-                case 'FCV'
-                    typecode=6;
-                case 'TCV'     
-                    typecode=7;
-                case 'GPV'
-                    typecode=8;
-            end 
+            typecode = getTypeLink(varargin{end});
             Errcode=addLinkWarnings(obj,typecode,varargin{11},toNode); 
             if Errcode==-1, return; end            
             [Errcode]=addNode(obj,2,newID,X,Y,MaxLevel,Diameter,Initlevel,newElevation,initqual,MinLevel,MinVol);
             if Errcode
                 return;
             end
-            if strcmp(upper(varargin{end}),'PIPE')
+            if sum(typecode==[0,1])
                 newPipeID=varargin{11}; 
                 newLength=varargin{13};
                 newDiameter=varargin{14};
                 newRoughness=varargin{15};
-                [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                if typecode
+                    [Errcode]=addBinPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                else
+                    [Errcode]=addBinCVPipe(obj,newPipeID,fromNode,toNode,newLength,newDiameter,newRoughness);
+                end
             elseif typecode==2
                 newPumpID=varargin{11}; 
                 newCurveIDofPump=varargin{13}; 
@@ -5024,6 +5253,9 @@ classdef epanet <handle
                 [Errcode]=addLink(obj,typecode,newValveID,fromNode,toNode,newValveDiameter,newValveSetting);
             end
         end
+        function [Errcode]=addBinCVPipe(obj,newLink,fromNode,toNode,newLength,newDiameter,newRoughness)
+            [Errcode]=addLink(obj,0,newLink,fromNode,toNode,newLength,newDiameter,newRoughness);
+        end
         function [Errcode]=addBinPipe(obj,newLink,fromNode,toNode,newLength,newDiameter,newRoughness)
             [Errcode]=addLink(obj,1,newLink,fromNode,toNode,newLength,newDiameter,newRoughness);
         end
@@ -5034,14 +5266,14 @@ classdef epanet <handle
                 newCurveXvalue=varargin{2};
                 newCurveYvalue=varargin{3};
                 newCurveType=varargin{4};
-                if strcmp(upper(newCurveType),'PUMP')
-                    Errcode=addBinCurvePump(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Head
-                elseif strcmp(upper(newCurveType),'EFFICIENCY')
-                    Errcode=addBinCurveEfficiency(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Efficiency
-                elseif strcmp(upper(newCurveType),'VOLUME')
-                    Errcode=addBinCurveVolume(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Heigh-Volume
-                elseif strcmp(upper(newCurveType),'HEADLOSS')
-                    Errcode=addBinCurveHeadloss(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Headloss
+                if strcmpi(newCurveType,'PUMP')
+                    addBinCurvePump(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Head
+                elseif strcmpi(newCurveType,'EFFICIENCY')
+                    addBinCurveEfficiency(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Efficiency
+                elseif strcmpi(newCurveType,'VOLUME')
+                    addBinCurveVolume(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Heigh-Volume
+                elseif strcmpi(newCurveType,'HEADLOSS')
+                    addBinCurveHeadloss(obj,newCurveIDofPump,newCurveXvalue,newCurveYvalue);%Flow-Headloss
                 end
                 [Errcode]=addLink(obj,2,newPumpID,fromNode,toNode,newCurveIDofPump,newCurveXvalue,newCurveYvalue,newCurveType);
             elseif length(varargin)==1
@@ -5086,8 +5318,10 @@ classdef epanet <handle
                 [Errcode]=addNewControl(obj,x,status,y_t_c,param,z);
             elseif nargin==5
                 [Errcode]=addNewControl(obj,x,status,y_t_c,param);
-            else
+            elseif nargin==4
                 [Errcode]=addNewControl(obj,x,status,y_t_c);
+            else
+                [Errcode]=addNewControl(obj,x); % add many controls
             end
         end
         function [Errcode]=removeBinNodeID(obj,NodeID)
@@ -5106,7 +5340,7 @@ classdef epanet <handle
             [Errcode]=rmRulesControl(obj,1,ID);
         end
         function [Errcode]=removeBinRulesControlNodeID(obj,ID)
-            [Errcode]=rmRulesControl(obj,1,ID);
+            [Errcode]=rmRulesControl(obj,0,ID);
         end
         function [Errcode]=removeBinControlNodeID(obj,ID)
             [Errcode]=rmControl(obj,0,ID);
@@ -5176,7 +5410,7 @@ classdef epanet <handle
         end
         function [Errcode]=setBinLinkPipeStatus(obj,varargin)
            indexParameter=8;
-           if sum(strcmp(lower(varargin{1}),'closed')+strcmp(lower(varargin{1}),'open')+strcmp(lower(varargin{1}),'cv'))==obj.BinLinkPipeCount
+           if sum(strcmpi(varargin{1},'closed')+strcmpi(varargin{1},'open')+strcmpi(varargin{1},'cv'))==obj.BinLinkPipeCount
                 parameter=varargin{1};
             else
                 warning('Invalid argument found.');Errcode=-1;
@@ -5186,7 +5420,7 @@ classdef epanet <handle
            [Errcode]=setBinParam(obj,indexParameter,parameter,sections); 
         end
         function [Errcode]=setBinLinkPumpStatus(obj,varargin)
-            if sum(strcmp(lower(varargin{1}),'closed')+strcmp(lower(varargin{1}),'open'))==obj.BinLinkPumpCount
+            if sum(strcmpi(varargin{1},'closed')+strcmpi(varargin{1},'open'))==obj.BinLinkPumpCount
                 parameter=varargin{1};
             else
                 warning('Invalid argument found.');Errcode=-1;
@@ -5215,7 +5449,7 @@ classdef epanet <handle
                     case 'minorloss' % font size
                         Minorloss=varargin{2*i};
                     case 'status' % color
-                        if sum(strcmp(lower(varargin{2*i}),'closed')+strcmp(lower(varargin{2*i}),'open'))==obj.BinLinkPipeCount
+                        if sum(strcmpi(varargin{2*i},'closed')+strcmpi(varargin{2*i},'open'))==obj.BinLinkPipeCount
                             Status=varargin{2*i};
                         else
                             warning('Invalid argument found.');Errcode=-1;
@@ -5227,7 +5461,7 @@ classdef epanet <handle
                 end
             end            
             [tlines]=regexp( fileread([obj.BinTempfile]), '\n', 'split');
-            fid = fopen([obj.BinTempfile], 'w');
+            fid = writenewTemp(obj.BinTempfile);
             for i=1:length(tlines)
                 tt=regexp(tlines{i}, '\s*', 'split');
                 if strcmp(tt{1},'[PIPES]')
@@ -5241,24 +5475,16 @@ classdef epanet <handle
            for i=pipes:pumps
                % Get first token in the line
                tok = strtok(tlines{i});
-%                if isempty(tok), break; end
+%                if isempty(tok), continue; end
                % Skip blank Clines and comments
-               if isempty(tok)
-               elseif strcmp(tok(1),';')
+               if isempty(tok), continue; end
+               if strcmp(tok(1),';')
                elseif sum(tlines{i}=='[')
                % skip
                else
-                   a = regexp(tlines{i}, '\s*','split');uu=1;
                    clear atlines;
-                   for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif (a{tt}==';')
-                            %skip
-                        else
-                            atlines{uu}=a{tt}; uu=uu+1;
-                        end
-                   end
+                   atlines = checktlines(tlines{i});
+
                    if ~isempty(Diameters)%Diameters
                        atlines{5} = num2str(Diameters(ll));  
                        newlines=[];
@@ -5328,7 +5554,7 @@ classdef epanet <handle
                 end
             end            
             [tlines]=regexp(fileread([obj.BinTempfile]), '\n', 'split');
-            fid = fopen([obj.BinTempfile], 'w');
+            fid = writenewTemp(obj.BinTempfile);
             for i=1:length(tlines)
                 tt=regexp(tlines{i}, '\s*', 'split');
                 if strcmp(tt{1},'[JUNCTIONS]')
@@ -5350,23 +5576,15 @@ classdef epanet <handle
                    % Get first token in the line
                    tok = strtok(tlines{i});
                    % Skip blank Clines and comments
-                   if isempty(tok), break; end
+                   if isempty(tok), continue; end
                    if strcmp(tok(1),';')
                    elseif sum(tlines{i}=='[')
                    elseif isempty(tok)
                    % skip
                    else
-                       a = regexp(tlines{i}, '\s*','split');uu=1;
                        clear atlines;
-                       for tt=1:length(a)
-                            if isempty(a{tt})
-                                %skip
-                            elseif (a{tt}==';')
-                                %skip
-                            else
-                                atlines{uu}=a{tt}; uu=uu+1;
-                            end
-                       end
+                       atlines = checktlines(tlines{i});
+
                        if ~isempty(Elevations)%Elevations
                            atlines{2} = num2str(Elevations(ll));  
                            newlines=[];
@@ -5405,23 +5623,15 @@ classdef epanet <handle
                    % Get first token in the line
                    tok = strtok(tlines{i});
                    % Skip blank Clines and comments
-                   if isempty(tok), break; end
+                   if isempty(tok), continue; end
                    if strcmp(tok(1),';')
                    elseif sum(tlines{i}=='[')
                    elseif isempty(tok)
                    % skip
                    else
-                       a = regexp(tlines{i}, '\s*','split');uu=1;
                        clear atlines;
-                       for tt=1:length(a)
-                            if isempty(a{tt})
-                                %skip
-                            elseif (a{tt}==';')
-                                %skip
-                            else
-                                atlines{uu}=a{tt}; uu=uu+1;
-                            end
-                       end
+                       atlines = checktlines(tlines{i});
+
                        if ~isempty(BaseDemands) && length(atlines)>2%BaseDemands
                            if ~isempty(atlines{3}) && ~sum(atlines{3}==';')
                                atlines{2} = num2str(BaseDemands(ll));  
@@ -5495,7 +5705,7 @@ classdef epanet <handle
                 end
             end            
             [tlines]=regexp( fileread([obj.BinTempfile]), '\n', 'split');
-            fid = fopen([obj.BinTempfile], 'w');
+            fid = writenewTemp(obj.BinTempfile);
             for i=1:length(tlines)
                 tt=regexp(tlines{i}, '\s*', 'split');
                 if strcmp(tt{1},'[TANKS]')
@@ -5511,29 +5721,20 @@ classdef epanet <handle
                     stop1=i;
                 end
             end
-            ll=1;clear atlines;
+            ll=1;
            for i=tanks:pipes
                % Get first token in the line
                tok = strtok(tlines{i});
-               if isempty(tok), break; end
+               if isempty(tok), continue; end
                % Skip blank Clines and comments
                if strcmp(tok(1),';')
                elseif sum(tlines{i}=='[')
                elseif isempty(tok)
                % skip
                else
-                   a = regexp(tlines{i}, '\s*','split');uu=1;
                    clear atlines;
-                   for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atlines{uu}=a{tt}; uu=uu+1;
-                        end
-                   end
+                   atlines = checktlines(tlines{i});
+
                    if ~isempty(elevations)%elevations
                        atlines{2} = num2str(elevations(ll));  
                        newlines=[];
@@ -5594,25 +5795,14 @@ classdef epanet <handle
           for i=start1+1:stop1-1
                % Get first token in the line
                tok = strtok(tlines{i});
-               if isempty(tok)
-                   tok='1';
-               end
+               if isempty(tok), continue; end
                if isempty(tlines{i})
                elseif strcmp(tok(1),';')
                else
-                   a = regexp(tlines{i}, '\s*','split');uu=1;
                    clear atlines;
-                   for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atlines{uu}=a{tt}; uu=uu+1;
-                        end
-                   end
-                   if ~isempty(MixModel) && ll<obj.BinNodeTankIndex
+                   atlines = checktlines(tlines{i});
+
+                   if ~isempty(MixModel) && ll<=obj.BinNodeTankIndex
                        atlines{2} = num2str(MixModel{ll});  
                        newlines=[];
                        for pp=1:length(atlines)
@@ -5620,7 +5810,7 @@ classdef epanet <handle
                        end
                        tlines{i}=newlines;
                    end
-                   if ~isempty(MixFraction) && ll<obj.BinNodeTankIndex
+                   if ~isempty(MixFraction) && ll<=obj.BinNodeTankIndex
                        atlines{3} = num2str(MixFraction(ll)); 
                        newlines=[];
                        for pp=1:length(atlines)
@@ -5654,7 +5844,7 @@ classdef epanet <handle
                 end
             end            
             [tlines]=regexp( fileread([obj.BinTempfile]), '\n', 'split');
-            fid = fopen([obj.BinTempfile], 'w');
+            fid = writenewTemp(obj.BinTempfile);
             for i=1:length(tlines)
                 tt=regexp(tlines{i}, '\s*', 'split');
                 if strcmp(tt{1},'[RESERVOIRS]')
@@ -5669,23 +5859,14 @@ classdef epanet <handle
                % Get first token in the line
                tok = strtok(tlines{i});
                % Skip blank Clines and comments
-               if isempty(tok)
-               elseif strcmp(tok(1),';')
+               if isempty(tok), continue; end
+               if strcmp(tok(1),';')
                elseif sum(tlines{i}=='[')
                % skip
                else
-                   a = regexp(tlines{i}, '\s*','split');uu=1;
                    clear atlines;
-                   for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atlines{uu}=a{tt}; uu=uu+1;
-                        end
-                   end
+                   atlines = checktlines(tlines{i});
+
                    if ~isempty(elevations)%elevations
                        atlines{2} = num2str(elevations(ll));  
                        newlines=[];
@@ -5709,6 +5890,125 @@ classdef epanet <handle
             fclose(fid); 
             if obj.Bin==1
                 Errcode=closeOpenNetwork(obj);
+            end
+        end
+        function [value] = getBinSections(obj)
+            % Open epanet input file
+            [info]=regexp( fileread(obj.BinTempfile), '\n', 'split'); 
+            sect=0;
+            value=struct;
+            p=zeros(1,24);
+            for i=1:length(info)
+                tline = info{i};
+                if ~ischar(tline),   break,   end
+                tok = strtok(tline);
+                if isempty(tok), continue, end
+                if (tok(1) == '[')
+                    if strcmpi(tok(1:5),'[VALV'), sect=24;
+                    elseif strcmpi(tok(1:5),'[PIPE'), sect=23;
+                    elseif strcmpi(tok(1:5),'[TANK'), sect=22;
+                    elseif strcmpi(tok(1:5),'[VERT'), sect=21;
+                    elseif strcmpi(tok(1:5),'[RESE'), sect=20;
+                    elseif strcmpi(tok(1:5),'[JUNC'), sect=19;
+                    elseif strcmpi(tok(1:5),'[PUMP'), sect=17;
+                    elseif strcmpi(tok(1:5),'[OPTI'), sect=16;
+                    elseif strcmpi(tok(1:5),'[REPO'), sect=15;
+                    elseif strcmpi(tok(1:5),'[TIME'), sect=14;
+                    elseif strcmpi(tok(1:5),'[REAC'), p(13)=0; sect=13;
+                    elseif strcmpi(tok(1:5),'[ENER'), sect=12;
+                    elseif strcmpi(tok(1:5),'[DEMA'), sect=11;
+                    elseif strcmpi(tok(1:5),'[STAT'), sect=10;
+                    elseif strcmpi(tok(1:5),'[EMIT'), sect=9;
+                    elseif strcmpi(tok(1:5),'[CONT'), sect=8;
+                    elseif strcmpi(tok(1:5),'[PATT'), sect=7;
+                    elseif strcmpi(tok(1:5),'[CURV'), sect=6;
+                    elseif strcmpi(tok(1:5),'[QUAL'), sect=5;
+                    elseif strcmpi(tok(1:5),'[SOUR'), sect=4;
+                    elseif strcmpi(tok(1:5),'[MIXI'), sect=3;
+                    elseif strcmpi(tok(1:5),'[COOR'), sect=1;
+                    elseif strcmpi(tok(1:5),'[RULE'), sect=2;
+                    elseif (tok(1) == '['), sect=0; continue;
+                    end
+                end
+                if sect==0, continue;
+                elseif sect==1
+                    p(1)=p(1)+1;
+                    value.Coordinates{p(1)}=tline;
+                elseif sect==2
+                    p(2)=p(2)+1;
+                    value.Rules{p(2)}=tline;
+                elseif sect==3
+                    p(3)=p(3)+1;
+                    value.Mixing{p(3)}=tline;
+                elseif sect==4
+                    p(4)=p(4)+1;
+                    value.Sources{p(4)}=tline;
+                elseif sect==5
+                    p(5)=p(5)+1;
+                    value.Quality{p(5)}=tline;
+                elseif sect==6
+                    p(6)=p(6)+1;
+                    value.Curves{p(6)}=tline;
+                elseif sect==7
+                    p(7)=p(7)+1;
+                    value.Patterns{p(7)}=tline;
+                elseif sect==8
+                    p(8)=p(8)+1;
+                    value.Controls{p(8)}=tline;
+                elseif sect==9
+                    p(9)=p(9)+1;
+                    value.Emitters{p(9)}=tline;
+                elseif sect==10
+                    p(10)=p(10)+1;
+                    value.Status{p(10)}=tline;
+                elseif sect==11
+                    p(11)=p(11)+1;
+                    value.Demands{p(11)}=tline;
+                elseif sect==12
+                    p(12)=p(12)+1;
+                    value.Energy{p(12)}=tline;
+                elseif sect==13
+                    if (tok(1) == '[')
+                        p(18)=p(18)+1;p(13)=p(13)+1;
+                        value.OptReactions{p(18)}=tline;
+                        value.Reactions{p(13)}=tline; continue;
+                    end
+                    if sum(strcmpi(tok,{'order','global','limiting','roughness'}))
+                        value.OptReactions{p(13)}=tline;p(13)=p(13)+1;
+                    elseif sum(strcmpi(tok,{'BULK','WALL','TANK'}))
+                        value.Reactions{p(18)}=tline;p(18)=p(18)+1;
+                    end
+                elseif sect==14
+                    p(14)=p(14)+1;
+                    value.Times{p(14)}=tline;
+                elseif sect==15
+                    p(15)=p(15)+1;
+                    value.Report{p(15)}=tline;
+                elseif sect==16
+                    p(16)=p(16)+1;
+                    value.Options{p(16)}=tline;
+                elseif sect==17
+                    p(17)=p(17)+1;
+                    value.Pumps{p(17)}=tline;
+                elseif sect==19
+                    p(19)=p(19)+1;
+                    value.Junctions{p(19)}=tline;
+                elseif sect==20
+                    p(20)=p(20)+1;
+                    value.Reservoirs{p(20)}=tline;
+                elseif sect==21
+                    p(21)=p(21)+1;
+                    value.Vertices{p(21)}=tline;
+                elseif sect==22
+                    p(22)=p(22)+1;
+                    value.Tanks{p(22)}=tline;
+                elseif sect==23
+                    p(23)=p(23)+1;
+                    value.Pipes{p(23)}=tline;
+                elseif sect==24
+                    p(24)=p(24)+1;
+                    value.Valves{p(24)}=tline;
+                end
             end
         end
         function value = getBinNodeSourceInfo(obj,varargin)
@@ -5742,9 +6042,6 @@ classdef epanet <handle
         function value = getBinCurvesInfo(obj)
             [value.BinCurveNameID,value.BinCurveXvalue,value.BinCurveYvalue,value.BinCurveAllLines,value.BinCurveTypes,value.BinCurveCount,value.BinCTypes]=CurveInfo(obj);
         end
-        function remAddBinCurvesID(obj,newinp)
-            remAddCurve(obj,newinp);
-        end
         function [value] = Binplot(obj,varargin)
             %Plots network in a new Matlab figure
             %Arguments:
@@ -5766,7 +6063,7 @@ classdef epanet <handle
             % d.Binplot('point','no','linksindex','yes');
             % d.Binplot('linksindex','yes','fontsize',8);
             % d.Binplot('nodesindex','yes','fontsize',14);
-            [value] = ENplot(obj,'bin',1,varargin{:});
+            [value] = plotnet(obj,'bin',1,varargin{:});
         end
         function value = getBinNumberReportingPeriods(obj,varargin)
             value = getBinComputedTimeSeries(obj,27);
@@ -5852,103 +6149,12 @@ classdef epanet <handle
         function value = getBinComputedAverageSourceInflow(obj,varargin)
             value = getBinComputedTimeSeries(obj,26);
         end
-        function value = getBinComputedAllParameters(obj)
-            value=[];
-            [fid,binfile] = runEPANETexe(obj);
-            if fid~=-1
-                data = fread(fid,'int32');
-                fclose(fid);
-                value.BinNumberReportingPeriods = data(end-2);
-                clear data;
-                fid1 = fopen(binfile, 'r');
-
-                % Seek to the 10th byte ('J'), read 5
-                fseek(fid1, 0, 'bof');
-                value.Binmagicnumber=fread(fid1, 1, 'uint32');
-                value.BinLibEPANET=fread(fid1, 1, 'uint32');
-                value.BinNumberNodes=fread(fid1, 1, 'uint32');
-                value.BinNumberReservoirsTanks=fread(fid1, 1, 'uint32');
-                value.BinNumberLinks=fread(fid1, 1, 'uint32');
-                value.BinNumberPumps=fread(fid1, 1, 'uint32');
-                value.BinNumberValves=fread(fid1, 1, 'uint32');
-                value.BinWaterQualityOption=fread(fid1, 1, 'uint32');
-                value.BinIndexNodeSourceTracing=fread(fid1, 1, 'uint32');
-                value.BinFlowUnitsOption=fread(fid1, 1, 'uint32');
-                value.BinPressureUnitsOption=fread(fid1, 1, 'uint32');
-                value.BinTimeStatisticsFlag=fread(fid1, 1, 'uint32');
-                value.BinReportingStartTimeSec=fread(fid1, 1, 'uint32');
-                value.BinReportingTimeStepSec=fread(fid1, 1, 'uint32');
-                value.BinSimulationDurationSec=fread(fid1, 1, 'uint32');
-                value.BinProblemTitle1=fread(fid1, 80, '*char')';
-                value.BinProblemTitle2=fread(fid1, 80, '*char')';
-                value.BinProblemTitle3=fread(fid1, 80, '*char')';
-                value.BinNameInputFile=fread(fid1, 260, '*char')';
-                value.BinNameReportFile=fread(fid1, 260, '*char')';
-                value.BinNameChemical=fread(fid1, 16, '*char')';
-                value.BinChemicalConcentrationUnits=fread(fid1, 32, '*char')'; 
-                fread(fid1, 4, 'uint32');
-                for i=1:value.BinNumberNodes
-                    value.BinIDLabelEachNode{i}=fread(fid1, 32, '*char')'; % error NODES*32
-                    value.BinIDLabelEachNode{i}=value.BinIDLabelEachNode{i}(find(value.BinIDLabelEachNode{i}));
-                end
-                for i=1:value.BinNumberLinks
-                    value.BinIDLabelEachLink{i}=fread(fid1, 32, '*char')';  % error LINKS*32
-                    value.BinIDLabelEachLink{i}=value.BinIDLabelEachLink{i}(find(value.BinIDLabelEachLink{i}));
-                end
-                value.BinIndexStartNodeEachLink=fread(fid1, value.BinNumberLinks, 'uint32')';
-                value.BinIndexEndNodeEachLink=fread(fid1, value.BinNumberLinks, 'uint32')';
-                value.BinTypeCodeEachLink=fread(fid1, value.BinNumberLinks, 'uint32')';
-                value.BinNodeIndexEachReservoirsTank=fread(fid1, value.BinNumberReservoirsTanks, 'uint32')'; % error
-                value.BinCrossSectionalAreaEachTank=fread(fid1, value.BinNumberReservoirsTanks, 'float')';
-                value.BinElevationEachNode=fread(fid1, value.BinNumberNodes, 'float')';
-                value.BinLengthEachLink=fread(fid1, value.BinNumberLinks, 'float')';
-                value.BinDiameterEachLink=fread(fid1, value.BinNumberLinks, 'float')';
-
-                value.BinPumpIndexListLinks=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinPumpUtilization=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinAverageEfficiency=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinAverageKwattsOrMillionGallons=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinAverageKwatts=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinPeakKwatts=fread(fid1, value.BinNumberPumps, 'float')';
-                value.BinAverageCostPerDay=fread(fid1, value.BinNumberPumps, 'float')';
-
-                fread(fid1, 1, 'float');
-                
-                for i=1:value.BinNumberReportingPeriods
-                    value.BinnodeDemand(:,i)         = fread(fid1, value.BinNumberNodes, 'float')';
-                    value.BinnodeHead(:,i)           = fread(fid1, value.BinNumberNodes, 'float')';
-                    value.BinnodePressure(:,i)       = fread(fid1, value.BinNumberNodes, 'float')';
-                    value.BinnodeQuality(:,i)        = fread(fid1, value.BinNumberNodes, 'float')';
-                    value.BinlinkFlow(:,i)           = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkVelocity(:,i)       = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkHeadloss(:,i)       = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkQuality(:,i)        = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkStatus(:,i)         = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkSetting(:,i)        = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkReactionRate(:,i)   = fread(fid1, value.BinNumberLinks, 'float')';
-                    value.BinlinkFrictionFactor(:,i) = fread(fid1, value.BinNumberLinks, 'float')';
-                end
-                value.BinAverageBulkReactionRate=fread(fid1, 1, 'float')';
-                value.BinAverageWallReactionRate=fread(fid1, 1, 'float')';
-                value.BinAverageTankReactionRate=fread(fid1, 1, 'float')';
-                value.BinAverageSourceInflowRate=fread(fid1, 1, 'float')';
-                value.BinNumberReportingPeriods2=fread(fid1, 1, 'uint32')';
-                value.BinWarningFlag=fread(fid1, 1, 'uint32')';
-                value.BinMagicNumber=fread(fid1, 1, 'uint32')';
-                fclose(fid1);
-            end
-            if fid==-1
-                fprintf('"Run was unsuccessful."\n');
-            else
-                fprintf('"Run was successful."\n');
-            end
+        function value = getBinComputedAllParameters(obj, varargin)
+            [fid,binfile,rptfile] = runEPANETexe(obj);
+            value = readEpanetBin(fid, binfile, rptfile);
         end
         function [info,tline,allines] = readInpFile(obj,varargin)
-            if ~sum(strcmp(who,'varargin'))
-                [info,tline,allines] = readAllFile(obj.BinTempfile);
-            else
-                [info,tline,allines] = readAllFile(obj.BinTempfile);
-            end
+            [info,tline,allines] = readAllFile(obj.BinTempfile);
         end
         function value = getBinNodesInfo(obj)
             valueL = obj.getBinLinksInfo;
@@ -5972,7 +6178,7 @@ classdef epanet <handle
                         value.BinNodeJunctionIndex=[];
                         value.BinNodeJunctionElevation=[];
                         value.BinNodeJunctionsBaseDemands=[];
-                        value.BinNodeDemandPatternNameID={};
+                        value.BinNodeJunDemandPatternNameID={};
                         value.BinNodeJunctionsBaseDemandsID={};k=1;
                         continue;
                     elseif strcmpi(tok(1:5),'[RESE')
@@ -5988,11 +6194,11 @@ classdef epanet <handle
                         value.BinNodeTankNameID={};
                         value.BinNodeTankIndex=[];
                         value.BinNodeTankElevation=[];
-                        value.BinNodeTankInitLevel=[]; 
-                        value.BinNodeTankMinLevel=[];  
-                        value.BinNodeTankMaxLevel=[]; 
+                        value.BinNodeTankInitialLevel=[]; 
+                        value.BinNodeTankMinimumWaterLevel=[];  
+                        value.BinNodeTankMaximumWaterLevel=[]; 
                         value.BinNodeTankDiameter=[];  
-                        value.BinNodeTankMinVol=[];
+                        value.BinNodeTankMinimumWaterVolume=[];
                         continue;
                     elseif strcmpi(tok(1:5),'[PIPE')
                         value.BinNodeJunctionCount = length(value.BinNodeJunctionNameID); 
@@ -6011,7 +6217,7 @@ classdef epanet <handle
                         continue;
                     elseif strcmpi(tok(1:5),'[DEMA') %&& max(value.BinNodeJunctionsBaseDemands)==0
                         sect=8;d=1;
-%                         value.BinNodeDemandPatternNameID={};
+%                         value.BinNodeJunDemandPatternNameID={};
                         continue;
                         % [QUALITY] section
                     elseif strcmpi(tok(1:5),'[QUAL')
@@ -6042,35 +6248,26 @@ classdef epanet <handle
                     end
                 end
                 clear atline;
-                a = regexp(tline,'\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
+                atline = checktlines(tline);
+
                 if sect==0
                     continue;
                     % Nodes
                 elseif sect==1
                     value.BinNodeJunctionNameID{k}=atline{1};
                     value.BinNodeJunctionIndex(k)=k;
-                    value.BinNodeJunctionElevation(k)=str2num(atline{2});
+                    value.BinNodeJunctionElevation(k)=str2double(atline{2});
                     if length(atline)>2
                         if ~isempty(atline{3}) && ~sum(atline{3}==';')
-                            value.BinNodeJunctionsBaseDemands(k)=single(str2num(atline{3}));
+                            value.BinNodeJunctionsBaseDemands(k)=single(str2double(atline{3}));
                             if length(atline)>3
                                 if ~sum(atline{4}==';')
-                                    value.BinNodeDemandPatternNameID{k}=atline{4};
+                                    value.BinNodeJunDemandPatternNameID{k}=atline{4};
                                 else
-                                    value.BinNodeDemandPatternNameID{k}='';
+                                    value.BinNodeJunDemandPatternNameID{k}='';
                                 end
                             else
-                                value.BinNodeDemandPatternNameID{k}='';
+                                value.BinNodeJunDemandPatternNameID{k}='';
                             end
                         end
                     end
@@ -6078,7 +6275,7 @@ classdef epanet <handle
                 elseif sect==2
                     value.BinNodeReservoirNameID{r}=atline{1};
                     value.BinNodeReservoirIndex(r)=k;
-                    value.BinNodeReservoirElevation(r)=str2num(atline{2});
+                    value.BinNodeReservoirElevation(r)=str2double(atline{2});
                     if length(atline)>2
                         if ~isempty(atline{3}) && ~sum(atline{3}==';')
                             value.BinNodeResDemandPatternNameID{r}=atline{3};
@@ -6093,12 +6290,12 @@ classdef epanet <handle
                 elseif sect==3
                     value.BinNodeTankNameID{p}=atline{1};
                     value.BinNodeTankIndex(p)=k;
-                    value.BinNodeTankElevation(p)=str2num(atline{2});
-                    value.BinNodeTankInitLevel(p)=single(str2num(atline{3}));
-                    value.BinNodeTankMinLevel(p)=str2num(atline{4});
-                    value.BinNodeTankMaxLevel(p)=single(str2num(atline{5}));
-                    value.BinNodeTankDiameter(p)=str2num(atline{6});
-                    value.BinNodeTankMinVol(p)=single(str2num(atline{7}));
+                    value.BinNodeTankElevation(p)=str2double(atline{2});
+                    value.BinNodeTankInitialLevel(p)=single(str2double(atline{3}));
+                    value.BinNodeTankMinimumWaterLevel(p)=str2double(atline{4});
+                    value.BinNodeTankMaximumWaterLevel(p)=single(str2double(atline{5}));
+                    value.BinNodeTankDiameter(p)=str2double(atline{6});
+                    value.BinNodeTankMinimumWaterVolume(p)=single(str2double(atline{7}));
                     k=k+1;
                     p=p+1;
                     % Demands
@@ -6106,45 +6303,44 @@ classdef epanet <handle
                     indd=find(strcmpi(value.BinNodeNameID,atline{1}));
                     if ~isempty(value.BinNodeJunctionsBaseDemandsID)
                         if strcmp(value.BinNodeJunctionsBaseDemandsID{end},atline{1})
-                            value.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2})); 
+                            value.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2})); 
                         else
-                            value.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2}));
+                            value.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2}));
                         end
                     else
-                        value.BinNodeJunctionsBaseDemands(indd)=single(str2num(atline{2}));
+                        value.BinNodeJunctionsBaseDemands(indd)=single(str2double(atline{2}));
                     end
                     value.BinNodeJunctionsBaseDemandsID{d}=atline{1};
-                    if length(atline)>2
-                        value.BinNodeDemandPatternNameID{indd}=atline{3};
+                    if length(atline)>2 
+                        value.BinNodeJunDemandPatternNameID{indd}=atline{3};
                     else
-                        value.BinNodeDemandPatternNameID{indd}='';
+                        value.BinNodeJunDemandPatternNameID{indd}='';
                     end
                     d=d+1;   
                     % Quality
                 elseif sect==12
                     Hh=find(strcmpi(value.BinNodeNameID,atline{1}));
-                    value.BinNodeInitialQuality(Hh)=str2num(atline{2});
+                    value.BinNodeInitialQuality(Hh)=str2double(atline{2});
                     value.BinCountInitialQualitylines=d;
                     d=d+1;
                 elseif sect==14
                     value.BinNodeTankMixID{d}=atline{1};
                     value.BinNodeTankMixModel{d}=atline{2};
-                    value.BinNodeTankMinimumFraction(d)=str2num(atline{3});
+                    value.BinNodeTankMinimumFraction(d)=str2double(atline{3});
                     d=d+1;
                 elseif sect==17
                     A = textscan(tline,'%s %f %f');
                     % get the node index
                     a=strcmp(A{1},value.BinNodeNameID);
                     index=strfind(a,1);
-                    if length(index)==0
-                        return;
-                    end
+                    if isempty(index), continue; end
                     vx(index) = A{2};
                     vy(index) = A{3};
                     % Vertices
                 elseif sect==18
                     A = textscan(tline,'%s %f %f');
                     index =  find(strcmp(valueL.BinLinkNameID,A{1}));
+                    if isempty(index), continue; end
                     nvert(index) = nvert(index) + 1;
                     vertx{index}(nvert(index)) = A{2};
                     verty{index}(nvert(index)) = A{3};
@@ -6158,11 +6354,6 @@ classdef epanet <handle
             value.BinNodeCoordinates{3} = vertx;
             value.BinNodeCoordinates{4} = verty;
             value.BinNodeElevations = single([value.BinNodeJunctionElevation value.BinNodeReservoirElevation value.BinNodeTankElevation]);
-%             value.BinNodeJunctionsBaseDemands(length(value.BinNodeJunctionsBaseDemands):value.BinNodeJunctionCount)=0;
-            value.BinNodeDemandPatternNameID=[value.BinNodeDemandPatternNameID value.BinNodeResDemandPatternNameID];
-            for i=value.BinNodeTankIndex
-               value.BinNodeDemandPatternNameID{i}=''; 
-            end
             value.BinNodeBaseDemands = single([value.BinNodeJunctionsBaseDemands zeros(1,value.BinNodeReservoirCount) zeros(1,value.BinNodeTankCount)]);
             value.BinNodeIndex=obj.getBinNodeIndex;
         end
@@ -6197,9 +6388,9 @@ classdef epanet <handle
                 end
             end
         end
-        function [valueCoord,valueRule] = getBinCoordRuleSections(obj)
+        function [valueCoord,valueRule] = getBinCoordRuleSections(obj, file)
             % Open epanet input file
-            [info]=regexp( fileread(obj.InputFile), '\n', 'split'); 
+            [info]=regexp( fileread(file), '\n', 'split'); 
             sect=0;d=1;valueCoord={};valueRule={};dRule=1;
             for h=1:length(info)
                 tline = info{h};
@@ -6237,154 +6428,11 @@ classdef epanet <handle
             end
         end
         function value = getBinNodeCoordinates(obj)
-            BinNodeName = obj.getBinNodeNameID;
-            BinLinkName = obj.getBinLinkNameID;
-            linkcount =  length(BinLinkName.BinLinkNameID);
-            nodecount = length(BinNodeName.BinNodeNameID);
-            vx = NaN(nodecount,1);
-            vy = NaN(nodecount,1);
-            vertx = cell(linkcount,1);
-            verty = cell(linkcount,1);
-            nvert = zeros(linkcount,1);
-            % Open epanet input file
-            [~,info] = obj.readInpFile;
-            sect=0;
-            for h=1:length(info)
-                tline = info{h};
-                if ~ischar(tline),   break,   end
-                % Get first token in the line
-                tok = strtok(tline);
-                % Skip blank Clines and comments
-                if isempty(tok), continue, end
-                if (tok(1) == ';'), continue, end
-                if (tok(1) == '[')
-                        % [COORDINATES] section
-                    if strcmpi(tok(1:5),'[COOR')
-                        sect=17;
-                        continue;
-                        % [VERTICES] section
-                    elseif strcmpi(tok(1:5),'[VERT')
-                        sect=18;
-                        continue;
-                        % [END]
-                    elseif strcmpi(tok(1:4),'[END')
-                        break;
-                    else
-                        sect = 0;
-                        continue;
-                    end
-                end
-                clear atline;
-                a = regexp(tline,'\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
-                if sect==0
-                    continue;
-                elseif sect==17
-                    A = textscan(tline,'%s %f %f');
-                    % get the node index
-                    a=strcmp(A{1},BinNodeName.BinNodeNameID);
-                    index=strfind(a,1);
-                    if length(index)==0
-                        return;
-                    end
-                    vx(index) = A{2};
-                    vy(index) = A{3};
-                    % Vertices
-                elseif sect==18
-                    A = textscan(tline,'%s %f %f');
-                    index =  find(strcmp(BinLinkName.BinLinkNameID,A{1}));
-                    nvert(index) = nvert(index) + 1;
-                    vertx{index}(nvert(index)) = A{2};
-                    verty{index}(nvert(index)) = A{3};
-                end
-            end
-            value{1} = vx;
-            value{2} = vy;
-            value{3} = vertx;
-            value{4} = verty;
+            value = NodeCoords(obj, 'Bin');
         end
         function value = getNodeCoordinates(obj, varargin)
-            if isempty(varargin)
-                vx = NaN(obj.getNodeCount,1);
-                vy = NaN(obj.getNodeCount,1);
-                vertx = cell(obj.getLinkCount,1);
-                verty = cell(obj.getLinkCount,1);
-                nvert = zeros(obj.getLinkCount,1);
-                % Open epanet input file
-                [~,info] = obj.readInpFile;
-                sect=0;
-                for h=1:length(info)
-                    tline = info{h};
-                    if ~ischar(tline),   break,   end
-                    % Get first token in the line
-                    tok = strtok(tline);
-                    % Skip blank Clines and comments
-                    if isempty(tok), continue, end
-                    if (tok(1) == ';'), continue, end
-                    if (tok(1) == '[')
-                            % [VERTICES] section
-                        if strcmpi(tok(1:5),'[VERT')
-                            sect=18;
-                            continue;
-                            % [END]
-                        elseif strcmpi(tok(1:4),'[END')
-                            break;
-                        else
-                            sect = 0;
-                            continue;
-                        end
-                    end
-                    clear atline;
-                    a = regexp(tline,'\s*','split');uu=1;
-                    for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atline{uu}=a{tt}; uu=uu+1;
-                        end
-                    end
-                    if sect==0
-                        continue;
-                        % Vertices
-                    elseif sect==18
-                        A = textscan(tline,'%s %f %f');
-                        [~,index] = ENgetlinkindex(char(A{1}),obj.LibEPANET);
-                        nvert(index) = nvert(index) + 1;
-                        vertx{index}(nvert(index)) = A{2};
-                        verty{index}(nvert(index)) = A{3};
-                    end
-                end
-            end
-            try
-                indices = getNodeIndices(obj,varargin);j=1;
-                for i=indices
-                    [obj.Errcode,vx(j),vy(j)]=ENgetcoord(i,obj.LibEPANET);
-                    if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
-                    j=j+1;
-                end
-            catch e
-            end
-            if isempty(varargin)
-                value{1} = vx;
-                value{2} = vy;
-                value{3} = vertx;
-                value{4} = verty;
-            else
-                if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
-                value = [vx' vy'];
-            end
+            if ~isempty(varargin), value = NodeCoords(obj, varargin{1});
+            else value = NodeCoords(obj); end
         end
         function value = getBinNodeNameID(obj)
             % Open epanet input file
@@ -6423,17 +6471,7 @@ classdef epanet <handle
                     end
                 end
                 clear atline;
-                a = regexp(tline, '\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
+                atline = checktlines(tline);
                 if sect==0
                     continue;
                     % Nodes
@@ -6489,17 +6527,7 @@ classdef epanet <handle
                     end
                 end
                 clear atline;
-                a = regexp(tline, '\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
+                atline = checktlines(tline);
                 if sect==0
                     continue;
                     % Links
@@ -6517,7 +6545,7 @@ classdef epanet <handle
             value.BinLinkNameID = [value.BinLinkPipeNameID value.BinLinkPumpNameID value.BinLinkValveNameID];
         end
         function value = getBinLinksInfo(obj)
-            sect=0;i=1;t=1;q=1;
+            sect=0;i=1;t=1;q=1;d=1;value=[];
             % Open epanet input file
             [~,info] = obj.readInpFile;
             for h=1:length(info)
@@ -6528,157 +6556,9 @@ classdef epanet <handle
                 % Skip blank Clines and comments
                 if isempty(tok), continue, end
                 if (tok(1) == ';'), continue, end
-                if (tok(1) == '[')
-                       % [PIPES] section
-                    if strcmpi(tok(1:5),'[PIPE')
-                        sect=1;
-                        value.BinLinkPipeNameID={};
-                        value.BinLinkPipeIndex=[];
-                        value.BinLinkFromNode={};
-                        value.BinLinkToNode={};
-                        value.BinLinkPipeLengths=[];
-                        value.BinLinkPipeDiameters=[];
-                        value.BinLinkPipeRoughness=[];
-                        value.BinLinkPipeMinorLoss=[];
-                        continue;
-                        % [PUMPS] section
-                    elseif strcmpi(tok(1:5),'[PUMP')
-                        sect=2;
-                        value.BinLinkPumpNameID={};
-                        value.BinLinkPumpIndex=[];
-                        value.BinLinkPumpPatterns={};
-                        value.BinLinkPumpCurveNameID={};
-                        value.BinLinkPumpPower=[];
-                        value.BinLinkPumpNameIDPower={};
-                        continue;
-                        % [VALVES] section
-                    elseif strcmpi(tok(1:5),'[VALV')
-                        sect=3;
-                        value.BinLinkValveNameID={};
-                        value.BinLinkValveIndex=[];
-                        value.BinLinkValveDiameters=[];
-                        value.BinLinkValveType={};
-                        value.BinLinkValveSetting=[];
-                        value.BinLinkValveMinorLoss=[];                        
-                        continue;
-                        % [STATUS] section
-                    elseif strcmpi(tok(1:5),'[STAT')
-                        sect=4;d=1;
-                        value.BinLinkInitialStatus={};
-                        value.BinLinkInitialStatusNameID={};
-                        value.BinCountStatuslines=0;
-                        continue;                        
-                    elseif strcmpi(tok(1:5),'[REAC')
-                        sect=5;d=1;
-                        value.BinLinkGlobalBulkReactionCoeff=[];
-                        value.BinLinkGlobalWallReactionCoeff=[];
-                        value.BinLinkBulkReactionCoeff=[];
-                        value.BinLinkWallReactionCoeff=[];
-                        value.BinCountReactionlines=0;         
-                        value.BinLinkPipeCount = length(value.BinLinkPipeNameID);
-                        value.BinLinkPumpCount = length(value.BinLinkPumpNameID);
-                        value.BinLinkValveCount = length(value.BinLinkValveNameID);
-                        value.BinLinkCount = value.BinLinkPipeCount+value.BinLinkPumpCount+value.BinLinkValveCount;
-                        value.BinLinkNameID = [value.BinLinkPipeNameID value.BinLinkPumpNameID value.BinLinkValveNameID];
-                        continue;                        
-                        % [END]
-                    elseif strcmpi(tok(1:4),'[END')
-                        break;
-                    else
-                        sect = 0;
-                        continue;
-                    end
-                end
-                clear atline;
-                a = regexp(tline, '\s*','split');uu=1;
-                for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif sum(a{tt}==';')
-                        %skip
-                        if tt>1,  break; end
-                    else
-                        atline{uu}=a{tt}; uu=uu+1;
-                    end
-                end
-                if sect==0
-                    continue;
-                    % Links
-                elseif sect==1
-                    value.BinLinkPipeNameID{t}=atline{1};
-                    value.BinLinkPipeIndex(t)=t;
-                    value.BinLinkFromNode{t}=atline{2};
-                    value.BinLinkToNode{t}=atline{3};
-                    value.BinLinkPipeLengths(t)=str2num(atline{4});
-                    value.BinLinkPipeDiameters(t)=str2num(atline{5});
-                    value.BinLinkPipeRoughness(t)=str2num(atline{6});
-                    if length(atline)>6
-                        value.BinLinkPipeMinorLoss(t)=str2num(atline{7});
-                    end
-                    value.BinLinkType={};
-                    if length(atline)>7
-                        value.BinLinkPipeStatus{t}=atline{8};
-                    else
-                        value.BinLinkPipeStatus{t}='Open';
-                    end
-                    t=t+1;
-                elseif sect==2
-                    value.BinLinkPumpNameID{q}=atline{1};
-                    value.BinLinkPumpIndex(q)=t;
-                    value.BinLinkFromNode{t}=atline{2};
-                    value.BinLinkToNode{t}=atline{3};
-                    if strcmp(regexp(tline,'\w*HEAD*\w','match'),'HEAD')
-                        value.BinLinkPumpCurveNameID{q}=atline{5};
-                    elseif strcmp(regexp(tline,'\w*POWER*\w','match'),'POWER')
-                        value.BinLinkPumpPower(q)=str2num(atline{5});
-                        value.BinLinkPumpNameIDPower{q}=atline{1};
-                    end
-                    if length(atline)>6
-                        value.BinLinkPumpPatterns{q}=atline{7};
-                    end
-                    t=t+1;
-                    q=q+1;
-                elseif sect==3
-                    value.BinLinkValveNameID{i}=atline{1};
-                    value.BinLinkValveIndex(i)=t;
-                    value.BinLinkFromNode{t}=atline{2};
-                    value.BinLinkToNode{t}=atline{3};
-                    value.BinLinkValveDiameters(i)=str2num(atline{4});
-                    value.BinLinkValveType{i}=atline{5};
-                    value.BinLinkValveSetting(i)=str2num(atline{6});
-                    if length(atline)>6
-                        value.BinLinkValveMinorLoss(i)=str2num(atline{7});
-                    end
-                    t=t+1;
-                    i=i+1;
-                    % Status
-                elseif sect==4
-                    value.BinLinkInitialStatus{d}=atline{2};
-                    value.BinLinkInitialStatusNameID{d}=atline{1};
-                    value.BinCountStatuslines=d;
-                    d=d+1;                    
-                    % Reactions
-                elseif sect==5
-                    if strcmpi(upper(atline{1}),'GLOBAL') && strcmpi(upper(atline{2}),'BULK')
-                        value.BinLinkGlobalBulkReactionCoeff=str2num(atline{3});
-                    elseif strcmpi(upper(atline{1}),'GLOBAL') && strcmpi(upper(atline{2}),'WALL')
-                        value.BinLinkGlobalWallReactionCoeff=str2num(atline{3});
-                        value.BinLinkWallReactionCoeff=value.BinLinkGlobalWallReactionCoeff*ones(1,value.BinLinkCount);
-                        value.BinLinkBulkReactionCoeff=value.BinLinkGlobalBulkReactionCoeff*ones(1,value.BinLinkCount);
-                        value.BinLinkWallReactionCoeff(value.BinLinkPumpIndex)=0;
-                        value.BinLinkWallReactionCoeff(value.BinLinkValveIndex)=0;
-                        value.BinLinkBulkReactionCoeff(value.BinLinkPumpIndex)=0;
-                        value.BinLinkBulkReactionCoeff(value.BinLinkValveIndex)=0;
-                    end
-                    if strcmpi(upper(atline{1}),'BULK')
-                        LinkIndex = find(strcmpi(value.BinLinkNameID,atline{2}));
-                        value.BinLinkBulkReactionCoeff(LinkIndex)=str2num(atline{3});
-                    elseif strcmpi(upper(atline{1}),'WALL')
-                        LinkIndex = find(strcmpi(value.BinLinkNameID,atline{2}));
-                        value.BinLinkWallReactionCoeff(LinkIndex)=str2num(atline{3});
-                    end
-                    value.countReactionlines=d;
-                    d=d+1;
+                [value, cont, sect, i,t,q,d] = getLV(tok,value,sect,tline,i,t,q,d);
+                if cont==0
+                    break;
                 end
             end
             if ~sum(value.BinLinkBulkReactionCoeff)
@@ -6758,17 +6638,7 @@ classdef epanet <handle
                     % Nodes
                 elseif sect==1
                     clear atline;
-                    a = regexp(tline,'\s*','split');uu=1;
-                    for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atline{uu}=a{tt}; uu=uu+1;
-                        end
-                    end
+                    atline = checktlines(tline);
                     value.BinControlsInfo{d}=atline;
                     if length(atline)>1
                         value.BinControlLinksID{d}=atline{2};
@@ -6797,11 +6667,11 @@ classdef epanet <handle
                 if (tok(1) == '[')                
                         % [RULES] section
                     if strcmpi(tok(1:5),'[RULE')
-                        sect=1;d=1;dd=0;
+                        sect=1;d=1;
                         value.BinRulesControlsInfo={};
                         value.BinRulesControlLinksID={};
                         value.BinRulesControlNodesID={};
-                        value.BinRulesCount=1;
+                        value.BinRulesCount=0;
                         continue;
                         % [END]
                     elseif strcmpi(tok(1:4),'[END')
@@ -6817,28 +6687,17 @@ classdef epanet <handle
                     % Nodes
                 elseif sect==1
                     clear atline;
-                    a = regexp(tline,'\s*','split');uu=1;
-                    for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atline{uu}=a{tt}; uu=uu+1;
-                        end
+                    atline = checktlines(tline);
+                    if strcmpi(atline{1},{'RULE'})
+                        d=1;value.BinRulesCount=value.BinRulesCount+1;
                     end
-                    if strcmp(upper(atline{1}),{'RULE'})
-                        dd=dd+1;d=1;
-                    end
-                    value.BinRulesControlsInfo{dd}{d}=atline;
-                    if sum(strcmp(upper(atline{2}),{'LINK','PIPE','PUMP','VALVE'}))
-                        value.BinRulesControlLinksID{dd}{d}=atline{3};
-                    elseif sum(strcmp(upper(atline{2}),{'NODE','JUNCTION','RESERVOIR','TANK'}))
-                        value.BinRulesControlNodesID{dd}{d}=atline{3};
+                    value.BinRulesControlsInfo{value.BinRulesCount}{d}=atline;
+                    if sum(strcmpi(atline{2},{'LINK','PIPE','PUMP','VALVE'}))
+                        value.BinRulesControlLinksID{value.BinRulesCount}{d}=atline{3};
+                    elseif sum(strcmpi(atline{2},{'NODE','JUNCTION','RESERVOIR','TANK'}))
+                        value.BinRulesControlNodesID{value.BinRulesCount}{d}=atline{3};
                     end
                     d=d+1;
-                    value.BinRulesCount=value.BinRulesCount+1;
                 end
             end
         end
@@ -6885,67 +6744,16 @@ classdef epanet <handle
                         continue;
                     end
                 end
-
                 if sect==0
                     continue;
                     % Options
                 elseif sect==1
                     clear atline;
-                    a = regexp(tline,'\s*','split');uu=1;
-                    for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
-                        else
-                            atline{uu}=a{tt}; uu=uu+1;
-                        end
-                    end
-                    if strcmp(upper(atline{1}),'UNITS')
-                        value.BinLinkFlowUnits=atline{2};
-                    elseif strcmp(upper(atline{1}),'HEADLOSS')
-                        value.BinOptionsHeadloss=atline{2};
-                    elseif strcmp(upper(atline{1}),'PRESSURE')
-                        value.BinNodePressureUnits=atline{2};
-                    elseif strcmp(upper(atline{1}),'SPECIFIC')
-                        value.BinOptionsSpecificGravity=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'VISCOSITY')
-                        value.BinOptionsViscosity=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'TRIALS')
-                        value.BinOptionsMaxTrials=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'ACCURACY')
-                        value.BinOptionsAccuracyValue=single(str2num(atline{2}));
-                    elseif strcmp(upper(atline{1}),'UNBALANCED')
-                        value.BinOptionsUnbalanced= atline(2:end);
-                    elseif strcmp(upper(atline{1}),'PATTERN')
-                        value.BinOptionsPattern=str2num(atline{2});
-                    elseif strcmp(upper(atline{1}),'DEMAND')
-                        value.BinOptionsPatternDemandMultiplier=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'EMITTER')
-                        value.BinOptionsEmitterExponent=str2num(atline{3});
-                    elseif strcmp(upper(atline{1}),'QUALITY')
-                        value.BinQualityType=atline{2};% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                        value.BinQualityCode=find((strcmpi(obj.TYPEQUALITY,atline{2})-1)>-1)-1;
-                        if isempty(value.BinQualityCode)
-                            value.BinQualityCode=1;
-                        end
-                        if value.BinQualityCode==3 && length(atline)>2
-                            value.BinQualityTraceNodeIndex=getBinNodeIndex(obj, atline{3});
-                            value.BinQualityTraceNodeID=atline{3};
-                        else
-                            if length(atline)>2
-                                value.BinQualityUnits=atline{3};
-                            end
-                        end
-                    elseif strcmp(upper(atline{1}),'DIFFUSIVITY')
-                        value.BinOptionsDiffusivity=str2num(atline{2});% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                    elseif strcmp(upper(atline{1}),'TOLERANCE')
-                        value.BinOptionsQualityTolerance=single(str2num(atline{2}));% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
-                    end
+                    atline = checktlines(tline);
+                    value = getOptionsValues(obj, value, atline);
                 end
             end
-        %     US Customary - SI metric
+            % US Customary - SI metric
             if find(strcmp(value.BinLinkFlowUnits, obj.TYPEUNITS))<6
                 value.BinUnits_US_Customary=1;
             else
@@ -7042,69 +6850,26 @@ classdef epanet <handle
                     % Times
                 elseif sect==1
                     clear atline;
-                    a = regexp(tline,'\s*','split');uu=1;
-                    for tt=1:length(a)
-                        if isempty(a{tt})
-                            %skip
-                        elseif sum(a{tt}==';')
-                            %skip
-                            if tt>1,  break; end
+                    atline = checktlines(tline);
+                    r=atline{2};
+                    if length(atline)>2 
+                        if find(~strcmpi(atline{end},{'HOURS','MIN','SECONDS','MINUTES','DAYS'})==0)
+                            r=atline{end-1};
                         else
-                            atline{uu}=a{tt}; uu=uu+1;
+                            r=atline{end};
                         end
                     end
-                    if strcmp(upper(atline{1}),'DURATION')
-                        r=atline{2};
-                    elseif length(atline)>2
-                        r=atline{3};
-                    end
-                    if sum(r==':')
-                        hrs=str2num(r(1:find(r==':')-1));
-                        min=str2num(r((find(r==':')+1):end-find(r==':')-1));
-                        if isempty(min), min=0; end
-                        if isempty(hrs), hrs=0; end
-                        if ~min && ~hrs
-                            g=find(r==':'); 
-                            secnd=str2num(r(g(end)+1:end)); 
-                        else
-                        secnd=hrs*3600+min*60;
-                        end
-                    elseif sum(r=='.')
-%                         min=str2num(r(1:find(r=='.')-1));
-%                         secnd1=str2num(r((find(r=='.')+1):end));
-                        if length(atline)>2; 
-                            if strcmp(upper(atline{3}),'HOURS')
-                                secnd=str2num(r)*3600;
-                            end
-                        else
-                            if isempty(min), min=0; end
-    %                         if isempty(secnd1), secnd1=0; end
-                            min=str2num(r);
-                            secnd=single(min*60);%+secnd1;
-                        end
-                    elseif ~sum(r==':') && ~sum(r=='.')
-                        secnd=single(str2num(r)*3600);
-                    end
-                    if strcmp(upper(atline{1}),'DURATION')
-                        value.BinTimeSimulationDuration=secnd;
-                    elseif strcmp(upper(atline{1}),'HYDRAULIC')
-                        value.BinTimeHydraulicStep=secnd;
-                    elseif strcmp(upper(atline{1}),'QUALITY')
-                        value.BinTimeQualityStep=secnd;
-                    elseif strcmp(upper(atline{1}),'PATTERN') && strcmp(upper(atline{2}),'TIMESTEP')
-                        value.BinTimePatternStep=secnd;
-                    elseif strcmp(upper(atline{1}),'PATTERN') && strcmp(upper(atline{2}),'START')
-                        value.BinTimePatternStart=secnd;
-                    elseif strcmp(upper(atline{1}),'REPORT') && strcmp(upper(atline{2}),'TIMESTEP')
-                        value.BinTimeReportingStep=secnd;
-                    elseif strcmp(upper(atline{1}),'REPORT') && strcmp(upper(atline{2}),'START')
-                        value.BinTimeReportingStart=secnd;
-                    elseif strcmp(upper(atline{1}),'STATISTIC') 
-                        value.BinTimeStatisticsIndex=find((strcmpi(obj.TYPESTATS,atline{2})-1)>-1)-1;
-                        value.BinTimeStatistics=obj.TYPESTATS{value.BinTimeStatisticsIndex+1};
-                    end       
+                    value = getTimes(obj, r, atline, value);                            
                 end
             end
+        end
+        function value = getCMDCODE(obj)
+            value = obj.CMDCODE;
+        end
+        function setCMDCODE(obj, code)
+            value = code;
+            if code~=0 && code~=1,  value = obj.CMDCODE; end
+            obj.CMDCODE = value;
         end
     end
 end
@@ -7138,9 +6903,8 @@ function [Errcode, value] = ENgetnodevalue(index, paramcode,LibEPANET)
     index=int32(index);
     paramcode=int32(paramcode);
     [Errcode, value]=calllib(LibEPANET,'ENgetnodevalue',index, paramcode,value);
-    if Errcode==240
-        value=NaN;
-    end
+    if Errcode==240, value=NaN; end
+    value = double(value);
 end
 function [Errcode, value] = ENgetbasedemand(index,numdemands,LibEPANET)
     %epanet20100
@@ -7176,7 +6940,6 @@ function [Errcode] = ENcloseQ(LibEPANET)
         ENgeterror(Errcode,LibEPANET);
     end
 end
-
 function [Errcode, ctype,lindex,setting,nindex,level] = ENgetcontrol(cindex,LibEPANET)
     [Errcode, ctype,lindex,setting,nindex,level]=calllib(LibEPANET,'ENgetcontrol',cindex,0,0,0,0,0);
     if Errcode
@@ -7190,12 +6953,10 @@ function [Errcode, count] = ENgetcount(countcode,LibEPANET)
     end
 end
 function [errmsg, e] = ENgeterror(Errcode,LibEPANET)
+    e=0; errmsg='';
     if Errcode
-        errmsg = char(32*ones(1,79));
-        [e,errmsg] = calllib(LibEPANET,'ENgeterror',Errcode,errmsg,79);
-    else
-        e=0;
-        errmsg='';
+        [e,errmsg] = calllib(LibEPANET,'ENgeterror',Errcode,char(32*ones(1,79)),79);
+        if e, [e,errmsg] = calllib(LibEPANET,'ENgeterror',e,char(32*ones(1,79)),79); end
     end
 end
 function [Errcode,flowunitsindex] = ENgetflowunits(LibEPANET)
@@ -7223,8 +6984,9 @@ if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
-function [Errcode, type] = ENgetlinktype(index,LibEPANET)
-[Errcode,type]=calllib(LibEPANET,'ENgetlinktype',index,0);
+function [Errcode, typecode] = ENgetlinktype(index,LibEPANET)
+[Errcode,typecode]=calllib(LibEPANET,'ENgetlinktype',index,0);
+if ~isnumeric(typecode), typecode = getTypeLink(typecode); end
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
@@ -7234,6 +6996,7 @@ function [Errcode, value] = ENgetlinkvalue(index, paramcode,LibEPANET)
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
+value = double(value);
 end
 function [Errcode,id] = ENgetnodeid(index,LibEPANET)
 id=char(32*ones(1,31));
@@ -7268,9 +7031,16 @@ if Errcode
 end
 end
 function [Errcode, id] = ENgetcurveid(index,LibEPANET)
-%New version dev2.1
+% EPANET Version dev2.1
 id=char(32*ones(1,31));
 [Errcode,id]=calllib(LibEPANET,'ENgetcurveid',index,id);
+if Errcode
+    ENgeterror(Errcode,LibEPANET);
+end
+end
+function [Errcode, type] = ENgetcurvetype(index,LibEPANET)
+% EPANET Version 2.2
+[Errcode,type]=calllib(LibEPANET,'ENgetcurvetype',index,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
@@ -7324,7 +7094,7 @@ if Errcode
 end
 end
 function ENMatlabCleanup(LibEPANET)
-% Load library
+% Unload library
 if libisloaded(LibEPANET)
     unloadlibrary(LibEPANET);
 else
@@ -7332,9 +7102,20 @@ else
     disp(errstring);
 end
 end
-function ENLoadLibrary(LibEPANETpath,LibEPANET)
+function ENLoadLibrary(LibEPANETpath,LibEPANET,varargin)
 if ~libisloaded(LibEPANET)
-    loadlibrary([LibEPANETpath,LibEPANET],[LibEPANETpath,LibEPANET,'.h'])
+    warning('off', 'MATLAB:loadlibrary:TypeNotFound');
+    if ~isdeployed
+        if isunix
+            loadlibrary(LibEPANET,[LibEPANETpath,LibEPANET,'.h']);
+        else
+            loadlibrary([LibEPANETpath,LibEPANET],[LibEPANETpath,LibEPANET,'.h']);
+        end
+    else
+        loadlibrary('epanet2',@mxepanet); %loadlibrary('epanet2','epanet2.h','mfilename','mxepanet.m');
+    end
+    warning('on', 'MATLAB:loadlibrary:TypeNotFound');
+    if ~isempty(varargin), return; end
 end
 if libisloaded(LibEPANET)
     LibEPANETString = 'EPANET loaded sucessfuly.';
@@ -7358,9 +7139,9 @@ tstep = double(tstep);
 end
 function [Errcode] = ENopen(inpname,repname,binname,LibEPANET) %DE
     Errcode=calllib(LibEPANET,'ENopen',inpname,repname,binname);
-    if Errcode
+    if Errcode && Errcode~=200
        [~,errmsg] = calllib(LibEPANET,'ENgeterror',Errcode,char(32*ones(1,79)),79);
-       warning(errmsg);
+       disp(errmsg);
     end
 end
 function [Errcode] = ENopenH(LibEPANET)
@@ -7508,21 +7289,21 @@ if Errcode
 end
 end
 function [Errcode] = ENsetcurve(index, x, y, nfactors,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode]=calllib(LibEPANET,'ENsetcurve',index,x,y,nfactors);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode, x, y] = ENgetcurvevalue(index, period,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,x, y]=calllib(LibEPANET,'ENgetcurvevalue',index, period, 0, 0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode, x, y] = ENsetcurvevalue(index, pnt, x, y, LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 % index  = curve index
 % pnt    = curve's point number
 % x      = curve x value
@@ -7534,14 +7315,14 @@ if Errcode
 end
 end
 function [Errcode, index] = ENgetcurveindex(id,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,~, index]=calllib(LibEPANET,'ENgetcurveindex',id,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode] = ENaddcurve(cid,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 Errcode=calllib(LibEPANET,'ENaddcurve',cid);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
@@ -7555,21 +7336,21 @@ if Errcode
 end
 end
 function [Errcode, len] = ENgetcurvelen(index,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,len]=calllib(LibEPANET,'ENgetcurvelen',index,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode, value] = ENgetheadcurveindex(pumpindex,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,value]=calllib(LibEPANET,'ENgetheadcurveindex',pumpindex,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode, value] = ENgetpumptype(pumpindex,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,value]=calllib(LibEPANET,'ENgetpumptype',pumpindex,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
@@ -7577,29 +7358,36 @@ end
 end
 function [Errcode, value] = ENgetaveragepatternvalue(index,LibEPANET) 
 % return  average pattern value
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,value]=calllib(LibEPANET,'ENgetaveragepatternvalue',index,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode, x, y] = ENgetcoord(index,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode,x,y]=calllib(LibEPANET,'ENgetcoord',index,0,0);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode] = ENsetcoord(index,x,y,LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode]=calllib(LibEPANET,'ENsetcoord',index,x,y);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
 function [Errcode] = ENsetbasedemand(index, demandIdx, value, LibEPANET)
-% New version dev2.1
+% EPANET Version 2.1
 [Errcode]=calllib(LibEPANET,'ENsetbasedemand',index, demandIdx, value);
+if Errcode
+    ENgeterror(Errcode,LibEPANET);
+end
+end
+function [Errcode] = ENsetdemandpattern(index, demandIdx, patInd, LibEPANET)
+% New version 
+[Errcode]=calllib(LibEPANET,'ENsetdemandpattern',index, demandIdx, patInd);
 if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
@@ -7611,7 +7399,51 @@ if Errcode
     ENgeterror(Errcode,LibEPANET);
 end
 end
+function [index,Errcode] = ENaddnode(obj,nodeid,nodetype)
+% dev-net-builder
+[Errcode]=calllib(obj.LibEPANET,'ENaddnode',nodeid,nodetype);
+disp(obj.getError(Errcode));
+index = obj.getNodeIndex(nodeid);
+end
+function [index,Errcode] = ENaddlink(obj,linkid,linktype,fromnode,tonode)
+% dev-net-builder
+[Errcode]=calllib(obj.LibEPANET,'ENaddlink',linkid,linktype,fromnode,tonode);
+disp(obj.getError(Errcode));
+index = obj.getLinkIndex(linkid);
+end
+function [Errcode] = ENdeletenode(obj,indexNode)
+% dev-net-builder
+[Errcode]=calllib(obj.LibEPANET,'ENdeletenode',indexNode);
+disp(obj.getError(Errcode));
+end
+function [Errcode] = ENdeletelink(obj,indexLink)
+% dev-net-builder
+[Errcode]=calllib(obj.LibEPANET,'ENdeletelink',indexLink);
+disp(obj.getError(Errcode));
+end
+function [Errcode] = ENsetheadcurveindex(obj,pumpindex,curveindex)
+% dev-net-builder
+[Errcode]=calllib(obj.LibEPANET,'ENsetheadcurveindex',pumpindex,curveindex);
+disp(obj.getError(Errcode));
+end
+% function [Errcode, nPremises, nTrueActions, nFalseActions, priority] = EN_getrule(cindex,LibEPANET)
+%     [Errcode, nPremises, nTrueActions, nFalseActions, priority]=calllib(LibEPANET,'ENgetrule',cindex,0,0,0,0);
+%     if Errcode
+%         ENgeterror(Errcode,LibEPANET);
+%     end
+% end
 function [obj] = MSXMatlabSetup(obj,msxname,varargin)
+arch = computer('arch');
+pwdepanet = fileparts(which(mfilename));
+if strcmp(arch,'win64')
+    obj.MSXLibEPANETPath = [pwdepanet,'\64bit\'];
+elseif strcmp(arch,'win32')
+    obj.MSXLibEPANETPath = [pwdepanet,'\32bit\'];
+end
+if isunix
+    obj.MSXLibEPANETPath = [pwdepanet,'/glnx/'];
+end
+            
 if ~isempty(varargin)
     if varargin{1}{1}~=1
         if nargin==3 
@@ -7622,8 +7454,6 @@ if ~isempty(varargin)
             end
         end
     end
-else
-    obj.MSXLibEPANETPath=obj.LibEPANETpath;
 end
 obj.MSXLibEPANET='epanetmsx'; % Get DLL LibEPANET (e.g. epanet20012x86 for 32-bit)
 if ~libisloaded(obj.MSXLibEPANET)
@@ -8047,43 +7877,36 @@ while 1
         % Options
     elseif sect == 1
         atline={};
-        a = regexp(tline,'\s*','split');uu=1;
-        for tt=1:length(a)
-            if isempty(a{tt})
-                %skip
-            elseif (a{tt}==';')
-                %skip
-            else
-                atline{uu}=a{tt}; uu=uu+1;
-            end
-        end
-        if strcmp(upper(atline{1}),'TIMESTEP')
-            value.timestep=str2num(atline{2});return;
-        elseif strcmp(upper(atline{1}),'AREA_UNITS')
-            value.areaunits=atline{2};return;
-        elseif strcmp(upper(atline{1}),'RATE_UNITS')
-            value.rateunits=atline{2};return;
-        elseif strcmp(upper(atline{1}),'SOLVER')
-            value.solver=atline{2};return;
-        elseif strcmp(upper(atline{1}),'RTOL')
-            value.rtol=str2num(atline{2});return;      
-        elseif strcmp(upper(atline{1}),'ATOL')
-            value.atol=str2num(atline{2});return;      
-        elseif strcmp(upper(atline{1}),'COUPLING')
-            value.coupling=atline{2};return;     
-        elseif strcmp(upper(atline{1}),'COMPILER')
-            value.compiler=atline{2};return;  
+        atline = checktlines(tline);
+        if strcmpi(atline{1},'TIMESTEP')
+            value.timestep=str2double(atline{2});%return;
+        elseif strcmpi(atline{1},'AREA_UNITS')
+            value.areaunits=atline{2};%return;
+        elseif strcmpi(atline{1},'RATE_UNITS')
+            value.rateunits=atline{2};%return;
+        elseif strcmpi(atline{1},'SOLVER')
+            value.solver=atline{2};%return;
+        elseif strcmpi(atline{1},'RTOL')
+            value.rtol=str2double(atline{2});%return; 
+        elseif strcmpi(atline{1},'ATOL')
+            value.atol=str2double(atline{2});%return;   
+        elseif strcmpi(atline{1},'COUPLING')
+            value.coupling=atline{2};%return;    
+        elseif strcmpi(atline{1},'COMPILER')
+            value.compiler=atline{2};%return;
         end
     end
 end
 fclose(fid);
 end
-function [axesid] = ENplot(obj,varargin)
+function [axesid] = plotnet(obj, varargin)
 % Initiality
 highlightnode=0;
 highlightlink=0;
 highlightnodeindex=[];
 highlightlinkindex=[];
+legendIndices=[];
+l=zeros(1, 6);
 Node=char('no');
 Link=char('no');
 NodeInd=0;
@@ -8094,29 +7917,32 @@ selectColorLink={''};
 axesid=0;
 lline='yes';
 npoint='yes';
+extend='no';
+legendposition = 'northeast';
+slegend = 'show';
 for i=1:(nargin/2)
     argument =lower(varargin{2*(i-1)+1});
     switch argument
         case 'nodes' % Nodes
-            if ~strcmp(lower(varargin{2*i}),'yes') && ~strcmp(lower(varargin{2*i}),'no')
+            if ~strcmpi(varargin{2*i}, 'yes') && ~strcmpi(varargin{2*i}, 'no')
                 warning('Invalid argument.');
                 return
             end
             Node=varargin{2*i};
         case 'links' % Nodes
-            if ~strcmp(lower(varargin{2*i}),'yes') && ~strcmp(lower(varargin{2*i}),'no')
+            if ~strcmpi(varargin{2*i}, 'yes') && ~strcmpi(varargin{2*i}, 'no')
                 warning('Invalid argument.');
                 return
             end
             Link=varargin{2*i};
         case 'nodesindex' % Nodes
-            if ~strcmp(lower(varargin{2*i}),'yes') 
+            if ~strcmpi(varargin{2*i}, 'yes') 
                 warning('Invalid argument.');
                 return
             end
             NodeInd=varargin{2*i};
         case 'linksindex' % Links
-            if ~strcmp(lower(varargin{2*i}),'yes')
+            if ~strcmpi(varargin{2*i}, 'yes')
                 warning('Invalid argument.');
                 return
             end
@@ -8132,43 +7958,51 @@ for i=1:(nargin/2)
         case 'colorlink' % color
             selectColorLink=varargin{2*i};        
         case 'point' % color
-            if ~strcmp(lower(varargin{2*i}),'yes') && ~strcmp(lower(varargin{2*i}),'no')
+            if ~strcmpi(varargin{2*i}, 'yes') && ~strcmpi(varargin{2*i}, 'no')
                 warning('Invalid argument.');
                 return
             end
             npoint=varargin{2*i};
-        case 'line' % color
-            if ~strcmp(lower(varargin{2*i}),'yes') && ~strcmp(lower(varargin{2*i}),'no')
+        case 'line' % remove line
+            if ~strcmpi(varargin{2*i}, 'yes') && ~strcmpi(varargin{2*i}, 'no')
                 warning('Invalid argument.');
                 return
             end
             lline=varargin{2*i};
-        case 'axes' % color
+        case 'axes' % axes id
             try
-                axesid=axes('Parent',varargin{2*i});
-            catch e
+                axesid=axes('Parent', varargin{2*i});
+            catch 
                 axesid=varargin{2*i};
             end
-        case 'bin' % color
+        case 'uifigure' % figure
+            fig=varargin{2*i};
+        case 'bin' 
             bin=varargin{2*i};
+        case 'extend' % extend option
+            extend=varargin{2*i};
+        case 'legendposition' % extend option
+            legendposition=varargin{2*i};
+        case 'legend'
+            slegend=varargin{2*i};
         otherwise
-            warning('Invalid property founobj.');
-            return
+            error('Invalid property founobj.');
     end
 end
+drawnow;
 
 if axesid==0
-   g=figure;
-   axesid=axes('Parent',g);
+   fig=figure;
+   axesid=axes('Parent', fig);
 end
 
-if cellfun('isempty',selectColorNode)==1
+if cellfun('isempty', selectColorNode)==1
     init={'r'};
     for i=1:length(highlightnode)
         selectColorNode=[init selectColorNode];
     end
 end
-if cellfun('isempty',selectColorLink)==1
+if cellfun('isempty', selectColorLink)==1
     init={'r'};
     for i=1:length(highlightlink)
         selectColorLink=[init selectColorLink];
@@ -8199,7 +8033,7 @@ elseif bin==0
     v.linknameid=obj.getLinkNameID;
     v.nodesconnlinks=obj.getNodesConnectingLinksID;
     chckfunctions=libfunctions(obj.LibEPANET);
-    if sum(strcmp(chckfunctions,'ENgetcoord'))
+    if sum(strcmp(chckfunctions, 'ENgetcoord'))
         v.nodecoords=obj.getNodeCoordinates;
     else
         v.nodecoords=obj.getBinNodeCoordinates;
@@ -8219,33 +8053,33 @@ if isnan(v.nodecoords{1}(2))
    return
 end
 % Get node names and x, y coordiantes
-if isa(highlightnode,'cell')
+if isa(highlightnode, 'cell')
     for i=1:length(highlightnode)
-        n = strcmp(v.nodenameid,highlightnode{i});
+        n = strcmp(v.nodenameid, highlightnode{i});
         if sum(n)==0
             warning('Undefined node with id "%s" in function call therefore the index is zero.', char(highlightnode{i}));
         else
-            highlightnodeindex(i) = strfind(n,1);
+            highlightnodeindex(i) = strfind(n, 1);
         end
     end
 end
 
-if isa(highlightlink,'cell')
+if isa(highlightlink, 'cell')
     for i=1:length(highlightlink)
-        n = strcmp(v.linknameid,highlightlink{i});
+        n = strcmp(v.linknameid, highlightlink{i});
         if sum(n)==0
             warning('Undefined link with id "%s" in function call therefore the index is zero.', char(highlightlink{i}));
         else
-            highlightlinkindex(i) = strfind(n,1);
+            highlightlinkindex(i) = strfind(n, 1);
         end
     end
 end
 
-if (strcmp(lower(lline),'yes'))
-    hold on;
+if (strcmpi(lline, 'yes'))
+    hold(axesid, 'on')
     for i=1:v.linkcount
-        FromNode=strfind(strcmp(v.nodesconnlinks(i,1),v.nodenameid),1);
-        ToNode=strfind(strcmp(v.nodesconnlinks(i,2),v.nodenameid),1);
+        FromNode=strfind(strcmp(v.nodesconnlinks(i, 1), v.nodenameid), 1);
+        ToNode=strfind(strcmp(v.nodesconnlinks(i, 2), v.nodenameid), 1);
 
         if FromNode
             x1 = double(v.nodecoords{1}(FromNode));
@@ -8256,52 +8090,47 @@ if (strcmp(lower(lline),'yes'))
             y2 = double(v.nodecoords{2}(ToNode));
         end
 
-        hh=strfind(highlightlinkindex,i);
+        hh=strfind(highlightlinkindex, i);
 
         if length(hh) && ~isempty(selectColorLink)
-            line([x1 v.nodecoords{3}{i} x2],[y1 v.nodecoords{4}{i} y2],'LineWidth',1,'Color',[.5 .5 .5],'Parent',axesid);
+            line([x1 v.nodecoords{3}{i} x2], [y1 v.nodecoords{4}{i} y2], 'LineWidth', 1, 'Color', [.5 .5 .5], 'Parent', axesid);
         end
         if ~length(hh)
-            h(:,4)=line([x1 v.nodecoords{3}{i} x2],[y1 v.nodecoords{4}{i} y2],'LineWidth',1,'Parent',axesid);
+            h(:, 1)=line([x1 v.nodecoords{3}{i} x2], [y1 v.nodecoords{4}{i} y2], 'LineWidth', 1, 'Parent', axesid);
+            if ~l(1), legendIndices = [legendIndices 1]; l(1)=1; end
         end
             
-        legendString{4} = char('Pipes');
         % Plot Pumps
-        if sum(strfind(v.pumpindex,i))
+        if sum(strfind(v.pumpindex, i))
             colornode = 'm';
             if length(hh) && isempty(selectColorLink)
                 colornode = 'r';
             end
-            h(:,5)=plot((x1+x2)/2,(y1+y2)/2,'mv','LineWidth',2,'MarkerEdgeColor','m',...
-                'MarkerFaceColor','m',...
-                'MarkerSize',5,'Parent',axesid);
-            plot((x1+x2)/2,(y1+y2)/2,'mv','LineWidth',2,'MarkerEdgeColor',colornode,...
-                'MarkerFaceColor',colornode,...
-                'MarkerSize',5,'Parent',axesid);
-
-            legendString{5} = char('Pumps');
+            h(:, 2)=plot((x1+x2)/2, (y1+y2)/2, 'mv', 'LineWidth', 2, 'MarkerEdgeColor', 'm', ...
+                'MarkerFaceColor', 'm', ...
+                'MarkerSize', 5, 'Parent', axesid);
+            if ~l(2), legendIndices = [legendIndices 2]; l(2)=1; end
+            plot((x1+x2)/2, (y1+y2)/2, 'mv', 'LineWidth', 2, 'MarkerEdgeColor', colornode, ...
+                'MarkerFaceColor', colornode, ...
+                'MarkerSize', 5, 'Parent', axesid);
         end
 
         % Plot Valves
-        if sum(strfind(v.valveindex,i))
+        if sum(strfind(v.valveindex, i))
             colornode = 'k';
             if length(hh) && isempty(selectColorLink)
                 colornode = 'r';
             end
-            h(:,6)=plot((x1+x2)/2,(y1+y2)/2,'k*','LineWidth',2,'MarkerEdgeColor',colornode,...
-                'MarkerFaceColor',colornode,'MarkerSize',7,'Parent',axesid);
-            legendString{6} = char('Valves');
+            h(:, 3)=plot((x1+x2)/2, (y1+y2)/2, 'k*', 'LineWidth', 2, 'MarkerEdgeColor', colornode, ...
+                'MarkerFaceColor', colornode, 'MarkerSize', 7, 'Parent', axesid);         
+            if ~l(3), legendIndices = [legendIndices 3]; l(3)=1; end
         end
 
         if length(hh) && isempty(selectColorLink)
-            line([x1,x2],[y1,y2],'LineWidth',1,'Color','r','Parent',axesid);
-            text((x1+x2)/2,(y1+y2)/2,v.linknameid(i),'Fontsize',fontsize,'Parent',axesid);
+            line([x1, x2], [y1, y2], 'LineWidth', 1, 'Color', 'r', 'Parent', axesid);
+            text((x1+x2)/2, (y1+y2)/2, v.linknameid(i), 'Fontsize', fontsize, 'Parent', axesid);
         elseif length(hh) && ~isempty(selectColorLink)
-            try 
-                tt=length(selectColorLink{hh});
-            catch err
-                tt=2;
-            end
+            try tt=length(selectColorLink{hh}); catch; tt=2; end
            if tt>1
                 if length(selectColorLink(hh))==1
                     nm{1}=selectColorLink(hh);
@@ -8309,171 +8138,171 @@ if (strcmp(lower(lline),'yes'))
                     nm=selectColorLink(hh);
                 end
                 if iscell(nm{1}) 
-                    line([x1 v.nodecoords{3}{i} x2],[y1 v.nodecoords{4}{i} y2],'LineWidth',1,'Color',nm{1}{1},'Parent',axesid);
+                    line([x1 v.nodecoords{3}{i} x2], [y1 v.nodecoords{4}{i} y2], 'LineWidth', 1, 'Color', nm{1}{1}, 'Parent', axesid);
                 else
-                    line([x1 v.nodecoords{3}{i} x2],[y1 v.nodecoords{4}{i} y2],'LineWidth',1,'Color',nm{1},'Parent',axesid);
+                    line([x1 v.nodecoords{3}{i} x2], [y1 v.nodecoords{4}{i} y2], 'LineWidth', 1, 'Color', nm{1}, 'Parent', axesid);
                 end
             else
-                line([x1 v.nodecoords{3}{i} x2],[y1 v.nodecoords{4}{i} y2],'LineWidth',1,'Color',char(selectColorLink(hh)),'Parent',axesid);
+                line([x1 v.nodecoords{3}{i} x2], [y1 v.nodecoords{4}{i} y2], 'LineWidth', 1, 'Color', char(selectColorLink(hh)), 'Parent', axesid);
             end
         end
         % Show Link id
-        if (strcmp(lower(Link),'yes')) %&& ~length(hh))
-            text((x1+x2)/2,(y1+y2)/2,v.linknameid(i),'Fontsize',fontsize,'Parent',axesid);
+        if (strcmpi(Link, 'yes')) %&& ~length(hh))
+            text((x1+x2)/2, (y1+y2)/2, v.linknameid(i), 'Fontsize', fontsize, 'Parent', axesid);
         end
         % Show Link Index
-        if (strcmp(lower(LinkInd),'yes')) %&& ~length(hh))
-            text((x1+x2)/2,(y1+y2)/2,num2str(v.linkindex(i)),'Fontsize',fontsize,'Parent',axesid);
+        if (strcmpi(LinkInd, 'yes')) %&& ~length(hh))
+            text((x1+x2)/2, (y1+y2)/2, num2str(v.linkindex(i)), 'Fontsize', fontsize, 'Parent', axesid);
         end
     end
 end
 
-if (strcmp(lower(npoint),'yes'))
-    if (strcmp(lower(npoint),'yes'))
-        % Coordinates for node FROM
-        hold on;
-        for i=1:v.nodecount
-            [x] = double(v.nodecoords{1}(i));
-            [y] = double(v.nodecoords{2}(i));
+if (strcmpi(npoint, 'yes'))
+    % Coordinates for node FROM
+    hold(axesid, 'on')
+    for i=1:v.nodecount
+        [x] = double(v.nodecoords{1}(i));
+        [y] = double(v.nodecoords{2}(i));
 
-            hh=strfind(highlightnodeindex,i);
-            if ~length(hh)
-                h(:,1)=plot(x, y,'o','LineWidth',2,'MarkerEdgeColor','b',...
-                'MarkerFaceColor','b',...
-                'MarkerSize',5,'Parent',axesid);
-                legendString{1}= char('Junctions');
-            end
+        hh=strfind(highlightnodeindex, i);
+        if ~length(hh)
+            h(:, 4)=plot(x, y, 'o', 'LineWidth', 2, 'MarkerEdgeColor', 'b', ...
+            'MarkerFaceColor', 'b', ...
+            'MarkerSize', 5, 'Parent', axesid);
+            if ~l(4), legendIndices = [legendIndices 4]; l(4)=1; end
+        end
 
-            % Plot Reservoirs
-            if sum(strfind(v.resindex,i))
-                colornode = 'g';
-                if length(hh) && isempty(selectColorNode)
-                    colornode = 'r';
-                end
-                h(:,2)=plot(x,y,'s','LineWidth',2,'MarkerEdgeColor','g',...
-                    'MarkerFaceColor','g',...
-                    'MarkerSize',13,'Parent',axesid);
-                plot(x,y,'s','LineWidth',2,'MarkerEdgeColor', colornode,...
-                    'MarkerFaceColor', colornode,...
-                    'MarkerSize',13,'Parent',axesid);
-                legendString{2} = char('Reservoirs');
-            end
-            % Plot Tanks
-            if sum(strfind(v.tankindex,i))
-                colornode='c';
-                if length(hh) && isempty(selectColorNode)
-                    colornode='r';
-                elseif length(hh) && ~isempty(selectColorNode)
-                    colornode= 'c';
-                end
-                h(:,3)=plot(x,y,'p','LineWidth',2,'MarkerEdgeColor','c',...
-                    'MarkerFaceColor','c',...
-                    'MarkerSize',16,'Parent',axesid);
-
-                plot(x,y,'p','LineWidth',2,'MarkerEdgeColor',colornode,...
-                    'MarkerFaceColor',colornode,...
-                    'MarkerSize',16,'Parent',axesid);
-
-                legendString{3} = char('Tanks');
-            end
-
+        % Plot Reservoirs
+        if sum(strfind(v.resindex, i))
+            colornode = 'g';
             if length(hh) && isempty(selectColorNode)
-                plot(x, y,'o','LineWidth',2,'MarkerEdgeColor','r',...
-                    'MarkerFaceColor','r',...
-                    'MarkerSize',5,'Parent',axesid);
-                text(x,y,v.nodenameid(i),'Fontsize',fontsize,'Parent',axesid)%'BackgroundColor',[.7 .9 .7],'Margin',margin/4);
+                colornode = 'r';
+            end
+            h(:, 5)=plot(x, y, 's', 'LineWidth', 2, 'MarkerEdgeColor', 'g', ...
+                'MarkerFaceColor', 'g', ...
+                'MarkerSize', 13, 'Parent', axesid);
+            if ~l(5), legendIndices = [legendIndices 5]; l(5)=1; end
+            plot(x, y, 's', 'LineWidth', 2, 'MarkerEdgeColor', colornode, ...
+                'MarkerFaceColor', colornode, ...
+                'MarkerSize', 13, 'Parent', axesid);
+        end
+        % Plot Tanks
+        if sum(strfind(v.tankindex, i))
+            colornode='c';
+            if length(hh) && isempty(selectColorNode)
+                colornode='r';
             elseif length(hh) && ~isempty(selectColorNode)
-                try 
-                    tt=length(selectColorNode{hh});
-                catch err
-                    tt=2;
-                end
-               if tt>1
-                    if length(selectColorNode(hh))==1
-                        nm{1}=selectColorNode(hh);
-                        nmplot=nm{1}{1};
-                    else
-                        nm=selectColorNode(hh);
-                        nmplot=nm{1};
-                    end
-                    if iscell(nm{1}) 
-                        plot(x, y,'o','LineWidth',2,'MarkerEdgeColor',nmplot,'MarkerFaceColor',nmplot,'MarkerSize',5,'Parent',axesid);
-                    else
-                        plot(x, y,'o','LineWidth',2,'MarkerEdgeColor',nmplot,'MarkerFaceColor',nmplot,'MarkerSize',5,'Parent',axesid);
-                    end
-                    if sum(find(i==v.resindex))
-                       plot(x,y,'s','LineWidth',2,'MarkerEdgeColor', nmplot,...
-                       'MarkerFaceColor', nmplot,...
-                       'MarkerSize',13,'Parent',axesid);
-                    end
-                    if sum(find(i==v.tankindex))
-                       plot(x,y,'p','LineWidth',2,'MarkerEdgeColor',nmplot,...
-                       'MarkerFaceColor',nmplot,...
-                       'MarkerSize',16,'Parent',axesid);
-                    end
-               else
-                    nmplot=char(selectColorNode(hh));
-                    plot(x, y,'o','LineWidth',2,'MarkerEdgeColor',nmplot,'MarkerFaceColor',nmplot,...
-                        'MarkerSize',5,'Parent',axesid);
-                    if sum(find(i==v.resindex))
-                       plot(x,y,'s','LineWidth',2,'MarkerEdgeColor', nmplot,...
-                       'MarkerFaceColor', nmplot,...
-                       'MarkerSize',13,'Parent',axesid);
-                    end
-                    if sum(find(i==v.tankindex))
-                       plot(x,y,'p','LineWidth',2,'MarkerEdgeColor',nmplot,...
-                       'MarkerFaceColor',nmplot,...
-                       'MarkerSize',16,'Parent',axesid);
-                    end
-               end
+                colornode= 'c';
             end
-            % Show Node id
-            if (strcmp(lower(Node),'yes')) %&& ~length(hh))
-                text(x,y,v.nodenameid(i),'Fontsize',fontsize);%'BackgroundColor',[.7 .9 .7],'Margin',margin/4);
-            end
-            % Show Node index
-            if (strcmp(lower(NodeInd),'yes')) %&& ~length(hh))
-                text(x,y,num2str(v.nodeindex(i)),'Fontsize',fontsize,'Parent',axesid);%'BackgroundColor',[.7 .9 .7],'Margin',margin/4);
-            end
-        end
-    end
-end
-% Legend Plots
-if isempty(highlightnodeindex) || isempty(highlightnodeindex)
-    u=1;
-    for i=find(~cellfun(@isempty,legendString))
-        if h(i)~=0
-            String{u} = legendString{i};
-            hh(:,u) = h(i);
-            u=u+1;
-        end
-    end
+            h(:, 6)=plot(x, y, 'p', 'LineWidth', 2, 'MarkerEdgeColor', 'c', ...
+                'MarkerFaceColor', 'c', ...
+                'MarkerSize', 16, 'Parent', axesid);
+            if ~l(6), legendIndices = [legendIndices 6]; l(6)=1; end
 
-    legend(hh,String);
+            plot(x, y, 'p', 'LineWidth', 2, 'MarkerEdgeColor', colornode, ...
+                'MarkerFaceColor', colornode, ...
+                'MarkerSize', 16, 'Parent', axesid);
+        end
+
+        if length(hh) && isempty(selectColorNode)
+            plot(x, y, 'o', 'LineWidth', 2, 'MarkerEdgeColor', 'r', ...
+                'MarkerFaceColor', 'r', ...
+                'MarkerSize', 5, 'Parent', axesid);
+            text(x, y, v.nodenameid(i), 'Fontsize', fontsize, 'Parent', axesid)%'BackgroundColor', [.7 .9 .7], 'Margin', margin/4);
+        elseif length(hh) && ~isempty(selectColorNode)
+            try tt=length(selectColorNode{hh}); catch, tt=2; end
+           if tt>1
+                if length(selectColorNode(hh))==1
+                    nm{1}=selectColorNode(hh);
+                    nmplot=nm{1}{1};
+                else
+                    nm=selectColorNode(hh);
+                    nmplot=nm{1};
+                end
+                if iscell(nm{1}) 
+                    plot(x, y, 'o', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, 'MarkerFaceColor', nmplot, 'MarkerSize', 5, 'Parent', axesid);
+                else
+                    plot(x, y, 'o', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, 'MarkerFaceColor', nmplot, 'MarkerSize', 5, 'Parent', axesid);
+                end
+                if sum(find(i==v.resindex))
+                   plot(x, y, 's', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, ...
+                   'MarkerFaceColor', nmplot, ...
+                   'MarkerSize', 13, 'Parent', axesid);
+                end
+                if sum(find(i==v.tankindex))
+                   plot(x, y, 'p', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, ...
+                   'MarkerFaceColor', nmplot, ...
+                   'MarkerSize', 16, 'Parent', axesid);
+                end
+           else
+                nmplot=char(selectColorNode(hh));
+                plot(x, y, 'o', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, 'MarkerFaceColor', nmplot, ...
+                    'MarkerSize', 5, 'Parent', axesid);
+                if sum(find(i==v.resindex))
+                   plot(x, y, 's', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, ...
+                   'MarkerFaceColor', nmplot, ...
+                   'MarkerSize', 13, 'Parent', axesid);
+                end
+                if sum(find(i==v.tankindex))
+                   plot(x, y, 'p', 'LineWidth', 2, 'MarkerEdgeColor', nmplot, ...
+                   'MarkerFaceColor', nmplot, ...
+                   'MarkerSize', 16, 'Parent', axesid);
+                end
+           end
+        end
+        % Show Node id
+        if (strcmpi(Node, 'yes')) %&& ~length(hh))
+            text(x, y, v.nodenameid(i), 'Fontsize', fontsize, 'Parent', axesid);%'BackgroundColor', [.7 .9 .7], 'Margin', margin/4);
+        end
+        % Show Node index
+        if (strcmpi(NodeInd, 'yes')) %&& ~length(hh))
+            text(x, y, num2str(v.nodeindex(i)), 'Fontsize', fontsize, 'Parent', axesid);%'BackgroundColor', [.7 .9 .7], 'Margin', margin/4);
+        end
+    end
 end
+    
+% Legend Plots
+if strcmpi(slegend, 'show')
+    if isempty(highlightnodeindex) || isempty(highlightnodeindex)
+        legendString={'Pipes', 'Pumps', 'Valves', ...
+            'Junctions', 'Reservoirs', 'Tanks'}; 
+        legendIndices=sort(legendIndices, 'descend');
+        legend(h(legendIndices), legendString(legendIndices), 'Location', legendposition);
+    end
+elseif strcmpi(slegend, 'hide')
+    %skip
+else
+    error('Invalid property founobj(legend: "hide", "show")')
+end
+    
 % Axis OFF and se Background
-[xmax,~]=max(v.nodecoords{1});
-[xmin,~]=min(v.nodecoords{1});
-[ymax,~]=max(v.nodecoords{2});
-[ymin,~]=min(v.nodecoords{2});
+[xmax, ~]=max(v.nodecoords{1});
+[xmin, ~]=min(v.nodecoords{1});
+[ymax, ~]=max(v.nodecoords{2});
+[ymin, ~]=min(v.nodecoords{2});
 
 if ~isnan(ymax)
     if ymax==ymin
-        xlim([xmin-((xmax-xmin)*.1),xmax+((xmax-xmin)*.1)]);
-        ylim([ymin-.1,ymax+.1]);
+        xlim(axesid, [xmin-((xmax-xmin)*.1), xmax+((xmax-xmin)*.1)]);
+        ylim(axesid, [ymin-.1, ymax+.1]);
     elseif xmax==xmin
-        xlim([xmin-.1,xmax+.1]);
-        ylim([ymin-(ymax-ymin)*.1,ymax+(ymax-ymin)*.1]);
+        xlim(axesid, [xmin-.1, xmax+.1]);
+        ylim(axesid, [ymin-(ymax-ymin)*.1, ymax+(ymax-ymin)*.1]);
     else
-        xlim([xmin-((xmax-xmin)*.1),xmax+((xmax-xmin)*.1)]);
-        ylim([ymin-(ymax-ymin)*.1,ymax+(ymax-ymin)*.1]);
+        xlim(axesid, [xmin-((xmax-xmin)*.1), xmax+((xmax-xmin)*.1)]);
+        ylim(axesid, [ymin-(ymax-ymin)*.1, ymax+(ymax-ymin)*.1]);
     end
 else
     warning('Undefined coordinates.');
 end
-axis off
-whitebg('w');
-set(axesid,'position',[0 0 1 1],'units','normalized');
+axis(axesid, 'off');
+try
+    whitebg(fig, 'w');
+catch
+end
+if strcmpi(extend, 'yes')
+    set(axesid, 'position', [0 0 1 1], 'units', 'normalized');
+end
 end
 function [info,tline,allines] = readAllFile(inpname)
     fid = fopen(inpname, 'rt');%or msxname
@@ -8487,7 +8316,7 @@ function [info,tline,allines] = readAllFile(inpname)
 end
 function [Errcode,value] = limitingPotential(obj,param, varargin)
     [tlines]=regexp( fileread(obj.BinTempfile), '\n', 'split');
-    Errcode=0;value=[];
+    Errcode=0;value=0;
     if strcmp(param,'get')
         for i=1:length(tlines)
            tmp{i}=regexp(tlines{i}, '\s*', 'split');
@@ -8495,13 +8324,13 @@ function [Errcode,value] = limitingPotential(obj,param, varargin)
            atlines(strcmp('',atlines)) = [];
            newlines{i}=tlines{i};
            if ~isempty(atlines)
-               if strcmp(lower(atlines{1}),'limiting')
-                   value = str2num(atlines{3});return;
+               if strcmpi(atlines{1},'limiting')
+                   value = str2double(atlines{3});return;
                end
            end
-       end
+        end
     else
-        fid = fopen([obj.BinTempfile],'w');
+        fid = writenewTemp(obj.BinTempfile);
         for i=1:length(tlines)
            tmp{i}=regexp(tlines{i}, '\s*', 'split');
            atlines=tmp{i};
@@ -8509,7 +8338,7 @@ function [Errcode,value] = limitingPotential(obj,param, varargin)
            newlines{i}=tlines{i};
            getLimit = obj.getBinLimitingPotential;
            if length(atlines)==3 && isempty(getLimit)
-               if strcmp(lower(atlines{1}),'global') && strcmp(lower(atlines{2}),'wall')
+               if strcmpi(atlines{1},'global') && strcmpi(atlines{2},'wall')
                   index=i;
                   newlines{i}=tlines{i};
                   newlines{i+1}=['Limiting',blanks(3),'Potential',blanks(3),num2str(varargin{1})];
@@ -8583,30 +8412,20 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
     elseif strcmpi(sections{1},'[TANKS]')
         cnts=obj.BinNodeTankCount;
     end
-    fid = fopen([obj.BinTempfile], 'w');
-    ll=1;clear atlines;
+    fid = writenewTemp(obj.BinTempfile);
+    ll=1;
     for i=start:stop
        % Get first token in the line
        tok = strtok(tlines{i});
-       if isempty(tok), tok(1)=';'; end
+       if isempty(tok), continue; end
        % Skip blank Clines and comments
        if strcmp(tok(1),';') && ok==0
        elseif sum(tlines{i}=='[') && ok==0
        elseif isempty(tok) && ok==0
        % skip
        else
-           a = regexp(tlines{i}, '\s*','split');uu=1;
            clear atlines;
-           for tt=1:length(a)
-                if isempty(a{tt})
-                    %skip
-                elseif sum(a{tt}==';')
-                    %skip
-                    if tt>1,  break; end
-                else
-                    atlines{uu}=a{tt}; uu=uu+1;
-                end
-           end
+           atlines = checktlines(tlines{i});
            if ll<cnts+1
                if (~isempty(parameter) && indexParameter~=3 && length(sections)<3 || indexParameter==2) && (~strcmpi(sections{1},'[SOURCES]')) && (~strcmpi(sections{1},'[REACTIONS]')) && (~strcmpi(sections{1},'[TIMES]')) && (~strcmpi(sections{1},'[OPTIONS]')) && (~strcmpi(sections{1},'[PATTERNS]')) && ~strcmpi(sections{1},'[TANKS]')
                    if indexParameter ~= 8  
@@ -8649,11 +8468,11 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
                end
            end
            if ~isempty(parameter) && (strcmpi(sections{1},'[REACTIONS]')) && (~strcmpi(sections{1},'[SOURCES]')) && (~strcmpi(sections{1},'[TIMES]')) && (~strcmpi(sections{1},'[OPTIONS]')) && (~strcmpi(sections{1},'[PATTERNS]')) 
-               if strcmp(lower(atlines{1}),'global') 
-                  if strcmp(lower(atlines{2}),'bulk') && indexParameter==1
+               if strcmpi(atlines{1},'global') 
+                  if strcmpi(atlines{2},'bulk') && indexParameter==1
                      atlines{3} = num2str(parameter);
                   end
-                  if strcmpi(lower(atlines{2}),'wall') && indexParameter==3
+                  if strcmpi(atlines{2},'wall') && indexParameter==3
                      atlines{3} = num2str(parameter);
                   end
                end
@@ -8665,28 +8484,28 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
            end
            mins=1;
            if ~isempty(parameter) && (strcmpi(sections{1},'[TIMES]')) && (~strcmpi(sections{1},'[SOURCES]')) && (~strcmpi(sections{1},'[OPTIONS]')) && (~strcmpi(sections{1},'[PATTERNS]')) 
-               if strcmp(upper(atlines{1}),'DURATION') && indexParameter==1 
+               if strcmpi(atlines{1},'DURATION') && indexParameter==1 
                     [mm,mins]=sec2hrs(parameter);
                     atlines{2} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'HYDRAULIC') && indexParameter==2
+               elseif strcmpi(atlines{1},'HYDRAULIC') && indexParameter==2
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'QUALITY') && indexParameter==3 && ~strcmp(upper(atlines{2}),'TRACE')
+               elseif strcmpi(atlines{1},'QUALITY') && indexParameter==3 && ~strcmpi(atlines{2},'TRACE')
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'PATTERN') && strcmp(upper(atlines{2}),'TIMESTEP') && indexParameter==4
+               elseif strcmpi(atlines{1},'PATTERN') && strcmpi(atlines{2},'TIMESTEP') && indexParameter==4
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'PATTERN') && strcmp(upper(atlines{2}),'START') && indexParameter==5
+               elseif strcmpi(atlines{1},'PATTERN') && strcmpi(atlines{2},'START') && indexParameter==5
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'REPORT') && strcmp(upper(atlines{2}),'TIMESTEP') && indexParameter==6
+               elseif strcmpi(atlines{1},'REPORT') && strcmpi(atlines{2},'TIMESTEP') && indexParameter==6
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'REPORT') && strcmp(upper(atlines{2}),'START') && indexParameter==7
+               elseif strcmpi(atlines{1},'REPORT') && strcmpi(atlines{2},'START') && indexParameter==7
                     [mm,mins]=sec2hrs(parameter);
                     atlines{3} = num2str(mm);
-               elseif strcmp(upper(atlines{1}),'STATISTIC') && indexParameter==8
+               elseif strcmpi(atlines{1},'STATISTIC') && indexParameter==8
                    atlines{2} = parameter;
                end
                if mins==0 && length(atlines)>3
@@ -8699,7 +8518,7 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
                tlines{i}=newlines;
            end    
            if ~isempty(parameter) && (strcmpi(sections{1},'[OPTIONS]')) && (~strcmpi(sections{1},'[SOURCES]')) && (~strcmpi(sections{1},'[PATTERNS]')) 
-               if strcmp(upper(atlines{1}),'QUALITY') && indexParameter==1 && itsOkQual==0
+               if strcmpi(atlines{1},'QUALITY') && indexParameter==1 && itsOkQual==0
                    clear atlines;
                    atlines{1}=parameter;itsOkQual=1;
                end
@@ -8804,25 +8623,17 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
            % Get first token in the line
            tok = strtok(tlines{i});
            % Skip blank Clines and comments
-           if isempty(tok), break; end
+           if isempty(tok), continue; end
            if strcmp(tok(1),';')
            elseif sum(tlines{i}=='[')
            elseif isempty(tok)
            % skip
            else
-               a = regexp(tlines{i}, '\s*','split');uu=1;
                clear atlines;
-               for tt=1:length(a)
-                    if isempty(a{tt})
-                        %skip
-                    elseif (a{tt}==';')
-                        %skip
-                    else
-                        atlines{uu}=a{tt}; uu=uu+1;
-                    end
-               end
+               atlines = checktlines(tlines{i});
                if ~isempty(parameter) && length(atlines)>1 && indexParameter~=2%BaseDemands
                    if ~length(strfind(cell2mat(atlines),';')) %~isempty(atlines{3}) && 
+                       if length(parameter)<ll, continue; end
                        if newInd==3
                           atlines{newInd} = num2str(parameter{ll});  
                        else
@@ -8839,12 +8650,10 @@ function [Errcode]=setBinParam(obj,indexParameter,parameter,sections,varargin)
            end
         end
     end
-    clear patameter;
+    clear parameter;
     fprintf(fid, '%s\n', tlines{:});
     fclose(fid);
-    if obj.Bin==1
-        Errcode=closeOpenNetwork(obj);
-    end
+    if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function [mm,mins] = sec2hrs(parameter)
    mm='';hrs=0;mins=0;
@@ -8878,7 +8687,7 @@ function [Errcode]=setBinParam2(obj,parameter,sections,zz,varargin)
         elseif strcmp(sections{3},'valve')
             nameID=value.BinLinkValveStatusNameID;
             cntlv=obj.BinLinkValveCount;
-            if strcmp(upper(parameter),'NONE'), Errcode=-1;return;end
+            if strcmpi(parameter,'NONE'), Errcode=-1;return;end
         end
     elseif strcmp(sections{1},'[PATTERNS]')
         value=obj.getBinPatternsInfo;
@@ -8890,7 +8699,7 @@ function [Errcode]=setBinParam2(obj,parameter,sections,zz,varargin)
         patternsid=[value.BinPatternNameID varargin];
     end
     [tlines]=regexp( fileread([obj.BinTempfile]), '\n', 'split');
-    fid = fopen([obj.BinTempfile], 'w');
+    fid = writenewTemp(obj.BinTempfile);
     for i=1:length(tlines)
         tt=regexp(tlines{i}, '\s*', 'split');
         tok = strtok(tlines{i});m=1;
@@ -8923,9 +8732,7 @@ function [Errcode]=setBinParam2(obj,parameter,sections,zz,varargin)
    for i=start+1:stop+zz
        % Get first token in the line
        tok = strtok(tlines{i});
-       if isempty(tok)
-           tok='1';
-       end
+       if isempty(tok), tok='1'; end
        if strcmp(tok(1),';')
        else
            clear atlines;
@@ -9018,7 +8825,7 @@ function value = getBinParam(obj,sections,varargin)
     if strcmp(sections{1},'[SOURCES]')
         value.BinNodeSourcePatternIndex = nan(1,obj.BinNodeCount);
         value.BinNodeSourceQuality = nan(1,obj.BinNodeCount);
-        value.BinNodeSourceTypeCode = nan(1,obj.BinNodeCount);
+        value.BinNodeSourceTypeIndex = nan(1,obj.BinNodeCount);
         value.BinNodeSourceType = cell(1,obj.BinNodeCount);
         value.BinNodeSourcePatternNameID = cell(1,obj.BinNodeCount);
     else 
@@ -9044,23 +8851,12 @@ function value = getBinParam(obj,sections,varargin)
    for i=start+1:stop-1
        % Get first token in the line
        tok = strtok(tlines{i});
-       if isempty(tok)
-           tok='1';
-       end
+       if isempty(tok), continue; end
        if strcmp(tok(1),';')
        else
            clear atline;
-            a = regexp(tlines{i}, '\s*','split');uu=1;
-            for tt=1:length(a)
-                if isempty(a{tt})
-                    %skip
-                elseif sum(a{tt}==';')
-                    %skip
-                    if tt>1,  break; end
-                else 
-                    atline{uu}=a{tt}; uu=uu+1;
-                end
-            end
+           atline = checktlines(tlines{i});
+
             if strcmp(sections{1},'[STATUS]')
                 if sum(strcmp(who,'atline'))
                     value.BinLinkInitialStatus{d}=atline{2};
@@ -9095,9 +8891,9 @@ function value = getBinParam(obj,sections,varargin)
                            value.BinNodeSourcePatternIndex(indexPat)=getBinPatternIndex(obj, atline{4});
                            value.BinNodeSourcePatternNameID{indexNode}=atline{4};
                        end
-                       value.BinNodeSourceQuality(indexNode)=str2num(atline{3});
-                       value.BinNodeSourceTypeCode(indexNode)=find((strcmpi(obj.TYPESOURCE,atline{2})-1)>-1)-1;
-                       value.BinNodeSourceType{indexNode}=obj.TYPESOURCE{value.BinNodeSourceTypeCode(indexNode)+1};
+                       value.BinNodeSourceQuality(indexNode)=str2double(atline{3});
+                       value.BinNodeSourceTypeIndex(indexNode)=find((strcmpi(obj.TYPESOURCE,atline{2})-1)>-1)-1;
+                       value.BinNodeSourceType{indexNode}=obj.TYPESOURCE{value.BinNodeSourceTypeIndex(indexNode)+1};
                    end
                end
            end
@@ -9137,22 +8933,15 @@ for i=1:length(CurveX)
 end
 
 % Check if new ID already exists
-i=1;exists=0;
-while i<length(v.BinCurveNameID)+1
-    exists(i) = strcmp(newCurveID,v.BinCurveNameID{i});
-    i=i+1;
-end
-if sum(exists)>0
-    s = sprintf('Curve "%s" already exists.',newCurveID);
-    warning(s);Errcode=-1;
-    return
+if ismember(newCurveID,v.BinCurveNameID)
+    warning('Curve "%s" already exists.',newCurveID);Errcode=-1; return;
 end
 sect=0;
 % Open and read inpname
 % Read all file and save in variable info
 [~,info] = obj.readInpFile;
 % write
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 sps=blanks(18);
 nn=0;yy=0;
 for t = 1:length(info)
@@ -9296,59 +9085,6 @@ if ~isempty(BinCNameID)
     BinCurveCount=length(BinCurveNameID);
 end
 end
-function remAddCurve(obj,newinp,varargin)
-% Open and read inpname
-% Read all file and save in variable info
-[info,~] = readAllFile(newinp);
-fid2 = fopen(newinp,'w');
-sect=0;nn=0;sps=blanks(5);
-for t=1:length(info)
-    a = info{t};
-    if isempty(a)
-        % skip
-    elseif isempty(info{t})
-        % skip
-    else
-        u=1;
-        while u < length(a)+1
-            if strcmp(a{u},'[CURVES]')
-                fprintf(fid2,'[CURVES]');
-                nn=0;sect=1;
-                fprintf(fid2,'\n');break;
-            elseif strcmp(a{u},'[CONTROLS]')
-                for g=1:length(a)
-                    fprintf(fid2, '%s%s', a{g},sps);
-                end
-                fprintf(fid2,'\n');
-                nn=1;sect=0;
-                break;
-            elseif sect==0
-                for g=1:length(a)
-                    fprintf(fid2, '%s%s', a{g},sps);
-                end
-                fprintf(fid2,'\n');
-                break;
-            end
-            % section [CURVES]
-            if (sect==1) && (nn==0)
-                for g=1:length(a)
-                    fprintf(fid2, '%s%s', a{g},sps);
-                end
-                fprintf(fid2,'\n');
-                break;
-            elseif isempty(a{u}) && nn==0
-            else
-                if isempty(a{u}) && nn==1
-                else
-                    fprintf(fid2,'%s%s',a{u},sps);
-                end
-            end
-            u=u+1;
-        end
-    end
-end
-fclose(fid2);
-end
 function Errcode=addNode(obj,typecode,varargin)
     % addNode - Add node in the network. Node type codes consist of the
     % following constants: EN_JUNCTION 0 Junction node EN_RESERVOIR 1
@@ -9360,31 +9096,27 @@ function Errcode=addNode(obj,typecode,varargin)
     nodes = obj.getBinNodesInfo;
     l = unique([links.BinLinkFromNode links.BinLinkToNode]);
     if nodes.BinNodeCount~=length(l)
-        for i=1:nodes.BinNodeCount
-            t = strcmpi(nodes.BinNodeNameID(i),l);
-            if sum(t)==0
-                s = sprintf('Node %s disconnected.',char(nodes.BinNodeNameID(i)));
-                warning(s);Errcode=-1;
-                return;
-            end
+        cg=ismember(nodes.BinNodeNameID,l);
+        if ~(sum(cg)==nodes.BinNodeCount)
+            ind=find(cg==0);
+            warning('Node %s disconnected.',nodes.BinNodeNameID{ind(1)});
+            Errcode=-1; return;
         end
     end     
-    if typecode==1 || typecode==0 % junction & reservoir
+    if sum(typecode==[0,1]) % junction & reservoir
         if typecode==0
             v=obj.getBinPatternsInfo;
             newidpattern=varargin{6};
             patterns=v.BinPatternNameID;
             if ~sum(strcmp(newidpattern,patterns))
                 warning('Invalid argument found.');
-                Errcode=-1;
-                return;
+                Errcode=-1; return;
             end
             newBaseDemand=varargin{5};
         end
         newElevation=varargin{4};
         initqual=0;
-    end
-    if typecode==2
+    else
         % Initial TANK
         MaxLevel=varargin{4};
         Diameter=varargin{5};
@@ -9395,24 +9127,12 @@ function Errcode=addNode(obj,typecode,varargin)
         MinVol=varargin{10};
     end
     % Check if id new already exists
-    if length(nodes.BinNodeNameID)==0
-        warning('There is no such object in the network.');Errcode=-1;
-        return;
+    if isempty(nodes.BinNodeNameID)
+        warning('There is no such object in the network.');Errcode=-1; return;
     end
-    for i=1:length(nodes.BinNodeNameID)
-        exists(i) = strcmp(newID,char(nodes.BinNodeNameID(i)));
-    end
-    if (sum(exists)==1)
-        s = sprintf('Node "%s" already exists.',newID);
-        warning(s);Errcode=-1;
-        return;
-    end
-    % Get type of node
-    A = [0 1 2];
-    code=strfind(A,typecode);
-    if length(code)==0
-        warning('There is no such typecode(0-2)!');Errcode=-1;
-        return;
+    if ismember(newID,nodes.BinNodeNameID)
+        warning('Node "%s" already exists.',newID);
+        Errcode=-1;return;
     end
     % check section in inpname, [JUNCTIONS], [RESERVOIRS], [TANKS]
     stank_check=1;
@@ -9421,7 +9141,7 @@ function Errcode=addNode(obj,typecode,varargin)
     % Open and read inpname
     % Read all file and save in variable info
     [~,info,~] = obj.readInpFile;
-    fid2 = fopen([obj.BinTempfile],'w');
+    fid2 = writenewTemp(obj.BinTempfile);
     % Initiality
     qualch=0;qq=0;
     Coordch=0;onetime=1;gg=0;
@@ -9438,7 +9158,6 @@ function Errcode=addNode(obj,typecode,varargin)
         elseif isempty(c)
             % skip
         else
-            i=i+1;
             u=1;
             while u < length(a)+1
                 % Find [brackets] cnt=2;
@@ -9542,9 +9261,7 @@ function Errcode=addNode(obj,typecode,varargin)
         end
     end
     fclose(fid2);
-    if obj.Bin==1
-        Errcode=closeOpenNetwork(obj);
-    end
+    if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function Errcode=addLink(obj,typecode,newLink,fromNode,toNode,varargin)
 % Link type codes consist of the following constants: 
@@ -9559,6 +9276,11 @@ function Errcode=addLink(obj,typecode,newLink,fromNode,toNode,varargin)
 % GPV General Purpose Valve 8
 % Initial PIPE plength, value for length of new pipe pdiameter,
 % value for diameter of new pipe proughness,  value for roughness of new pipe
+if typecode==1,status='Open';end
+if ~typecode
+    status='CV';
+    typecode=1;
+end
 if typecode==1 && nargin>5
     plength=varargin{1};
     pdiameter=varargin{2};
@@ -9571,16 +9293,8 @@ elseif typecode==2
         curveID='';
     end
 elseif typecode>2
-    if typecode==0, type_valv = 'CVPIPE';  end
-    if typecode==3, type_valv = 'PRV';     end
-    if typecode==4, type_valv = 'PSV';     end
-    if typecode==5, type_valv = 'PBV';     end
-    if typecode==6, type_valv = 'FCV';     end
-    if typecode==7, type_valv = 'TCV';     end
-    if typecode==8, type_valv = 'GPV';     end
-    if typecode~=1 && typecode~=2
-        typecode=3;
-    end
+    type_valv = obj.TYPELINK{typecode+1};
+    if typecode>2, typecode=3; end
     vdiameter=varargin{1};
     vsetting=varargin{2};    
 end
@@ -9589,7 +9303,7 @@ crvs = obj.getBinCurvesInfo;
 % Open and read inpname
 % Read all file and save in variable info
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 % Add pipe
 nn=0;sps=blanks(10);
 for t = 1:length(info)
@@ -9603,14 +9317,13 @@ for t = 1:length(info)
             cnt=bracketsCheck(a{u});
             if (cnt==2 && strcmp(a{u},'[PIPES]') && nn==0 && typecode==1)
                 fprintf(fid2,'%s',a{u});
-                fprintf(fid2, '\n%s%s%s%s%s%s%d%s%d%s%d%s%d',newLink,sps,fromNode,sps,...
-                    toNode,sps,plength,sps,pdiameter,sps,proughness,sps,0);
+                fprintf(fid2, '\n%s%s%s%s%s%s%d%s%d%s%d%s%d%s%s',newLink,sps,fromNode,sps,...
+                    toNode,sps,plength,sps,pdiameter,sps,proughness,sps,0,sps,status);
                 
             elseif (cnt==2 && strcmp(a{u},'[PUMPS]') && nn==0 && typecode==2)
                 if ~isempty(curveID)
                     if isempty(char(crvs.BinCurveNameID))
-                        s = sprintf('No head curve supplied for pump %s.',newLink);
-                        warning(s);
+                        warning('No head curve supplied for pump %s.',newLink);
                         return;
                     end
                     fprintf(fid2,'%s',a{u});
@@ -9623,8 +9336,8 @@ for t = 1:length(info)
                 end
             elseif typecode==3 && strcmp(a{u},'[VALVES]')
                 fprintf(fid2,'%s',a{u});
-                fprintf(fid2, '\n%s%s%s%s%s%s%d%s%s%s%d',newLink,sps,fromNode,sps,...
-                    toNode,sps,vdiameter,sps,type_valv,sps,vsetting);
+                fprintf(fid2, '\n%s%s%s%s%s%s%d%s%s%s%s',newLink,sps,fromNode,sps,...
+                    toNode,sps,vdiameter,sps,type_valv,sps,num2str(vsetting));
                 nn=1;
             elseif isempty(a{u}) && nn==0
             else
@@ -9639,35 +9352,23 @@ for t = 1:length(info)
     fprintf(fid2,'\n');
 end
 fclose(fid2);
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function [Errcode] = rmNode(obj,NodeID)
 % Remove node from the network.
 % Check if id new already exists
 nodes = obj.getBinNodesInfo;Errcode=0;
-if length(nodes.BinNodeNameID)==0
-    return;
+if isempty(nodes.BinNodeNameID), return; end
+if ~ismember(NodeID,nodes.BinNodeNameID)
+    warning('There is no such object in the network.'); 
+    Errcode=-1; return;
 end
-i=1;
-while i<length(nodes.BinNodeNameID)+1
-    exists(i) = strcmp(NodeID,char(nodes.BinNodeNameID(i)));
-    i=i+1;
-end
-if (sum(exists)==0)
-    s = sprintf('There is no such object in the network.');
-    warning(s);
-    Errcode=-1;
-    return;
-end
-if sum(strcmp(NodeID,nodes.BinNodeReservoirNameID)) || sum(strcmp(NodeID,nodes.BinNodeTankNameID))
-    if (length(char(nodes.BinNodeReservoirNameID))+length(char(nodes.BinNodeTankNameID))-1)==0;
-        warning('This tank/reservoir has not removed.');
-        Errcode=-1;
-        return;
-    end
-end
+% if ismember(NodeID,nodes.BinNodeReservoirNameID) || ismember(NodeID,nodes.BinNodeTankNameID)
+%     if (nodes.BinNodeReservoirCount+nodes.BinNodeTankCount-1)==0;
+%         warning('This tank/reservoir has not removed.');
+%         Errcode=-1; return;
+%     end
+% end
 % Get links which delete with function Remove Link
 links = obj.getBinLinksInfo;
 a=strcmp(links.BinLinkFromNode,NodeID);
@@ -9678,8 +9379,11 @@ linkindex12=[linkindex1 linkindex2];
 checklinks_index=unique(linkindex12);
 checklinks=links.BinLinkNameID(checklinks_index);
 obj.removeBinControlNodeID(NodeID);% Remove control, code 0(NODE)
+if ~isempty(obj.getBinRulesControlsInfo)
+    obj.removeBinRulesControlNodeID(NodeID); %Remove Rule
+end
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 out=0; sps=blanks(10);
 for t = 1:length(info)
     c = info{t};
@@ -9691,9 +9395,7 @@ for t = 1:length(info)
         while u < length(a)+1
             if isempty(a{u}) && (x==0)
                 u=u+1; x=1;xx=1;
-                if u==length(a)+1
-                    break;
-                end
+                if u==length(a)+1, break; end
             end
             if strcmp(a{u},'[PIPES]'), out=1; end
             if strcmp(a{u},'[DEMANDS]'), out=0; end %out=0; delete line
@@ -9717,164 +9419,97 @@ for t = 1:length(info)
 end
 fclose(fid2);
 % Remove links
-if length(checklinks)
-    for i=1:length(checklinks)
-        warn1(i)=obj.removeBinLinkID(checklinks{i});
-    end
-else
-    warn1=1;
+for i=1:length(checklinks)
+    obj.removeBinLinkID(checklinks{i});
 end
 % Find who other id must be delete
 remove_link={''};
 remove_link_index = zeros(1,length(links.BinLinkFromNode));
-if length(checklinks)
-    for i=1:length(checklinks)
-        remove_link(i)=checklinks(i);
-        remove_link_index(i)=i;
-        s=sprintf('Removed link:%s',char(remove_link(i)));
-        warning(s);
-    end
-else
-    warn1=sum(warn1)+1;
+for i=1:length(checklinks)
+    remove_link(i)=checklinks(i);
+    remove_link_index(i)=i;
+    warning('Removed link:%s',char(remove_link(i)));
 end
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function Errcode=rmRulesControl(obj,type,id)
 % Remove control from the network.
-exists=0;Errcode=0;
-exists1=0;
+exists=0;Errcode=0;exists1=0;
 rulescontrols = obj.getBinRulesControlsInfo;
-if type==1
-    if length(rulescontrols.BinRulesControlLinksID)==0
-        s = sprintf('There is no such object in the network.');
-        warning(s);Errcode=-1;
-        return;
+if type
+    if isempty(rulescontrols.BinRulesControlLinksID)
+        warning('There is no rule object in the network.');
+        Errcode=-1;return;
     end
-    for i=1:length(rulescontrols.BinRulesControlLinksID) 
-        if type==1
-            exists(i) = strcmp(rulescontrols.BinRulesControlLinksID{i}{length(rulescontrols.BinRulesControlLinksID{1})},char(id));
-        end
+    for i=length(rulescontrols.BinRulesControlLinksID):-1:1
+        exists(i,:) = strcmp(rulescontrols.BinRulesControlLinksID{i}{length(rulescontrols.BinRulesControlLinksID{1})},char(id));
     end
-end
-if type==0
-    if length(rulescontrols.BinRulesControlNodesID)==0
-        s = sprintf('There is no such object in the network.');
-        warning(s);Errcode=-1;
-        return;
+else
+    if isempty(rulescontrols.BinRulesControlNodesID)
+        warning('There is no such rule in the network.');
+        Errcode=-1;return;
     end
-    for i=1:length(rulescontrols.BinRulesControlNodesID)
-        if type==0
-            exists1(i) = strcmp( rulescontrols.BinRulesControlNodesID{i}{length(rulescontrols.BinRulesControlNodesID{1})},char(id));
-        else
-            warning('Type is NODE(0) or LINK(1)');Errcode=-1;
-            return;
-        end
+    for i=length(rulescontrols.BinRulesControlNodesID):-1:1
+        exists1(i) = strcmp( rulescontrols.BinRulesControlNodesID{i}{length(rulescontrols.BinRulesControlNodesID{1})},char(id));
     end
 end
+if ~sum(exists) && ~sum(exists1)
+    warning('There is no such rule in the network.');
+    Errcode=-1; return;
+end
+[addSectionCoordinates,addSectionRules] = obj.getBinCoordRuleSections(obj.BinTempfile);
+cntRules = cellfun('length',rulescontrols.BinRulesControlsInfo);
+endInpIndex=find(~cellfun(@isempty,regexp(addSectionCoordinates,'END','match')));
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
-e=0;n=0;kk=1;sps=blanks(15);tt=0;
-for t = 1:length(info)
-    c = info{t};
-    a = regexp(c, '\s*','split');
-    if isempty(a)
-    elseif isempty(c)
-    else
-        u=1;
-        while u < length(a)+1
-            rr = regexp(a,'\w*[\w*]\w*','split');
-            check_brackets = rr{:};
-            ch1 = strcmp(check_brackets,'[');
-            ch2 = strcmp(check_brackets,']');
-            
-            if strcmp(a{u},'[RULES]')
-                fprintf(fid2,'%s',a{u});
-                n=1;
-            elseif ch1(1)==1 && ch2(2)==1 && n==1
-                if (isempty(a{u})&& n==1), break; end
-                e=1;
+info(find(~cellfun(@isempty,regexp(info,'END','match'))))='';
+f1 = writenewTemp(obj.BinTempfile);
+rulesSectionIndex=find(~cellfun(@isempty,regexp(info,'RULES','match')));
+if ~isempty(rulesSectionIndex)
+    fprintf(f1, '%s\n', info{1:rulesSectionIndex-1});    
+    fprintf(f1, '[RULES]\n');
+end
+if type
+    for i=length(rulescontrols.BinRulesControlLinksID):-1:1
+        if ~exists(i)
+            for j=1:length(rulescontrols.BinRulesControlsInfo{i})
+                fprintf(f1, '%s\n', addSectionRules{sum(cntRules(1:i-1))+1+j});    
             end
-            if strcmp(a{u},'[END]'),  e=1; fprintf(fid2,'%s',a{u});break;   end
-            
-            if n==1 && e==0 && kk==1
-                if strcmp(a{u},'[RULES]'), break; end
-                if isempty(a{u})
-                elseif strfind(a{u},';')
-                    break;
-                else
-                    if type==1
-                        if tt==1
-                            if strcmp(upper(a{1}),'PRIORITY') && type==1
-                                break;
-                            end
-                        end
-                        tt = strcmp(a{u+2},id); kk=0;
-                        if tt==1
-                            break;
-                        else
-                            fprintf(fid2,'%s%s',a{u},sps);
-                        end
-                    elseif type==0
-                        tt = strcmp(a{u+5},id); kk=0;
-                        if tt==1
-                            break;
-                        else
-                            fprintf(fid2,'%s%s',a{u},sps);
-                        end
-                    end
-                end
-            else
-                if isempty(a{u})
-                else
-                    fprintf(fid2,'%s%s',a{u},sps);
-                end
-            end
-            u=u+1;
         end
     end
-    fprintf(fid2,'\n');kk=1;
+else
+    for i=length(rulescontrols.BinRulesControlNodesID):-1:1
+        if ~exists1(i) 
+            for j=1:length(rulescontrols.BinRulesControlsInfo{i})
+                fprintf(f1, '%s\n', addSectionRules{sum(cntRules(1:i-1))+1+j});    
+            end
+        end
+    end
 end
-fclose(fid2);
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
+if ~isempty(addSectionCoordinates) % && isempty(coordSectionIndex)
+    fprintf(f1, '%s\n', addSectionCoordinates{:});
 end
+if isempty(endInpIndex), fprintf(f1, '[END]\n'); end
+fclose(f1);
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function Errcode=rmControl(obj,type,id)
 % Remove control from the network.
-exists=0;Errcode=0;
-exists1=0;
+Errcode=0;
 controls = obj.getBinControlsInfo;
-if type==1
-    if length(controls.BinControlLinksID)==0
-        s = sprintf('There is no such object in the network.');
-        warning(s);Errcode=-1;
-        return;
+if type
+    if isempty(controls.BinControlLinksID)
+        warning('There is no such control in the network.');
+        Errcode=-1; return;
     end
-    for i=1:length(controls.BinControlLinksID) 
-        if type==1
-            exists(i) = strcmp(controls.BinControlLinksID{i},char(id));
-        end
-    end
-end
-if type==0
-    if length(controls.BinControlNodesID)==0
-        s = sprintf('There is no such object in the network.');
-        warning(s);Errcode=-1;
-        return;
-    end
-    for i=1:length(controls.BinControlNodesID)
-        if type==0
-            exists1(i) = strcmp(controls.BinControlNodesID{i},char(id));
-        else
-            warning('Type is NODE(0) or LINK(1)');Errcode=-1;
-            return;
-        end
+else
+    if isempty(controls.BinControlNodesID)
+        warning('There is no such control in the network.');
+        Errcode=-1; return;
     end
 end
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 e=0;n=0;kk=1;sps=blanks(15);
 for t = 1:length(info)
     c = info{t};
@@ -9940,24 +9575,15 @@ function [Errcode] = rmLink(obj,LinkID)
 % Remove link from the network.
 % Check if id new already exists
 links = obj.getBinLinksInfo;Errcode=0;
-if length(links.BinLinkNameID)==0
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
+if isempty(links.BinLinkNameID)
+    warning('There is no such object in the network.');
+    Errcode=-1; return;
 end
-countLinks=length(links.BinLinkNameID);
-i=1;
-while i<countLinks+1
-    exists(i) = strcmp(LinkID,char(links.BinLinkNameID(i)));
-    if exists(i)==1
-        index_rmvlink=i;
-    end
-    i=i+1;
-end
-if (sum(exists)~=1)
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
+if ~ismember(LinkID,links.BinLinkNameID)
+    warning('There is no such object in the network.');
+    Errcode=-1; return;
+else
+    index_rmvlink = find(strcmp(LinkID,links.BinLinkNameID));
 end
 nodes = obj.getBinNodesInfo;
 from_node = links.BinLinkFromNode(index_rmvlink);
@@ -9968,9 +9594,12 @@ r = strcmp(nodes.BinNodeNameID,to_node);
 if sum(r)==0, to_node=''; end
 % Remove control, code 1(LINK)
 obj.removeBinControlLinkID(LinkID);
+if ~isempty(obj.getBinRulesControlsInfo)
+    obj.removeBinRulesControlLinkID(LinkID); %Remove Rule
+end
 
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 
 % section [JUNCTIONS]
 out=0;YY=0;sps=blanks(15);
@@ -10020,93 +9649,51 @@ end
 fclose(fid2);
 % Get nodes which delete with function Remove Node
 links = obj.getBinLinksInfo;
-for i=1:length(links.BinLinkNameID)
-    t(i) = strcmp(from_node,char(links.BinLinkFromNode(i)));
-    tt(i) = strcmp(to_node,char(links.BinLinkToNode(i)));
-    ttt(i) = strcmp(to_node,char(links.BinLinkFromNode(i)));
-    tttt(i) = strcmp(from_node,char(links.BinLinkToNode(i)));
-    i=i+1;
+if ~ismember(from_node,[links.BinLinkToNode links.BinLinkFromNode]) && ~isempty(from_node)
+    warning('Node %s disconnected.',char(from_node));
 end
-if sum(t)+sum(tttt)==0 || sum(tt)+sum(ttt)==0
-    if isempty(char(from_node)) && isempty(char(to_node))
-        warning('Call function Removenode or Addlink.');
-    end
+if ~ismember(to_node,[links.BinLinkToNode links.BinLinkFromNode]) && ~isempty(from_node)
+    warning('Node %s disconnected.',char(from_node));
 end
-if sum(t)+sum(tttt)==0
-    if ~isempty(char(from_node))
-        s = sprintf('Node %s disconnected.',char(from_node));
-        warning(s);
-    end
-end
-if sum(tt)+sum(ttt)==0
-    if ~isempty(char(to_node))
-        s = sprintf('Node %s disconnected.',char(to_node));
-        warning(s);
-    end
-end
-if sum(t)+sum(tttt)==0 || sum(tt)+sum(ttt)==0
-    if ~isempty(char(from_node)) || ~isempty(char(to_node))
-        if ~sum(strcmp(from_node,nodes.BinNodeReservoirNameID)) || ~sum(strcmp(from_node,nodes.BinNodeTankNameID))...
-                || ~sum(strcmp(to_node,nodes.BinNodeReservoirNameID)) || ~sum(strcmp(to_node,nodes.BinNodeTankNameID))
-            Errcode=0;
-        else
-            Errcode=-1;
-        end
-    end
-end
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+if obj.Bin,  Errcode=closeOpenNetwork(obj); end
 end
 function [Errcode]=addNewControl(obj,x,status,y_t_c,param,z,varargin)
 % syntax
+Errcode=0;
 if (nargin==6)
-    syntax = sprintf('LINK     %s     %s     IF     NODE     %s     %s     %d',x,status,y_t_c,param,z);
+    syntax = ['LINK ',x,' ',status,' IF NODE ',y_t_c,' ',param,' ',num2str(z)];
 elseif (nargin==5)
-    syntax = sprintf('LINK     %s     %s     AT     CLOCKTIME     %s     %s',x,status,y_t_c,param);
+    syntax = ['LINK ',x,' ',status,' AT CLOCKTIME ',y_t_c,' ',param];
 elseif (nargin==4)
-    syntax = sprintf('LINK     %s     %s     AT     TIME     %s',x,status,y_t_c);
+    syntax = ['LINK ',x,' ',status,' AT TIME ',y_t_c];
 end
 if (nargin==6)
     % Check if id new already exists
-    nodes = obj.getBinNodesInfo;
-    if length(char(nodes.BinNodeNameID))==0
-        return
-    end
-    i=1;
-    while i<length(char(nodes.BinNodeNameID))+1
-        exists(i) = strcmp(y_t_c,char(nodes.BinNodeNameID(i)));
-        i=i+1;
-    end
-    
-    if (sum(exists)~=1)
-        s = sprintf('There is no such object in the network.');
-        warning(s);Errcode=-1;
-        return;
+    if ~ismember(x,obj.getBinNodesInfo.BinNodeNameID)
+        warning('There is no such object in the network.');
+        Errcode=-1; return;
     end
 end
-% Check if id new already exists
-links = obj.getBinLinksInfo; Errcode=0;
-if length(char(links.BinLinkNameID))==0
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
-end
-i=1;
-while i<length(char(links.BinLinkNameID))+1
-    exists(i) = strcmp(x,char(links.BinLinkNameID(i)));
-    i=i+1;
-end
-if (sum(exists)~=1)
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
+if (nargin==2)
+   controls = x; 
+else
+    % Check if id new already exists
+    if ~ismember(x,obj.getBinLinksInfo.BinLinkNameID)
+        warning('There is no such object in the network.');
+        Errcode=-1; return;
+    end
 end
 type_n='[CONTROLS]';
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
-noo=0;s=0;sps=blanks(15);
-for t = 1:length(info)
+m = strfind(info, type_n);
+Index = find(not(cellfun('isempty', m)));
+fid2 = writenewTemp(obj.BinTempfile);
+noo=0;s=0;sps=blanks(15);goOut=0;
+for i=1:Index-1
+    fprintf(fid2,'%s',info{i});
+    fprintf(fid2,'\n');
+end                    
+for t = Index:length(info)
     c = info{t};
     a = regexp(c, '\s*','split');
     if isempty(a)
@@ -10118,17 +9705,25 @@ for t = 1:length(info)
                 fprintf(fid2,'[CONTROLS]');
                 s=1; break;
             end
-            rr = regexp(a,'\w*[\w*]\w*','split');
-            check_brackets = rr{:};
-            ch1 = strcmp(check_brackets,'[');
-            ch2 = strcmp(check_brackets,']');
-            if (ch1(1)==1 && ch2(2)==1 && (s==1) && noo==0)
-                fprintf(fid2, '%s',syntax);
-                fprintf(fid2,'\r\n');
-                fprintf(fid2,'\r\n');
-                fprintf(fid2,'%s',a{u});
-                fprintf(fid2,'\r\n');
-                noo=1;
+            if (s==1) && (noo==0)
+                if (nargin==2)
+                    for i=1:length(controls)
+                        fprintf(fid2, controls(i,:));
+                        fprintf(fid2,'\r\n');
+                    end
+                    for i=t:length(info)
+                        fprintf(fid2,'%s',info{i});
+                        fprintf(fid2,'\n');
+                    end                    
+                    goOut=1;
+                end
+                if ~goOut
+                    fprintf(fid2, '%s',syntax);
+                    fprintf(fid2,'\r\n');
+                    fprintf(fid2,c);
+                    noo=1;
+                end
+                break;
             elseif isempty(a{u}) && noo==0
             else
                 if isempty(a{u}) && noo==1
@@ -10139,45 +9734,28 @@ for t = 1:length(info)
             u=u+1;
         end
     end
+    if goOut, break; end
     fprintf(fid2,'\n');
 end
 fclose(fid2);
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function [Errcode]=rmCurveID(obj,CurveID,varargin)
 % Check if id new already exists
-valueC=obj.getBinCurvesInfo;Errcode=0;
-if length(valueC.BinCurveNameID)==0
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
-end
-i=1;
-while i<length(valueC.BinCurveNameID)+1
-    exists(i) = strcmp(CurveID,char(valueC.BinCurveNameID(i)));
-    i=i+1;
-end
-if (sum(exists)==0)
-    s = sprintf('There is no such object in the network.');
-    warning(s);Errcode=-1;
-    return;
+Errcode=0;
+if ~ismember(CurveID, obj.getBinCurvesInfo.BinCurveNameID)
+    warning('There is no such object in the network.');
+    Errcode=-1; return;
 end
 value=obj.getBinLinksInfo;
-i=1;
-while (i<length(value.BinLinkPumpCurveNameID)+1)
-    p = strcmp(CurveID,value.BinLinkPumpCurveNameID{i});
-    if p==1
-        s = sprintf('Pump %s refers to undefined curve.',value.BinLinkPumpNameID{i});
-        warning(s);
-    end
-    i=i+1;
+indCurve = find(strcmp(CurveID,value.BinLinkPumpCurveNameID),1);
+if ~isempty(indCurve)
+    warning('Pump %s refers to undefined curve.',value.BinLinkPumpNameID{indCurve});
 end
 % Open and read inpname
 % Read all file and save in variable info
 [~,info] = obj.readInpFile;
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 e=0;n=0;sps=blanks(15);
 for t = 1:length(info)
     c = info{t};
@@ -10233,9 +9811,7 @@ for t = 1:length(info)
     fprintf(fid2,'\n');
 end
 fclose(fid2);
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function [Errcode]=Options(obj,newFlowUnits,headloss,varargin)
 % Notes: Flow units codes are as follows: 
@@ -10299,7 +9875,7 @@ curves = obj.getBinCurvesInfo;
 rules=obj.getBinRulesControlsInfo;
 
 [info] = readAllFile(obj.BinTempfile);
-fid2 = fopen([obj.BinTempfile],'w');
+fid2 = writenewTemp(obj.BinTempfile);
 sect=0;
 nn=0;pp=1;sps=blanks(15);
 for t = 1:length(info)
@@ -10389,9 +9965,9 @@ for t = 1:length(info)
                         pp=pp+1;
                         fprintf(fid2,'%s%s',char(a{mm}),sps);
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                         end
                         if length(a)>2
                             mm=2;
@@ -10410,9 +9986,9 @@ for t = 1:length(info)
                         pp=pp+1;
                         fprintf(fid2,'%s%s',char(a{mm}),sps);
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                         end
                     end
                 else
@@ -10427,19 +10003,19 @@ for t = 1:length(info)
                         pp=pp+1;
                         fprintf(fid2,'%s%s',char(a{mm}),sps);
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+3})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+4})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+5})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+6})*0.02831685),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+3})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+4})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+5})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+6})*0.02831685),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+3})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+4})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+5})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+6})*35.3147),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+3})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+4})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+5})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+6})*35.3147),sps);
                         end
                     end
                 else
@@ -10457,19 +10033,19 @@ for t = 1:length(info)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*25.4),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*25.4),sps);
                             if nheadl
                                 if strcmp('D-W',value.BinOptionsHeadloss)
-                                    fprintf(fid2,'%s%s',num2str(str2num(a{mm+3})*0.3048),sps);
+                                    fprintf(fid2,'%s%s',num2str(str2double(a{mm+3})*0.3048),sps);
                                     mm=7;
                                 else
                                     mm=6;
                                 end
                             end
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*0.03937007874),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*0.03937007874),sps);
                             if nheadl
                                 if strcmp('D-W',value.BinOptionsHeadloss)
                                     mm=7;
@@ -10497,12 +10073,12 @@ for t = 1:length(info)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         power=regexp(c,'POWER','match');
-                        if strcmpi(upper(power),'POWER')
+                        if strcmpi(power,'POWER')
                             mm=mm-1;
                             if changes==1 
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.745699882507324),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.745699882507324),sps);
                             elseif changes==2
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})/0.745699882507324),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})/0.745699882507324),sps);
                             end
                         end
                     end
@@ -10526,19 +10102,19 @@ for t = 1:length(info)
                         fcv=regexp(c,'FCV','match');if isempty(fcv), fcv=0; end
 %                         tcv=regexp(c,'TCV','match');if isempty(tcv), tcv=0; end
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*25.4),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*25.4),sps);
                             fprintf(fid2,'%s%s',char(a{mm+2}),sps);
-                            if strcmpi(upper(prv),'PRV') || strcmpi(upper(psv),'PSV') || strcmpi(upper(pbv),'PBV') %|| strcmpi(upper(tcv),'TCV')
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+3})*0.3048),sps);
-                            elseif strcmpi(upper(fcv),'FCV')
+                            if strcmpi(prv,'PRV') || strcmpi(psv,'PSV') || strcmpi(pbv,'PBV') %|| strcmpi(tcv,'TCV')
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+3})*0.3048),sps);
+                            elseif strcmpi(fcv,'FCV')
                                 setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
                             end
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.03937007874),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.03937007874),sps);
                             fprintf(fid2,'%s%s',char(a{mm+2}),sps);
-                            if strcmpi(upper(prv),'PRV') || strcmpi(upper(psv),'PSV') || strcmpi(upper(pbv),'PBV') %|| strcmpi(upper(tcv),'TCV')
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+3})/0.3048),sps);
-                            elseif strcmpi(upper(fcv),'FCV')
+                            if strcmpi(prv,'PRV') || strcmpi(psv,'PSV') || strcmpi(pbv,'PBV') %|| strcmpi(tcv,'TCV')
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+3})/0.3048),sps);
+                            elseif strcmpi(fcv,'FCV')
                                 setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
                             end
                         end
@@ -10618,9 +10194,9 @@ for t = 1:length(info)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                             setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm);
                             if changes==1
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*0.3048),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*0.3048),sps);
                             elseif changes==2
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*3.281),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*3.281),sps);
                             else
                                 fprintf(fid2,'%s%s',char(a{mm+2}),sps);
                             end
@@ -10642,11 +10218,11 @@ for t = 1:length(info)
                             pp=pp+1;
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                             if changes==1
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*2.831685e-02),sps);
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})*0.3048),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*2.831685e-02),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})*0.3048),sps);
                             else
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+2})),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+2})),sps);
                             end
                         elseif curves.BintypeCurve(ww)==3 % HEADLOSS
                             kk=regexp(c,'\w*HEADLOSS*\w','match');
@@ -10656,9 +10232,9 @@ for t = 1:length(info)
                             pp=pp+1;
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                             if changes==1
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                             elseif changes==2
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                             else
                                 fprintf(fid2,'%s%s',char(a{mm+1}),sps);
                             end
@@ -10688,7 +10264,7 @@ for t = 1:length(info)
                 if pp<length(controls.BinControlsInfo)+1
                     pp=pp+1;
                     if length(a)>7
-                        if strcmp(upper(a{mm+6}),'BELOW') || strcmp(upper(a{mm+6}),'ABOVE')
+                        if strcmpi(a{mm+6},'BELOW') || strcmpi(a{mm+6},'ABOVE')
                             for mm=mm:(mm+6)
                                 fprintf(fid2,'%s%s',char(a{mm}),sps);
                             end
@@ -10699,17 +10275,17 @@ for t = 1:length(info)
                                     if strcmp(obj.BinLinkType(index),'FCV')
                                         setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
                                     else
-                                        fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                                        fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                                     end
                                 elseif changes==2
                                     if strcmp(obj.BinLinkType(index),'FCV')
                                         setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
                                     else
-                                        fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                                        fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                                     end
                                 end
                             else
-                                fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+                                fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
                             end
                         else
                             for mm=mm:length(a)
@@ -10731,37 +10307,37 @@ for t = 1:length(info)
                 mm=1;
                 if pp<rules.BinRulesCount+1
                     pp=pp+1;
-                    if strcmp(upper(regexp(cell2mat(a),'\s*LEVEL*','match')),'LEVEL') %|| 
+                    if strcmpi(regexp(cell2mat(a),'\s*LEVEL*','match'),'LEVEL') %|| 
                         for mm=mm:(mm+4)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                         end
-                    elseif strcmp(upper(regexp(cell2mat(a),'\s*HEAD*','match')),'HEAD')
+                    elseif strcmpi(regexp(cell2mat(a),'\s*HEAD*','match'),'HEAD')
                         for mm=mm:(mm+4)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3048),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3048),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.281),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.281),sps);
                         end
-                    elseif strcmp(upper(regexp(cell2mat(a),'\s*DEMAND*','match')),'HEAD')
+                    elseif strcmpi(regexp(cell2mat(a),'\s*DEMAND*','match'),'HEAD')
                         for mm=mm:(mm+4)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
-                    elseif strcmp(upper(regexp(cell2mat(a),'\s*PRESSURE*','match')),'HEAD')
+                    elseif strcmpi(regexp(cell2mat(a),'\s*PRESSURE*','match'),'HEAD')
                         for mm=mm:(mm+4)
                             fprintf(fid2,'%s%s',char(a{mm}),sps);
                         end
                         if changes==1
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})/1.422),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})/1.422),sps);
                         elseif changes==2
-                            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.422),sps);
+                            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.422),sps);
                         end
                     else
                         for mm=mm:length(a)
@@ -10778,14 +10354,14 @@ for t = 1:length(info)
                 % section [OPTIONS]
             elseif (sect==14) && (nn==0)
                 mm=1;
-                if strcmp(upper(a{mm}),'UNITS')
+                if strcmpi(a{mm},'UNITS')
                     fprintf(fid2,'%s%s',char(a{mm}),sps);
                     if nheadl
                         fprintf(fid2,'%s%s',char(newFlowUnits),sps);nn=1;
                     else
                         fprintf(fid2,'%s%s',char(previousFlowUnits),sps);
                     end
-                elseif strcmp(upper(a{mm}),'HEADLOSS')
+                elseif strcmpi(a{mm},'HEADLOSS')
                     fprintf(fid2,'%s%s',char(a{mm}),sps);
                     fprintf(fid2,'%s%s',char(headloss),sps);
                     nn=1;
@@ -10806,9 +10382,7 @@ for t = 1:length(info)
     fprintf(fid2,'\n');
 end
 fclose(fid2);
-if obj.Bin==1
-    Errcode=closeOpenNetwork(obj);
-end
+if obj.Bin, Errcode=closeOpenNetwork(obj); end
 end
 function Errcode=closeOpenNetwork(obj)
     obj.closeNetwork;  %Close input file 
@@ -10818,470 +10392,432 @@ function setflow(previousFlowUnits,newFlowUnits,fid2,a,sps,mm)
 if strcmp(previousFlowUnits,'GPM')
     switch newFlowUnits %(GPM)
         case 'CFS' 
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.00222816399286988),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.00222816399286988),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.00144),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.00144),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.00119905),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.00119905),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.004419191),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.004419191),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0630902),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0630902),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.785412),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.785412),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.005450993),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.005450993),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.2271247),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.2271247),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*5.450993),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*5.450993),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'CFS')
     switch newFlowUnits
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*448.8312),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*448.8312),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.6463169),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.6463169),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.5381711),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.5381711),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.983471),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.983471),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*28.31685),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*28.31685),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1899.011),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1899.011),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*2.446576),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*2.446576),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*101.9406),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*101.9406),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*2446.576),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*2446.576),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'MGD')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.547229),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.547229),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*694.4445),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*694.4445),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.8326738),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.8326738),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.068883),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.068883),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*43.81264),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*43.81264),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*2628.758),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*2628.758),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.785412),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.785412),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*157.7255),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*157.7255),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3785.412),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3785.412),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'IMGD')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.858145),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.858145),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*833.9936),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*833.9936),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.200951),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.200951),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.685577),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.685577),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*52.61681),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*52.61681),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3157.008),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3157.008),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*4.546092),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*4.546092),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*189.4205),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*189.4205),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*4546.092),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*4546.092),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'AFD')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.5041667),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.5041667),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*226.2857),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*226.2857),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.3258514),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.3258514),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.271328),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.271328),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*14.27641),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*14.27641),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*856.5846),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*856.5846),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.233482),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.233482),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*51.39508),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*51.39508),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1233.482),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1233.482),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'LPS')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.03531466),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.03531466),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*15.85032),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*15.85032),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.02282446),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.02282446),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.01900533),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.01900533),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.07004562),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.07004562),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*60),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*60),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0864),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0864),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*3.6),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*3.6),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*86.4),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*86.4),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'LPM')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0005885777),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0005885777),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.264172),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.264172),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0003804078),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0003804078),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0003167556),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0003167556),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0011674272),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0011674272),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.01666667),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.01666667),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.00144),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.00144),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.06),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.06),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1.44),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1.44),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'MLD')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.4087345),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.4087345),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*183.4528),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*183.4528),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.264172),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.264172),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.2199692),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.2199692),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.8107132),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.8107132),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*11.57407),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*11.57407),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*694.4445),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*694.4445),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*41.66667),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*41.66667),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*1000),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*1000),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'CMH')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.009809635),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.009809635),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*4.402868),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*4.402868),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.006340129),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.006340129),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.00527926),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.00527926),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.01945712),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.01945712),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.2777778),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.2777778),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*16.66667),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*16.66667),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.024),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.024),sps);
         case 'CMD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*24),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*24),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 elseif strcmp(previousFlowUnits,'CMD')
     switch newFlowUnits
         case 'CFS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0004087345),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0004087345),sps);
         case 'GPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.1834528),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.1834528),sps);
         case 'MGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.000264172),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.000264172),sps);
         case 'IMGD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0002199692),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0002199692),sps);
         case 'AFD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.0008107132),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.0008107132),sps);
         case 'LPS'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.01157407),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.01157407),sps);
         case 'LPM'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.6944444),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.6944444),sps);
         case 'MLD'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.001),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.001),sps);
         case 'CMH'
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})*0.04166667),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})*0.04166667),sps);
         otherwise
-            fprintf(fid2,'%s%s',num2str(str2num(a{mm+1})),sps);
+            fprintf(fid2,'%s%s',num2str(str2double(a{mm+1})),sps);
     end
 end
 end
-function [fid,binfile] = runEPANETexe(obj)
-    [tmppath,tempfile]=fileparts(obj.BinTempfile);
-    [~,mm]=system(['cmd /c for %A in ("',tmppath,'") do @echo %~sA']);
-    mmPwd=regexp(mm,'\s','split');
-    inpfile=[mmPwd{1},'/',tempfile,'.inp'];
-    rptfile=[inpfile(1:length(inpfile)-4),'.txt'];
-    binfile=[inpfile(1:length(inpfile)-4),'.bin'];
-    if exist(binfile)==2, fclose all; delete(binfile); end
-    if strcmp(computer('arch'),'win64') || strcmp(computer('arch'),'win32')
+function [fid,binfile,rptfile] = runEPANETexe(obj)
+    arch = computer('arch');
+    [inpfile, rptfile, binfile]= createTempfiles(obj.BinTempfile);
+    if strcmp(arch,'win64') || strcmp(arch,'win32')
         [~,lpwd]=system(['cmd /c for %A in ("',obj.LibEPANETpath,'") do @echo %~sA']);
         libPwd=regexp(lpwd,'\s','split');
-        r = sprintf('%s\\epanet2d.exe %s %s %s',libPwd{1},inpfile,rptfile,binfile);
+        r = sprintf('%s//epanet2d.exe %s %s %s',libPwd{1},inpfile,rptfile,binfile);
     end
-    system(r);
+    if isunix
+        r = sprintf('%sepanet2d %s %s %s',obj.LibEPANETpath,obj.BinTempfile,rptfile,binfile);
+    elseif ismac
+        r = sprintf('%runepanet %s %s %s',obj.LibEPANETpath,obj.BinTempfile,rptfile,binfile);
+    end
+    if obj.getCMDCODE, [~,~]=system(r); else system(r); end
     fid = fopen(binfile,'r');
 end
 function value = getBinComputedTimeSeries(obj,indParam,varargin)
-    [fid,binfile] = runEPANETexe(obj);
+    [fid,binfile,rptfile] = runEPANETexe(obj);
     value=[];
     if fid~=-1
         data = fread(fid,'int32');
-        fclose(fid);
         BinNodeCount=data(3);
         BinNodeResTankCount=data(4);
         BinLinkCount=data(5);
         BinLinkPumpCount=data(6);
         NumberReportingPeriods = data(end-2);
         if indParam==27
-            value = NumberReportingPeriods; return;
+            value = NumberReportingPeriods; 
         end
         if indParam==28
-            value = data(15); return; % simulation duration
+            value = data(15); % simulation duration
         end
         clear data;
-        fid1 = fopen(binfile, 'r');
-        fread(fid1, 15, 'uint32');
-        fread(fid1, 808, '*char');
-        fread(fid1, 4, 'uint32');
-        fread(fid1, 32*BinNodeCount+32*BinLinkCount, '*char'); % error NODES*32
-        fread(fid1, BinLinkCount*3, 'uint32');
-        fread(fid1, BinNodeResTankCount*2, 'uint32'); % error
-        if indParam==1
-            value =fread(fid1, BinNodeCount, 'float')';return; % ElevationEachNode
-        elseif indParam==2
-            fread(fid1, BinNodeCount, 'float');
-            value =fread(fid1, BinLinkCount, 'float')';return; % LengthEachLink
-        elseif indParam==3
-            fread(fid1, BinNodeCount+BinLinkCount, 'float');
-            value =fread(fid1, BinLinkCount, 'float')';return; % DiameterEachLink
-        elseif indParam==4
-            fread(fid1, BinNodeCount+BinLinkCount*2, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % PumpIndexListLinks
-        elseif indParam==5
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % PumpUtilization
-        elseif indParam==6
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*2, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % AverageEfficiency
-        elseif indParam==7
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*3, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % AverageKwattsOrMillionGallons
-        elseif indParam==8
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*4, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % AverageKwatts
-        elseif indParam==9
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*5, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % PeakKwatts
-        elseif indParam==10
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*6, 'float');
-            value =fread(fid1, BinLinkPumpCount, 'float')';return; % AverageCostPerDay
+        % Beginning of file
+        fseek(fid, 0, 'bof');
+        fread(fid, 15, 'uint32');
+        fread(fid, 808, '*char');
+        fread(fid, 4, 'uint32');
+        fread(fid, 32*BinNodeCount+32*BinLinkCount, '*char'); % error NODES*32
+        fread(fid, BinLinkCount*3, 'uint32');
+        fread(fid, BinNodeResTankCount*2, 'uint32'); % error
+        switch indParam
+            case 1
+                value =fread(fid, BinNodeCount, 'float')'; % ElevationEachNode
+            case 2
+                fread(fid, BinNodeCount, 'float');
+                value =fread(fid, BinLinkCount, 'float')'; % LengthEachLink
+            case 3
+                fread(fid, BinNodeCount+BinLinkCount, 'float');
+                value =fread(fid, BinLinkCount, 'float')'; % DiameterEachLink
+            case 4
+                fread(fid, BinNodeCount+BinLinkCount*2, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % PumpIndexListLinks
+            case 5
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % PumpUtilization
+            case 6
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*2, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % AverageEfficiency
+            case 7
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*3, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % AverageKwattsOrMillionGallons
+            case 8
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*4, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % AverageKwatts
+            case 9
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*5, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % PeakKwatts
+            case 10
+                fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*6, 'float');
+                value =fread(fid, BinLinkPumpCount, 'float')'; % AverageCostPerDay
         end
         if indParam>10
-            fread(fid1, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*7+1, 'float');
-        end
-        for i=1:NumberReportingPeriods
-            if indParam==11
-                value(:,i) = fread(fid1, BinNodeCount, 'float')'; % nodeDemand
-                fread(fid1, BinNodeCount*3, 'float');
-                fread(fid1, BinLinkCount*8, 'float');
-            elseif indParam==12
-                fread(fid1, BinNodeCount, 'float');
-                value(:,i) = fread(fid1, BinNodeCount, 'float')'; % nodeHead
-                fread(fid1, BinNodeCount*2, 'float');
-                fread(fid1, BinLinkCount*8, 'float');
-            elseif indParam==13
-                fread(fid1, BinNodeCount*2, 'float');
-                value(:,i) = fread(fid1, BinNodeCount, 'float')'; % nodePressure
-                fread(fid1, BinNodeCount, 'float');
-                fread(fid1, BinLinkCount*8, 'float');
-            elseif indParam==14
-                fread(fid1, BinNodeCount*3, 'float');
-                value(:,i) = fread(fid1, BinNodeCount, 'float')'; % nodeQuality
-                fread(fid1, BinLinkCount*8, 'float');
-            elseif indParam==15
-                fread(fid1, BinNodeCount*4, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkFlow
-                fread(fid1, BinLinkCount*7, 'float');
-            elseif indParam==16
-                fread(fid1, BinNodeCount*4+BinLinkCount, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkVelocity
-                fread(fid1, BinLinkCount*6, 'float');
-            elseif indParam==17
-                fread(fid1, BinNodeCount*4+BinLinkCount*2, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkHeadloss
-                fread(fid1, BinLinkCount*5, 'float');
-            elseif indParam==18
-                fread(fid1, BinNodeCount*4+BinLinkCount*3, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkQuality
-                fread(fid1, BinLinkCount*4, 'float');
-            elseif indParam==19
-                fread(fid1, BinNodeCount*4+BinLinkCount*4, 'float')
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkStatus
-                fread(fid1, BinLinkCount*3, 'float');
-            elseif indParam==20
-                fread(fid1, BinNodeCount*4+BinLinkCount*5, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkSetting
-                fread(fid1, BinLinkCount*2, 'float');
-            elseif indParam==21
-                fread(fid1, BinNodeCount*4+BinLinkCount*6, 'float')
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkReactionRate
-                fread(fid1, BinLinkCount, 'float');
-            elseif indParam==22
-                fread(fid1, BinNodeCount*4+BinLinkCount*7, 'float');
-                value(:,i) = fread(fid1, BinLinkCount, 'float')'; % linkFrictionFactor
-            elseif indParam>22
-                fread(fid1, BinNodeCount*4+BinLinkCount*8, 'float');
+            fread(fid, BinNodeCount+BinLinkCount*2+BinLinkPumpCount*7+1, 'float');
+            for i=1:NumberReportingPeriods
+                switch indParam
+                    case 11
+                        value(i,:) = fread(fid, BinNodeCount, 'float')'; % nodeDemand
+                        fread(fid, BinNodeCount*3, 'float');
+                        fread(fid, BinLinkCount*8, 'float');
+                    case 12
+                        fread(fid, BinNodeCount, 'float');
+                        value(i,:) = fread(fid, BinNodeCount, 'float')'; % nodeHead
+                        fread(fid, BinNodeCount*2, 'float');
+                        fread(fid, BinLinkCount*8, 'float');
+                    case 13
+                        fread(fid, BinNodeCount*2, 'float');
+                        value(i,:) = fread(fid, BinNodeCount, 'float')'; % nodePressure
+                        fread(fid, BinNodeCount, 'float');
+                        fread(fid, BinLinkCount*8, 'float');
+                    case 14
+                        fread(fid, BinNodeCount*3, 'float');
+                        value(i,:) = fread(fid, BinNodeCount, 'float')'; % nodeQuality
+                        fread(fid, BinLinkCount*8, 'float');
+                    case 15
+                        fread(fid, BinNodeCount*4, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkFlow
+                        fread(fid, BinLinkCount*7, 'float');
+                    case 16
+                        fread(fid, BinNodeCount*4+BinLinkCount, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkVelocity
+                        fread(fid, BinLinkCount*6, 'float');
+                    case 17
+                        fread(fid, BinNodeCount*4+BinLinkCount*2, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkHeadloss
+                        fread(fid, BinLinkCount*5, 'float');
+                    case 18
+                        fread(fid, BinNodeCount*4+BinLinkCount*3, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkQuality
+                        fread(fid, BinLinkCount*4, 'float');
+                    case 19
+                        % Status Code for Each Link
+                        % 0 = closed (max. head exceeded)
+                        % 1 = temporarily closed
+                        % 2 = closed
+                        % 3 = open
+                        % 4 = active (partially open)
+                        % 5 = open (max. flow exceeded)
+                        % 6 = open (flow setting not met)
+                        % 7 = open (pressure setting not met)
+                        fread(fid, BinNodeCount*4+BinLinkCount*4, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkStatus
+                        fread(fid, BinLinkCount*3, 'float');
+                    case 20
+                        fread(fid, BinNodeCount*4+BinLinkCount*5, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkSetting
+                        fread(fid, BinLinkCount*2, 'float');
+                    case 21
+                        fread(fid, BinNodeCount*4+BinLinkCount*6, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkReactionRate
+                        fread(fid, BinLinkCount, 'float');
+                    case 22
+                        fread(fid, BinNodeCount*4+BinLinkCount*7, 'float');
+                        value(i,:) = fread(fid, BinLinkCount, 'float')'; % linkFrictionFactor
+                end
+                if indParam>22
+                    fread(fid, BinNodeCount*4+BinLinkCount*8, 'float');
+                end
             end
         end
-        if indParam==23
-            value =fread(fid1, 1, 'float')'; % AverageBulkReactionRate
-        elseif indParam==24
-            fread(fid1, 1, 'float');
-            value =fread(fid1, 1, 'float')'; % AverageWallReactionRate
-        elseif indParam==25
-            fread(fid1, 2, 'float');
-            value =fread(fid1, 1, 'float')'; % AverageTankReactionRate
-        elseif indParam==26
-            fread(fid1, 3, 'float');
-            value =fread(fid1, 1, 'float')'; % AverageSourceInflowRate
+        switch indParam
+            case 23
+                value =fread(fid, 1, 'float')'; % AverageBulkReactionRate
+            case 24
+                fread(fid, 1, 'float');
+                value =fread(fid, 1, 'float')'; % AverageWallReactionRate
+            case 25
+                fread(fid, 2, 'float');
+                value =fread(fid, 1, 'float')'; % AverageTankReactionRate
+            case 26
+                fread(fid, 3, 'float');
+                value =fread(fid, 1, 'float')'; % AverageSourceInflowRate
         end
-        fclose(fid1);
     end
-    if fid==-1
-        fprintf('"Run was unsuccessful."\n');
-    else
-        fprintf('"Run was successful."\n');
-    end
+    warning('off'); try fclose(fid); catch e, end; try delete(binfile); catch e, end
+    try delete(rptfile); catch e, end; warning('on'); 
 end
 function Errcode=addLinkWarnings(obj,typecode,newLink,toNode)
 % Check if id new already exists
 Nodes = obj.getBinNodesInfo;
 Errcode=0;
-if length(Nodes.BinNodeNameID)==0
-    Errcode=-1;
-    return;
+if isempty(Nodes.BinNodeNameID), Errcode=-1; return; end
+if ~ismember(toNode,Nodes.BinNodeNameID)
+    warning('There is no node "%s" in the network.',toNode);
+    Errcode=-1; return;
 end
-existsTo=0;
-for i=1:length(Nodes.BinNodeNameID) 
-    existsTo(i) = strcmp(toNode,char(Nodes.BinNodeNameID{i}));
-end
-if sum(existsTo)~=1
-    s = sprintf('There is no node "%s" in the network.',toNode);
-    warning(s);Errcode=-1;
-    return;
-end
-A = [0 1 2 3 4 5 6 7 8];
-code = strfind(A,typecode);
-if length(code)==0
-    warning('There is no such typecode(0-8)');
-    Errcode=-1;
-    return;
+if ~ismember(0:8,typecode)
+    warning('Wrong constant type.');
+    Errcode=-1; return;
 else
-    if typecode==0, type_valv = 'CVPIPE';  end
-    if typecode==3, type_valv = 'PRV';     end
-    if typecode==4, type_valv = 'PSV';     end
-    if typecode==5, type_valv = 'PBV';     end
-    if typecode==6, type_valv = 'FCV';     end
-    if typecode==7, type_valv = 'TCV';     end
-    if typecode==8, type_valv = 'GPV';     end
-    if typecode~=1 && typecode~=2
-        typecode=3;
-    end
+%     type_valv = obj.TYPELINK{typecode+1};
+    if typecode>2, typecode=3; end
 end
 % Valve illegally connected to a tank or reservoir
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if typecode==3
-    i=1;ifToReservoir=0;
-    while i<length(Nodes.BinNodeReservoirNameID)+1
-        ifToReservoir(i) = strcmp(toNode,char(Nodes.BinNodeReservoirNameID{i}));
-        i=i+1;
-    end
-    i=1;ifFromTank=0;ifToTank=0;
-    while i<length(Nodes.BinNodeTankNameID)+1
-        ifToTank(i) = strcmp(toNode,char(Nodes.BinNodeTankNameID{i}));
-        i=i+1;
-    end
-    if sum(ifToReservoir)==1 || sum(ifToTank)==1
-        s = sprintf('Valve "%s" illegally connected to a tank.',newLink);
-        Errcode=-1;
-        warning(s);
+    if ismember(toNode,Nodes.BinNodeReservoirNameID) || ismember(toNode,Nodes.BinNodeTankNameID)
+        Errcode=-1; warning('Valve "%s" illegally connected to a tank.',newLink);
         return;
     end
 end
 % Check if newLink already exists
 Links = obj.getBinLinksInfo;
-for i=1:length(Links.BinLinkNameID)
-    exists_link = strcmp(newLink,char(Links.BinLinkNameID(i)));
-    if exists_link==1
-        s = sprintf('Link %s already exists.',newLink);
-        Errcode=-1;
-        warning(s);
-        return;
-    end
+if ismember(newLink,Links.BinLinkNameID)
+    Errcode=-1; warning('Link %s already exists.',newLink); return;
 end
 
 if typecode==2
     crvs = obj.getBinCurvesInfo;
     if isempty(char(crvs.BinCurveNameID))
-        s = sprintf('No head curve supplied for pump %s.',newLink);
-        Errcode=-1;
-        warning(s);
-        return;
+        Errcode=-1; warning('No head curve supplied for pump %s.',newLink); return;
     end
 end
 end
 function cnt=bracketsCheck(v)
     t =  regexp(v, '[(\w*)]','split');
-    y=1;cnt=0;
-    while y<length(t)+1
-        tt = isempty(t{y});
-        if tt==0
-            cnt=cnt+1;
-        end
-        y=y+1;
-    end
+    cnt=length(t(~cellfun('isempty',t)));
 end
 function setMSXOptions(obj,varargin)
 solver=obj.getMSXSolver;
@@ -11319,7 +10855,7 @@ for i=1:(nargin/2)
 end
                 
 [info,tline] = readAllFile(obj.MSXFile);
-fid2 = fopen([obj.MSXTempFile],'w');
+fid2 = writenewTemp(obj.MSXTempFile);
 sect=0;
 for t = 1:length(info)
     a = info{t};
@@ -11366,16 +10902,630 @@ end
 obj.unloadMSX;
 obj.loadMSXFile(obj.MSXTempFile,1);
 end
-function indices = getLinkIndices(obj, varargin)
+function [indices, value] = getLinkIndices(obj, varargin)
     indices = getIndices(obj.getLinkCount, varargin{1});
+    value = zeros(1, length(indices));
 end
-function indices = getNodeIndices(obj, varargin)
+function indices = getControlIndices(obj, varargin)
+    indices = getIndices(obj.getControlRulesCount, varargin{1});
+end
+function [indices, value] = getNodeIndices(obj, varargin)
     indices = getIndices(obj.getNodeCount, varargin{1});
+    value = zeros(1, length(indices));
+end
+function [indices, value] = getCurveIndices(obj, varargin)
+    indices = getIndices(obj.getCurveCount, varargin{1});
+    value = zeros(1, length(indices));
 end
 function indices = getIndices(cnt, varargin)
     if isempty(varargin{1})
         indices=1:cnt;
+    elseif isempty(varargin{1}{1})
+        indices=1:cnt;
     else
         indices=varargin{1}{1};
     end 
+end
+function value = getTimes(obj, r, atline, value)
+    tmpt=[0 0];
+    if sum(r==':')
+        r=regexp(r,':','split');
+        tmpt(1)=str2double(r{1});
+        tmpt(2)=str2double(r{2});
+        secnd=tmpt(1)*3600+tmpt(2)*60;
+        if length(r)>2
+            secnd=secnd+str2double(r{3}); 
+        end
+    else
+        tmp=3600;
+        switch upper(atline{end})
+            case 'MIN'
+                tmp=60;
+            case 'MINUTES'
+                tmp=60;
+            case 'SECONDS'
+                tmp=1/60;
+            case 'SEC'
+                tmp=1/60;
+            case 'DAYS'
+                tmp=24;
+        end
+        secnd=single(str2double(r)*tmp);
+    end
+    switch upper(atline{1})
+        case 'DURATION'
+            value.BinTimeSimulationDuration=secnd;
+        case 'HYDRAULIC'
+            value.BinTimeHydraulicStep=secnd;
+        case 'QUALITY'
+            value.BinTimeQualityStep=secnd;
+        case 'PATTERN'
+            if strcmpi(atline{2},'TIMESTEP')
+                value.BinTimePatternStep=secnd;
+            elseif strcmpi(atline{2},'START')
+                value.BinTimePatternStart=secnd;
+            end
+        case 'REPORT'
+            if strcmpi(atline{2},'TIMESTEP')
+                value.BinTimeReportingStep=secnd;
+            elseif strcmpi(atline{2},'START')
+                value.BinTimeReportingStart=secnd;
+            end
+        case 'STATISTIC' 
+            value.BinTimeStatisticsIndex=find((strcmpi(obj.TYPESTATS,atline{2})-1)>-1)-1;
+            value.BinTimeStatistics=obj.TYPESTATS{value.BinTimeStatisticsIndex+1};
+    end    
+end
+function value = getOptionsValues(obj, value, atline)
+    switch upper(atline{1})
+        case 'UNITS'
+            value.BinLinkFlowUnits=atline{2};
+        case 'HEADLOSS'
+            value.BinOptionsHeadloss=atline{2};
+        case 'PRESSURE'
+            value.BinNodePressureUnits=atline{2};
+        case 'SPECIFIC'
+            value.BinOptionsSpecificGravity=str2double(atline{3});
+        case 'VISCOSITY'
+            value.BinOptionsViscosity=str2double(atline{2});
+        case 'TRIALS'
+            value.BinOptionsMaxTrials=str2double(atline{2});
+        case 'ACCURACY'
+            value.BinOptionsAccuracyValue=single(str2double(atline{2}));
+        case 'UNBALANCED'
+            value.BinOptionsUnbalanced= atline(2:end);
+        case 'PATTERN'
+            value.BinOptionsPattern=str2double(atline{2});
+        case 'DEMAND'
+            value.BinOptionsPatternDemandMultiplier=str2double(atline{3});
+        case 'EMITTER'
+            value.BinOptionsEmitterExponent=str2double(atline{3});
+        case 'QUALITY'
+            value.BinQualityType=atline{2};% Water quality analysis code (None:0/Chemical:1/Age:2/Trace:3)
+            value.BinQualityCode=find((strcmpi(obj.TYPEQUALITY,atline{2})-1)>-1)-1;
+            if isempty(value.BinQualityCode)
+                value.BinQualityCode=1;
+            end
+            if length(atline)>2
+                if value.BinQualityCode==3
+                    value.BinQualityTraceNodeIndex=obj.getBinNodeIndex(atline{3});
+                    value.BinQualityTraceNodeID=atline{3};
+                else
+                    value.BinQualityUnits=atline{3};
+                end
+            end
+        case 'DIFFUSIVITY' 
+            value.BinOptionsDiffusivity=str2double(atline{2});  
+        case 'TOLERANCE' 
+            value.BinOptionsQualityTolerance=single(str2double(atline{2})); 
+    end
+end
+function [value, cont, sect, i,t,q,d] = getLV(tok,value,sect,tline,i,t,q,d)
+    cont=1;
+    if (tok(1) == '[')
+           % [PIPES] section
+        if strcmpi(tok(1:5),'[PIPE')
+            sect=1;
+            value.BinLinkPipeNameID={};
+            value.BinLinkPipeIndex=[];
+            value.BinLinkFromNode={};
+            value.BinLinkToNode={};
+            value.BinLinkPipeLengths=[];
+            value.BinLinkPipeDiameters=[];
+            value.BinLinkPipeRoughness=[];
+            value.BinLinkPipeMinorLoss=[];
+            cont=1;return;
+            % [PUMPS] section
+        elseif strcmpi(tok(1:5),'[PUMP')
+            sect=2;
+            value.BinLinkPumpNameID={};
+            value.BinLinkPumpIndex=[];
+            value.BinLinkPumpPatterns={};
+            value.BinLinkPumpCurveNameID={};
+            value.BinLinkPumpPower=[];
+            value.BinLinkPumpNameIDPower={};
+            cont=1;return;
+            % [VALVES] section
+        elseif strcmpi(tok(1:5),'[VALV')
+            sect=3;
+            value.BinLinkValveNameID={};
+            value.BinLinkValveIndex=[];
+            value.BinLinkValveDiameters=[];
+            value.BinLinkValveType={};
+            value.BinLinkValveSetting=[];
+            value.BinLinkValveMinorLoss=[];                        
+            cont=1;return;
+            % [STATUS] section
+        elseif strcmpi(tok(1:5),'[STAT')
+            sect=4;
+            value.BinLinkInitialStatus={};
+            value.BinLinkInitialStatusNameID={};
+            value.BinCountStatuslines=0;
+            cont=1;return;                        
+        elseif strcmpi(tok(1:5),'[REAC')
+            sect=5;
+            value.BinLinkGlobalBulkReactionCoeff=[];
+            value.BinLinkGlobalWallReactionCoeff=[];
+            value.BinLinkBulkReactionCoeff=[];
+            value.BinLinkWallReactionCoeff=[];
+            value.BinCountReactionlines=0;         
+            value.BinLinkPipeCount = length(value.BinLinkPipeNameID);
+            value.BinLinkPumpCount = length(value.BinLinkPumpNameID);
+            value.BinLinkValveCount = length(value.BinLinkValveNameID);
+            value.BinLinkCount = value.BinLinkPipeCount+value.BinLinkPumpCount+value.BinLinkValveCount;
+            value.BinLinkNameID = [value.BinLinkPipeNameID value.BinLinkPumpNameID value.BinLinkValveNameID];
+            cont=1;return;                        
+            % [END]
+        elseif strcmpi(tok(1:4),'[END')
+            cont=0;return;
+        else
+            sect = 0;
+            cont=1;return;
+        end
+    end
+    clear atline;
+    atline = checktlines(tline);
+    if sect==0
+        return;
+        % Links
+    elseif sect==1
+        value.BinLinkPipeNameID{t}=atline{1};
+        value.BinLinkPipeIndex(t)=t;
+        value.BinLinkFromNode{t}=atline{2};
+        value.BinLinkToNode{t}=atline{3};
+        value.BinLinkPipeLengths(t)=str2double(atline{4});
+        value.BinLinkPipeDiameters(t)=str2double(atline{5});
+        value.BinLinkPipeRoughness(t)=str2double(atline{6});
+        if length(atline)>6
+            value.BinLinkPipeMinorLoss(t)=str2double(atline{7});
+        end
+        value.BinLinkType={};
+        if length(atline)>7
+            value.BinLinkPipeStatus{t}=atline{8};
+        else
+            value.BinLinkPipeStatus{t}='Open';
+        end
+        t=t+1;
+    elseif sect==2
+        value.BinLinkPumpNameID{q}=atline{1};
+        value.BinLinkPumpIndex(q)=t;
+        value.BinLinkFromNode{t}=atline{2};
+        value.BinLinkToNode{t}=atline{3};
+        if strcmp(regexp(tline,'\w*HEAD*\w','match'),'HEAD')
+            value.BinLinkPumpCurveNameID{q}=atline{5};
+        elseif strcmp(regexp(tline,'\w*POWER*\w','match'),'POWER')
+            value.BinLinkPumpPower(q)=str2double(atline{5});
+            value.BinLinkPumpNameIDPower{q}=atline{1};
+        end
+        if length(atline)>6
+            value.BinLinkPumpPatterns{q}=atline{7};
+        end
+        t=t+1;
+        q=q+1;
+    elseif sect==3
+        value.BinLinkValveNameID{i}=atline{1};
+        value.BinLinkValveIndex(i)=t;
+        value.BinLinkFromNode{t}=atline{2};
+        value.BinLinkToNode{t}=atline{3};
+        value.BinLinkValveDiameters(i)=str2double(atline{4});
+        value.BinLinkValveType{i}=atline{5};
+        value.BinLinkValveSetting(i)=str2double(atline{6});
+        if length(atline)>6
+            value.BinLinkValveMinorLoss(i)=str2double(atline{7});
+        end
+        t=t+1;
+        i=i+1;
+        % Status
+    elseif sect==4
+        value.BinLinkInitialStatus{d}=atline{2};
+        value.BinLinkInitialStatusNameID{d}=atline{1};
+        value.BinCountStatuslines=d;
+        d=d+1;                    
+        % Reactions
+    elseif sect==5
+        if strcmpi(atline{1},'GLOBAL') && strcmpi(atline{2},'BULK')
+            value.BinLinkGlobalBulkReactionCoeff=str2double(atline{3});
+        elseif strcmpi(atline{1},'GLOBAL') && strcmpi(atline{2},'WALL')
+            value.BinLinkGlobalWallReactionCoeff=str2double(atline{3});
+            value.BinLinkWallReactionCoeff=value.BinLinkGlobalWallReactionCoeff*ones(1,value.BinLinkCount);
+            value.BinLinkBulkReactionCoeff=value.BinLinkGlobalBulkReactionCoeff*ones(1,value.BinLinkCount);
+            value.BinLinkWallReactionCoeff(value.BinLinkPumpIndex)=0;
+            value.BinLinkWallReactionCoeff(value.BinLinkValveIndex)=0;
+            value.BinLinkBulkReactionCoeff(value.BinLinkPumpIndex)=0;
+            value.BinLinkBulkReactionCoeff(value.BinLinkValveIndex)=0;
+        end
+        if strcmpi(atline{1},'BULK')
+            LinkIndex = find(strcmpi(value.BinLinkNameID,atline{2}));
+            value.BinLinkBulkReactionCoeff(LinkIndex)=str2double(atline{3});
+        elseif strcmpi(atline{1},'WALL')
+            LinkIndex = find(strcmpi(value.BinLinkNameID,atline{2}));
+            value.BinLinkWallReactionCoeff(LinkIndex)=str2double(atline{3});
+        end
+        value.countReactionlines=d;
+        d=d+1;
+    end
+end
+function [status, result] = runMSX(obj, rptfile, varargin)
+    inpfile=obj.BinTempfile;
+    arch=computer('arch');
+    if strcmp(arch,'win64') || strcmp(arch,'win32')
+        [~,lpwd]=system(['cmd /c for %A in ("',obj.MSXLibEPANETPath,'") do @echo %~sA']);
+        libtmp=regexp(lpwd,'\s','split');
+        libPwd=libtmp{1};
+        if nargin<3
+            r = sprintf('%s\\epanetmsx.exe "%s" "%s" "%s"',libPwd,inpfile,obj.MSXTempFile,rptfile);
+        else
+            binfile=varargin{1};
+            r = sprintf('%s\\epanetmsx.exe "%s" "%s" "%s" "%s"',libPwd,inpfile,obj.MSXTempFile,rptfile,binfile);
+        end
+    elseif isunix
+        libPwd=obj.MSXLibEPANETPath;
+        if nargin<3
+            r = sprintf('%s\\epanetmsx "%s" "%s" "%s"',libPwd,inpfile,obj.MSXTempFile,rptfile);
+        else
+            binfile=varargin{1};
+            r = sprintf('%s\\epanetmsx "%s" "%s" "%s" "%s"',libPwd,inpfile,obj.MSXTempFile,rptfile,binfile);
+        end
+    end
+    [status, result] = system(r);
+end
+% function value = readMSXBinaryFile(binfile)
+%     fid = fopen(binfile, 'r');
+%     if fid~=-1
+%         data = fread(fid,'int32');
+%         fclose(fid);
+%         value.BinMSXNumberReportingPeriods = data(end-2);
+%         clear data;
+%         fid1 = fopen(binfile, 'r');
+% 
+%         % Seek to the 10th byte ('J'), read 5
+%         fseek(fid1, 0, 'bof');
+%         value.BinMSXmagicnumber=fread(fid1, 1, 'uint32');
+%         value.BinMSXLibMSX=fread(fid1, 1, 'uint32');
+%         value.BinMSXNumberNodes=fread(fid1, 1, 'uint32');
+%         value.BinMSXNumberLinks=fread(fid1, 1, 'uint32');
+%         value.BinMSXSpeciesCount=fread(fid1, 1, 'uint32');
+%         value.BinMSXReportingTimeStepSec=fread(fid1, 1, 'uint32');
+% 
+%         for i=1:value.BinMSXSpeciesCount
+%             value.BinMSXSpeciesNumberChar(i)=fread(fid1, 1, 'uint32');
+%             value.BinMSXSpeciesNameID{i}=fread(fid1, value.BinMSXSpeciesNumberChar(i), '*char')';
+%         end  
+%         for i=1:value.BinMSXSpeciesCount
+%             value.BinMSXSpeciesUnits{i}=fread(fid1, 15, '*char')';
+%         end
+%         value.BinMSXSpeciesUnits = regexprep(value.BinMSXSpeciesUnits,'[^\w'']','');
+% 
+%         fread(fid1, 32, 'float');
+%         for i=1:value.BinMSXReportingTimeStepSec/3600:value.BinMSXNumberReportingPeriods
+%             for s=1:value.BinMSXSpeciesCount
+%                 for u=1:value.BinMSXNumberNodes
+%                     value.BinMSXNodesQuality{s}(i,u) = fread(fid1, 1, 'float')'; %%%% edit here
+%                 end
+%             end
+%         end
+%         for i=1:value.BinMSXReportingTimeStepSec/3600:value.BinMSXNumberReportingPeriods
+%             for s=1:value.BinMSXSpeciesCount
+%                 for u=1:value.BinMSXNumberLinks
+%                     value.BinMSXLinksQuality{s}(i,:) = fread(fid1, 1, 'float')';
+%                 end
+%             end
+%         end        
+%     end
+% end
+function value = readEpanetBin(fid, binfile, rptfile, varargin)
+    value=[]; 
+    if fid~=-1
+        data = fread(fid,'int32');
+        value.BinNumberReportingPeriods = data(end-2);
+        clear data;
+        % Beginning of file
+        fseek(fid, 0, 'bof');
+        value.Binmagicnumber=fread(fid, 1, 'uint32');
+        value.BinLibEPANET=fread(fid, 1, 'uint32');
+        value.BinNumberNodes=fread(fid, 1, 'uint32');
+        value.BinNumberReservoirsTanks=fread(fid, 1, 'uint32');
+        value.BinNumberLinks=fread(fid, 1, 'uint32');
+        value.BinNumberPumps=fread(fid, 1, 'uint32');
+        value.BinNumberValves=fread(fid, 1, 'uint32');
+        value.BinWaterQualityOption=fread(fid, 1, 'uint32');
+        value.BinIndexNodeSourceTracing=fread(fid, 1, 'uint32');
+        value.BinFlowUnitsOption=fread(fid, 1, 'uint32');
+        value.BinPressureUnitsOption=fread(fid, 1, 'uint32');
+        value.BinTimeStatisticsFlag=fread(fid, 1, 'uint32');
+        value.BinReportingStartTimeSec=fread(fid, 1, 'uint32');
+        value.BinReportingTimeStepSec=fread(fid, 1, 'uint32');
+        value.BinSimulationDurationSec=fread(fid, 1, 'uint32');
+        value.BinProblemTitle1=fread(fid, 80, '*char')';
+        value.BinProblemTitle2=fread(fid, 80, '*char')';
+        value.BinProblemTitle3=fread(fid, 80, '*char')';
+        value.BinNameInputFile=fread(fid, 260, '*char')';
+        value.BinNameReportFile=fread(fid, 260, '*char')';
+        value.BinNameChemical=regexprep(fread(fid, 16, '*char')','[^\w'']','');
+        value.BinChemicalConcentrationUnits=regexprep(fread(fid, 32, '*char')','[^\w'']',''); 
+        fread(fid, 4, 'uint32');
+        for i=1:value.BinNumberNodes
+            value.BinIDLabelEachNode{i}=fread(fid, 32, '*char')'; % error NODES*32
+            value.BinIDLabelEachNode{i}=value.BinIDLabelEachNode{i}(find(value.BinIDLabelEachNode{i}, 32));
+        end
+        for i=1:value.BinNumberLinks
+            value.BinIDLabelEachLink{i}=fread(fid, 32, '*char')';  % error LINKS*32
+            value.BinIDLabelEachLink{i}=value.BinIDLabelEachLink{i}(find(value.BinIDLabelEachLink{i}, 32));
+        end
+        value.BinIndexStartNodeEachLink=fread(fid, value.BinNumberLinks, 'uint32')';
+        value.BinIndexEndNodeEachLink=fread(fid, value.BinNumberLinks, 'uint32')';
+        value.BinTypeCodeEachLink=fread(fid, value.BinNumberLinks, 'uint32')';
+        value.BinNodeIndexEachReservoirsTank=fread(fid, value.BinNumberReservoirsTanks, 'uint32')'; % error
+        value.BinCrossSectionalAreaEachTank=fread(fid, value.BinNumberReservoirsTanks, 'float')';
+        value.BinElevationEachNode=fread(fid, value.BinNumberNodes, 'float')';
+        value.BinLengthEachLink=fread(fid, value.BinNumberLinks, 'float')';
+        value.BinDiameterEachLink=fread(fid, value.BinNumberLinks, 'float')';
+
+        value.BinPumpIndexListLinks=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinPumpUtilization=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinAverageEfficiency=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinAverageKwattsOrMillionGallons=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinAverageKwatts=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinPeakKwatts=fread(fid, value.BinNumberPumps, 'float')';
+        value.BinAverageCostPerDay=fread(fid, value.BinNumberPumps, 'float')';
+
+        fread(fid, 1, 'float');
+
+        for i=1:value.BinNumberReportingPeriods
+            value.BinnodeDemand(i,:)         = fread(fid, value.BinNumberNodes, 'float')';
+            value.BinnodeHead(i,:)           = fread(fid, value.BinNumberNodes, 'float')';
+            value.BinnodePressure(i,:)       = fread(fid, value.BinNumberNodes, 'float')';
+            value.BinnodeQuality(i,:)        = fread(fid, value.BinNumberNodes, 'float')';
+            value.BinlinkFlow(i,:)           = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkVelocity(i,:)       = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkHeadloss(i,:)       = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkQuality(i,:)        = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkStatus(i,:)         = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkSetting(i,:)        = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkReactionRate(i,:)   = fread(fid, value.BinNumberLinks, 'float')';
+            value.BinlinkFrictionFactor(i,:) = fread(fid, value.BinNumberLinks, 'float')';
+        end
+        value.BinAverageBulkReactionRate=fread(fid, 1, 'float')';
+        value.BinAverageWallReactionRate=fread(fid, 1, 'float')';
+        value.BinAverageTankReactionRate=fread(fid, 1, 'float')';
+        value.BinAverageSourceInflowRate=fread(fid, 1, 'float')';
+        value.BinNumberReportingPeriods2=fread(fid, 1, 'uint32')';
+        value.BinWarningFlag=fread(fid, 1, 'uint32')';
+        value.BinMagicNumber=fread(fid, 1, 'uint32')';
+    end
+    if ~isempty(varargin)
+        v.Time = (0:value.BinReportingTimeStepSec:value.BinSimulationDurationSec)';
+        v.Pressure = value.BinnodePressure;
+        v.Demand = value.BinnodeDemand;
+        v.Head = value.BinnodeHead;
+        v.NodeQuality = value.BinnodeQuality;
+        v.Flow = value.BinlinkFlow;
+        v.Velocity = value.BinlinkVelocity;
+        v.HeadLoss = value.BinlinkHeadloss;
+        v.Status = value.BinlinkStatus;
+        v.Setting = value.BinlinkSetting;
+        v.ReactionRate = value.BinlinkReactionRate;
+        v.FrictionFactor = value.BinlinkFrictionFactor;
+        v.LinkQuality = value.BinlinkQuality;
+        clear value;
+        value=v;
+    end
+    warning('off'); try fclose(fid); catch e, end; try delete(binfile); catch e, end
+    try delete(rptfile); catch e, end; warning('on'); 
+end
+function [inpfile, rptfile, binfile]= createTempfiles(BinTempfile)
+    [tmppath,tempfile]=fileparts(BinTempfile);
+    [~,mm]=system(['cmd /c for %A in ("',tmppath,'") do @echo %~sA']);
+    mmPwd=regexp(mm,'\s','split');
+    inpfile=[mmPwd{1},'/',tempfile,'.inp'];
+    uuID = char(java.util.UUID.randomUUID);
+    rptfile=['@#',uuID,'.txt'];
+    binfile=['@#',uuID,'.bin'];
+end
+function typecode = getTypeLink(type)
+    ch_ = find(type=='_');
+    if ~isempty(ch_)
+        type=type(ch_+1:end);
+    end
+    switch upper(type)
+        case 'CVPIPE'   
+            typecode=0;
+        case 'PIPE'   
+            typecode=1;
+        case 'PUMP'
+            typecode=2;
+        case 'PRV'
+            typecode=3;
+        case 'PSV'
+            typecode=4;
+        case 'PBV'   
+            typecode=5;
+        case 'FCV'
+            typecode=6;
+        case 'TCV'     
+            typecode=7;
+        case 'GPV'
+            typecode=8;
+        otherwise
+            typecode=-1;
+    end 
+end
+function fid = writenewTemp(Tempfile)
+    fid=fopen(Tempfile,'w');
+    while fid==-1, fid=fopen(Tempfile,'w'); end
+end
+function value = NodeCoords(obj, varargin)
+        if strcmpi(varargin,'Bin')
+            BinNodeName = obj.getBinNodeNameID;
+            BinLinkName = obj.getBinLinkNameID;
+            linkcount =  length(BinLinkName.BinLinkNameID);
+            nodecount = length(BinNodeName.BinNodeNameID);
+        else
+            nodecount=obj.getNodeCount;
+            linkcount=obj.getLinkCount;
+        end
+        vx = NaN(nodecount,1);
+        vy = NaN(nodecount,1);
+        vertx = cell(linkcount,1);
+        verty = cell(linkcount,1);
+        nvert = zeros(linkcount,1);
+        % Open epanet input file
+        [~,info] = obj.readInpFile;
+        sect = 0;
+        for h=1:length(info)
+            tline = info{h};
+            if ~ischar(tline),   break,   end
+            % Get first token in the line
+            tok = strtok(tline);
+            % Skip blank Clines and comments
+            if isempty(tok), continue, end
+            if (tok(1) == ';'), continue, end
+            if (tok(1) == '[')
+                
+                % [COORDINATES] section
+                if strcmpi(tok(1:5),'[COOR')
+                    if strcmpi(varargin,'Bin');
+                        sect = 17; continue;
+                    end
+                % [VERTICES] section
+                elseif strcmpi(tok(1:5),'[VERT')
+                    sect = 18; continue;
+                % [END]
+                elseif strcmpi(tok(1:4),'[END')
+                    break;
+                else
+                    sect = 0; continue;
+                end
+            end
+            if sect==0
+                continue;
+
+            % Coordinates
+            elseif sect==17
+                A = textscan(tline,'%s %f %f');
+                mm = strcmp(A{1},BinNodeName.BinNodeNameID);
+                index=strfind(mm,1);
+                if isempty(index), continue; end
+                vx(index) = A{2};
+                vy(index) = A{3};
+
+            % Vertices
+            elseif sect==18
+                A = textscan(tline,'%s %f %f');
+                if strcmpi(varargin,'Bin');
+                    index =  find(strcmp(BinLinkName.BinLinkNameID,A{1}));
+                    if isempty(index), continue; end
+                else
+                    [~,index] = ENgetlinkindex(char(A{1}),obj.LibEPANET);
+                    if index==0, continue; end
+                end
+                nvert(index) = nvert(index) + 1;
+                vertx{index}(nvert(index)) = A{2};
+                verty{index}(nvert(index)) = A{3};
+            end
+        end
+    try
+        if strcmpi(varargin,'Bin'), varargin={}; end
+        indices = getNodeIndices(obj,varargin);j=1;
+        for i=indices
+            [obj.Errcode,vx(j),vy(j)]=ENgetcoord(i,obj.LibEPANET); j=j+1;
+        end
+    catch
+    end
+    if isempty(varargin) 
+        value{1} = vx;
+        value{2} = vy;
+        value{3} = vertx;
+        value{4} = verty;
+    else
+        if ~strcmpi(varargin,'Bin')
+            if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+            value = [vx(1:length(varargin{1})) vy(1:length(varargin{1}))];
+        end
+    end
+end
+function atline = checktlines(tline)
+    atline='';
+    a = regexp(tline, '\s*','split');uu=1;
+    for tt=1:length(a)
+        if isempty(a{tt})
+            %skip
+        elseif sum(a{tt}==';')
+            %skip
+            if tt>1,  break; end
+        else
+            atline{uu}=a{tt}; uu=uu+1;
+        end
+    end
+end
+function setControlFunction(obj, index, value)
+    splitControl = strsplit(value);
+    controlRuleIndex = index;
+    controlSettingValue = find(strcmpi(obj.TYPESTATUS,splitControl(3)))-1;
+    if isempty(controlSettingValue)
+        if strcmpi(splitControl(3), 'CLOSE')
+            controlSettingValue = 0;
+        else
+            % control setting Value (type should be int) for pump or valve
+            controlSettingValue = str2double(splitControl{3});
+        end
+    end
+    linkIndex = obj.getLinkIndex(splitControl(2));
+    if ~linkIndex
+        warning('Wrong link ID. Please change your control.')
+    end
+    switch upper(splitControl{4})
+        case 'IF'
+            %LINK linkID status IF NODE nodeID ABOVE/BELOW value
+            nodeIndex = obj.getNodeIndex(splitControl(6));
+            controlTypeIndex = 0; % LOWLEVEL
+            if strcmpi(splitControl(7), 'ABOVE')
+                controlTypeIndex = 1; % HIGHLEVEL
+            end
+            controlLevel = str2double(splitControl{8});
+        case 'AT'
+            if strcmpi(splitControl{5}, 'CLOCKTIME')
+                %LINK linkID status AT CLOCKTIME clocktime AM/PM 
+                nodeIndex = 0;
+                controlTypeIndex = 3; 
+                controlLevel = str2double(splitControl{6}); 
+            else
+                %LINK linkID status AT TIME time
+                nodeIndex = 0;
+                controlTypeIndex = 2; 
+                controlLevel = str2double(splitControl{6}); 
+            end
+        otherwise
+    end
+
+    [obj.Errcode] = ENsetcontrol(controlRuleIndex,...
+        controlTypeIndex,linkIndex,controlSettingValue,nodeIndex,controlLevel,obj.LibEPANET);
+    if obj.Errcode, error(obj.getError(obj.Errcode)), return; end   
+end
+function nodesID = setLinkType(obj, id)
+    index = obj.getLinkIndex(id);
+    nodeLinkIndex = obj.getLinkNodesIndex();
+    nodesIndex = nodeLinkIndex(index, :);
+    nodesID = obj.getNodeNameID(nodesIndex);
+    obj.deleteLink(index);
 end

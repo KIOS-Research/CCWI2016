@@ -19,6 +19,8 @@ demand_pattern = G.getPattern;
 roughness_coeff = G.getLinkRoughnessCoeff;
 node_id = G.getNodeNameID;
 
+G.setMSXTimeStep(3600)
+
 %% Scenarios
 Ns = 100; % Number of scenarios to simulate
 u_p = 0.20; % pattern uncertainty

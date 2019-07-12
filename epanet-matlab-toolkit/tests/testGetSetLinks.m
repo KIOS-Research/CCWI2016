@@ -1,4 +1,4 @@
-%% EPANET-Matlab Class Test Net1  **01/07/2016**
+%% EPANET-Matlab Toolkit Test Part 3
 % This file is provided to ensure that all functions can be executed
 % correctly.
 % Press F10 for step-by-step execution. You may also use the breakpoints, 
@@ -8,9 +8,10 @@ clear;
 close all;
 
 % Create EPANET object using the INP file
-inpname='Net1.inp'; % Net1
-% net2-cl2 Net3 BWSN_Network_1 
+inpname='Net1.inp';  
+% Net1 Net2 Net3 BWSN_Network_1 
 d=epanet(inpname);
+% d=epanet(inpname, 'epanet2');
 
 %% *Get Links Data (EXAMPLES)*
 all_diameters = d.getLinkDiameter;

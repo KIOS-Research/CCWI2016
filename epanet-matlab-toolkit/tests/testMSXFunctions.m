@@ -1,4 +1,4 @@
-%% EPANET-Matlab Class Test Part 2
+%% EPANET-Matlab Toolkit Test Part 4
 % This file is provided to ensure that all functions can be executed
 % correctly.
 % Press F10 for step-by-step execution. You may also use the breakpoints, 
@@ -16,43 +16,80 @@ inpname='example.inp'; %net2-cl2 example
 
 %% MSX Functions
 d=epanet(inpname);
+% d=epanet(inpname, 'epanet2');
 msxname = [inpname(1:end-4),'.msx'];
 d.loadMSXFile(msxname);
 
+
+%% MSX PLOTS
+lll=d.getMSXComputedQualityLink
+figure;cmap=hsv(5);for i=1:d.getMSXSpeciesCount;plot(lll.Time,lll.Quality{1}(:,i),'Color',cmap(i,:));hold on; end; legend(d.MSXSpeciesNameID)
+
+nnn=d.getMSXComputedQualityNode
+figure;cmap=hsv(5);for i=1:d.getMSXSpeciesCount;plot(nnn.Time,nnn.Quality{1}(:,i),'Color',cmap(i,:));hold on; end; legend(d.MSXSpeciesNameID)
+
+d.plotMSXSpeciesNodeConcentration(1,1:d.MSXSpeciesCount)
+d.plotMSXSpeciesNodeConcentration(2,1:d.MSXSpeciesCount)
+d.plotMSXSpeciesNodeConcentration(3,1:d.MSXSpeciesCount)
+d.plotMSXSpeciesNodeConcentration(4,1:d.MSXSpeciesCount)
+d.plotMSXSpeciesNodeConcentration(5,1:d.MSXSpeciesCount)
+d.getMSXComputedQualityLink(1,1:d.MSXSpeciesCount)%index link, index species
+d.plotMSXSpeciesLinkConcentration(1,1:d.MSXSpeciesCount)
+disp('Press any key to continue...')
+pause
+
+
 % New functions - Read MSX File
-d.getMSXSolver
-d.getMSXAreaUnits
-d.getMSXRateUnits
-d.getMSXRtol
-d.getMSXAtol
 d.getMSXTimeStep
+d.setMSXTimeStep(3600) 
+d.getMSXTimeStep
+
+d.getMSXAreaUnits
+d.setMSXAreaUnitsFT2
+d.getMSXAreaUnits
+d.setMSXAreaUnitsM2
+d.getMSXAreaUnits
+d.setMSXAreaUnitsCM2
+d.getMSXAreaUnits
+
+d.getMSXRateUnits
+d.setMSXRateUnitsSEC
+d.getMSXRateUnits
+d.setMSXRateUnitsMIN
+d.getMSXRateUnits
+d.setMSXRateUnitsHR
+d.getMSXRateUnits
+d.setMSXRateUnitsDAY
+d.getMSXRateUnits
+
+d.getMSXSolver
+d.setMSXSolverEUL
+d.getMSXSolver
+d.setMSXSolverRK5
+d.getMSXSolver
+d.setMSXSolverROS2
+d.getMSXSolver
+ 
 d.getMSXCoupling
+d.setMSXCouplingFULL
+d.getMSXCoupling
+d.setMSXCouplingNONE
+d.getMSXCoupling
+
+d.getMSXCompiler
+d.setMSXCompilerVC % depends on the C compiler you are using
+d.getMSXCompiler
+d.setMSXCompilerGC % depends on the C compiler you are using
+d.getMSXCompiler
+d.setMSXCompilerNONE % depends on the C compiler you are using
 d.getMSXCompiler
 
-d.setMSXTimeStep(3600) 
-
-d.setMSXAreaUnitsFT2
-d.setMSXAreaUnitsM2
-d.setMSXAreaUnitsCM2
-
-d.setMSXRateUnitsSEC
-d.setMSXRateUnitsMIN
-d.setMSXRateUnitsHR
-d.setMSXRateUnitsDAY
-
-d.setMSXSolverEUL
-d.setMSXSolverRK5
-d.setMSXSolverROS2
- 
-d.setMSXCouplingFULL
-d.setMSXCouplingNONE
-
-d.setMSXCompilerVC % depends on the C compiler you are using
-d.setMSXCompilerGC % depends on the C compiler you are using
-d.setMSXCompilerNONE % depends on the C compiler you are using
-
+d.getMSXAtol
 d.setMSXAtol(0.1)
+d.getMSXAtol
+d.getMSXRtol
 d.setMSXRtol(0.2)
+d.getMSXRtol
 
 %% GET PARAMETERS
 d.getMSXEquationsTerms
@@ -103,24 +140,6 @@ disp('Press any key to continue...')
 pause
 
 
-%% MSX PLOTS
-lll=d.getMSXComputedQualityLink
-figure;cmap=hsv(5);for i=1:d.getMSXSpeciesCount;plot(lll.Time,lll.Quality{1}(:,i),'Color',cmap(i,:));hold on; end; legend(d.MSXSpeciesNameID)
-
-nnn=d.getMSXComputedQualityNode
-figure;cmap=hsv(5);for i=1:d.getMSXSpeciesCount;plot(nnn.Time,nnn.Quality{1}(:,i),'Color',cmap(i,:));hold on; end; legend(d.MSXSpeciesNameID)
-
-d.plotMSXSpeciesNodeConcentration(1,1:d.MSXSpeciesCount)
-d.plotMSXSpeciesNodeConcentration(2,1:d.MSXSpeciesCount)
-d.plotMSXSpeciesNodeConcentration(3,1:d.MSXSpeciesCount)
-d.plotMSXSpeciesNodeConcentration(4,1:d.MSXSpeciesCount)
-d.plotMSXSpeciesNodeConcentration(5,1:d.MSXSpeciesCount)
-d.getMSXComputedQualityLink(1,1:d.MSXSpeciesCount)%index link, index species
-d.plotMSXSpeciesLinkConcentration(1,1:d.MSXSpeciesCount)
-disp('Press any key to continue...')
-pause
-
-
 %% Print Errors MSX
 for e=[0,200,501:524]
     disp(d.getMSXError(e))
@@ -144,12 +163,6 @@ disp('Press any key to continue...')
 pause
 
 % Different way to write the report (the "bug" above does not appear)
-d.runMSXexe
-open([d.MSXTempFile(1:end-4),'.txt']);
-
-disp('Press any key to continue...')
-pause
-
 rptmsx='reportmsx.txt';
 d.writeMSXReportExe(rptmsx);
 open(rptmsx);
@@ -228,7 +241,10 @@ d.setMSXPatternValue(1,1,2);
 d.getMSXPattern 
 
 d.setMSXPattern(1,[1 0.5 0.8 2 1.5]); % node index, values
-% or d.setMSXPattern('testpat',[1 1 1 1 1.5]); nodeID , values
+d.getMSXPattern 
+
+d.setMSXPattern(d.getMSXPatternsNameID{1},[1 1 1 1 1.5]); % nodeID , values
+d.getMSXPattern 
 
 d.getMSXPattern 
 d.getMSXPatternValue(1,5) 

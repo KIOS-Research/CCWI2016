@@ -7,4 +7,4 @@ There are 3 types of approaches to solve the PDD analysis model, and the method 
 - Paez, D., Suribabu, C. R., & Filion, Y. (2018,b). Method for extended period simulation of water distribution networks with pressure driven demands. Water resources management, 32(8), 2837-2846
 
 ![](./BUT.jpg)
-![](.\CACE.jpg)
+![](./CACE.jpg)

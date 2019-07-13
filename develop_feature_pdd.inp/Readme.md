@@ -55,7 +55,7 @@ Keep in mind that some bugs may exist in the `EPANET` libraries, in case you are
 &uparrow; [Back to top](#table-of-contents)
 
 ## Contributors
-* Zhao Han, [College of Architechture and Civil Engineering, Beijing University of Technology](https://bjut.edu.cn/)
+* Zhao Han, [College of Architechture and Civil Engineering, Beijing University of Technology](http://bjut.edu.cn/)
 
 The 'EPANET_PDD-Matlab Toolkit' is based/inspired on the [EPANET-Matlab Toolkt](https://github.com/KIOS-Research/CCWI2016), [EPANET-Matlab Toolkit](http://www.mathworks.com/matlabcentral/fileexchange/25100-epanet-matlab-toolkit) as well as the OpenWaterAnalytics [EPANET-Matlab Wrappers](https://github.com/OpenWaterAnalytics/epanet-matlab)
  

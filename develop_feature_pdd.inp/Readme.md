@@ -1,7 +1,9 @@
+![](./BUT.jpg)
+![](./CACE.jpg)
 # A new feature for epanet.m
 I would like to add Pressur-Driven-Demand (PDD) analysis to the epanet.m. The PDD analysis is necessary when the pressurs of nodes in the Water Distribution Network (WDN) are insufficient.
 
-There are 3 types of approaches to solve the PDD analysis model, and the method proposed by Paez et al.(2018 b) is used in this function. which is tested in BPDRR (Paze et al.2018 a) 
+There are 3 types of approaches to solve the PDD analysis model, and the method proposed by Paez et al.(2018 b) is used in this project, which is tested in BPDRR (Paze et al.2018 a) 
 
 ## Table of Contents
 
@@ -12,6 +14,7 @@ There are 3 types of approaches to solve the PDD analysis model, and the method 
 - [How to fix/report bugs](#How-to-fixreport-bugs)
 - [Licenses](#Licenses)
 - [Contributors](#Contributors)
+- [Acknwledgements](#Acknowledgements)
 - [Reference](#Reference)
 
 ## Requirements 
@@ -23,6 +26,8 @@ There are 3 types of approaches to solve the PDD analysis model, and the method 
 &uparrow; [Back to top](#table-of-contents)
 
 ## How to use the Toolkit
+
+&uparrow; [Back to top](#table-of-contents)
 
 ## How to install necessary compilers 
 
@@ -61,6 +66,9 @@ The 'EPANET_PDD-Matlab Toolkit' is based/inspired on the [EPANET-Matlab Toolkt](
  
 &uparrow; [Back to top](#table-of-contents)
 
+## Acknowledgements
+
+&uparrow; [Back to top](#table-of-contents)
 
 ## Reference
 
@@ -71,5 +79,5 @@ The 'EPANET_PDD-Matlab Toolkit' is based/inspired on the [EPANET-Matlab Toolkt](
 ## How to cite 
 
 
-![](./BUT.jpg)
-![](./CACE.jpg)
+
+&uparrow; [Back to top](#table-of-contents)

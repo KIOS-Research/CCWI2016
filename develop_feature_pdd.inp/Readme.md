@@ -1,5 +1,5 @@
-![](./BUT.jpg)
-![](./CACE.jpg)
+![](./BJUT.jpg)
+
 # A new feature for epanet.m
 I would like to add Pressur-Driven-Demand (PDD) analysis to the epanet.m. The PDD analysis is necessary when the pressurs of nodes in the Water Distribution Network (WDN) are insufficient.
 
@@ -76,6 +76,7 @@ The 'EPANET_PDD-Matlab Toolkit' is based/inspired on the [EPANET-Matlab Toolkt](
 
 - Paez, D., Fillion, Y., & Hulley, M. (2018,a). Battle of post-disaster response and restauration (BPDRR): problem description and rules. In 1st International Water Distribution System Analysis / Computing and Control in the Water Industry Joint Conference, Kingston, Canada, July 23-25, 2018.
 - Paez, D., Suribabu, C. R., & Filion, Y. (2018,b). Method for extended period simulation of water distribution networks with pressure driven demands. Water resources management, 32(8), 2837-2846
+- D.G. Eliades, M. Kyriakou, S. Vrachimis and M.M. Polycarpou, "EPANET-MATLAB Toolkit: An Open-Source Software for Interfacing EPANET with MATLAB", in Proc. 14th International Conference on Computing and Control for the Water Industry (CCWI), The Netherlands, Nov 2016, p.8. (doi:10.5281/zenodo.831493)
 
 &uparrow; [Back to top](#table-of-contents)
 ## How to cite 
@@ -83,3 +84,5 @@ The 'EPANET_PDD-Matlab Toolkit' is based/inspired on the [EPANET-Matlab Toolkt](
 
 
 &uparrow; [Back to top](#table-of-contents)
+![](./BUT.jpg)
+![](./CACE.jpg)
